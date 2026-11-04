@@ -13,7 +13,8 @@
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <script src="config.js"></script>
 </head>
-<body<title>Hjemmebane</title>
+<body>
+<title>Hjemmebane</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Bungee+Shade&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Monoton&family=Baloo+2:wght@500;600;800&display=swap">
@@ -1832,7 +1833,7 @@ const ERAS=[
 ];
 function discoIntro(onEnd){
   const scenes=[{d:2600,music:"dintro",bg:"#0d0820",cls:"i-open",html:`<div class="i-ball">${ballHTML(120)}</div><p class="i-kicker">En rejse gennem</p><h1 class="i-big">musikhistorien</h1>`,after:()=>setTimeout(spinBalls,30)}]
-   .concat(ERAS.map(e=>({d:2700,music:e.music,cls:"i-era "+e.cls,html:`<div class="i-prop"></div><div class="i-dec">${e.d}</div><p class="i-name">${e.name}</p><div class="i-hits">${e.hits.map((h,i)=>`<div class="i-hit" style="animation-delay:${.25+i*.32}s"><b>${esc(h[1])}</b><span>${esc(h[0])} · ${h[2]}</span></div>`).join("")}</div><p class="i-fmt">${e.fmt}</p>`})))
+   .concat(ERAS.map(e=>({d:2700,music:e.music,bg:{e50:"#5c0a14",e60:"#0b4f4a",e70:"#4a2006",e80:"#14002e",e90:"#121a52",e00:"#0d1b2e",e10:"#22074a",e20:"#060606"}[e.cls],cls:"i-era "+e.cls,html:`<div class="i-prop"></div><div class="i-dec">${e.d}</div><p class="i-name">${e.name}</p><div class="i-hits">${e.hits.map((h,i)=>`<div class="i-hit" style="animation-delay:${.25+i*.32}s"><b>${esc(h[1])}</b><span>${esc(h[0])} · ${h[2]}</span></div>`).join("")}</div><p class="i-fmt">${e.fmt}</p>`})))
    .concat([{d:3600,music:"dfinale",bg:"#0d0820",cls:"i-fin",html:`<div class="i-ball">${ballHTML(140)}</div><h1 class="i-logo">DISKO</h1><p class="i-kicker">${SONGS.length} sange. Kan du dem alle?</p>`,after:()=>{setTimeout(spinBalls,30);setTimeout(()=>shout("Music time!",false,"en-US"),500);confetti(180,.3)}}]);
   playIntro(scenes,{cls:"disco-intro",onEnd});
 }
@@ -1872,7 +1873,6 @@ function openGame(g,force){THEME.stop();ac();
 PACKDB.load().then(()=>{if(S.view==="studio")render()});
 render();
 </script>
->
 
 </body>
 </html>
