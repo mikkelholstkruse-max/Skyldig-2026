@@ -46,6 +46,17 @@ Bagefter virker "Hver sin telefon" på alle telefoner, og Familiestudiet deles m
 
 > Om sikkerhed: Databasen er åben for alle, der kender spillets nøgler. Til et familiespil er det fint, men skriv ikke noget meget privat i Familiestudiet.
 
+## 4. Fulde sange i Disko (valgfrit, kræver Apple-udviklerkonto)
+
+Uden dette spiller Disko Apples 30-sekunders klip. Med det kan DJ'en, der har Apple Music, afspille hele sange.
+
+1. Meld dig ind i **Apple Developer Program** på developer.apple.com (cirka 700 kr. om året).
+2. Gå til **Certificates, Identifiers & Profiles → Keys**, opret en nøgle, og sæt flueben ved **Media Services (MusicKit)**.
+3. Download nøglefilen (.p8), og notér **Key ID** og dit **Team ID**.
+4. Send de tre ting til Claude. Claude laver et udviklertoken og lægger det i `config.js`. Tokenet skal fornyes hvert halve år.
+
+Første gang DJ'en starter en Disko, beder Apple om at logge ind med Apple Music.
+
 ---
 
 ## Sådan arbejder du effektivt med GitHub og Claude
