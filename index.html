@@ -1968,13 +1968,14 @@ const SHOW_ERAS=[
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
 const BUILDS={normal:"Almindelig",staerk:"Høj og stærk",mave:"Lille mave",top:"Kvinde, fyldig top",hofte:"Kvinde, fyldige hofter"};
-function defBody(n){n=norm(n);if(/^(mig|mikkel)/.test(n))return{b:"staerk",h:188};if(/^(far|fatter|papa|dad)/.test(n))return{b:"mave",h:180};if(/^(s(ø|o|oe)ster|sis)/.test(n))return{b:"top",h:169};if(/^(mor|mutter|mama|mom)/.test(n))return{b:"hofte",h:167};return{b:"normal",h:175}}
+function defBody(n){n=norm(n);if(/^(mig|mikkel)/.test(n))return{b:"staerk",h:196};if(/^(far|fatter|papa|dad)/.test(n))return{b:"mave",h:188};if(/^(s(ø|o|oe)ster|sis)/.test(n))return{b:"top",h:169};if(/^(mor|mutter|mama|mom)/.test(n))return{b:"hofte",h:167};return{b:"normal",h:175}}
 function stageFamily(){let ps=(S.lp||store("skyldig.localplayers")||[]).slice(0,4);const def=["Mor","Far","Søster","Mig"];while(ps.length<4)ps.push({name:def[ps.length],color:COLORS[ps.length]});
   return ps.map((p,i)=>{const db=defBody(p.name);return{name:p.name,photo:p.photo||(ON.photo&&norm(p.name)===norm(ON.name)?ON.photo:null),color:p.color||COLORS[i],build:p.build||db.b,height:+p.height||db.h}})}
 function faceTex(p,T){const c=document.createElement("canvas");c.width=c.height=256;const x=c.getContext("2d");const tex=new T.CanvasTexture(c);x.beginPath();x.arc(128,128,124,0,7);x.clip();x.fillStyle="#f1c9a5";x.fillRect(0,0,256,256);
   if(p.photo){const im=new Image();im.onload=()=>{x.drawImage(im,0,0,256,256);tex.needsUpdate=true};im.src=p.photo}else{x.fillStyle=p.color;x.fillRect(0,0,256,256);x.fillStyle="#1a1035";x.font="bold 150px Bungee, sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText((p.name||"?")[0].toUpperCase(),128,140)}
   tex.needsUpdate=true;return tex}
 function stageShow(onEnd){
+  try{BGM.stop()}catch(e){}
   if(!window.THREE){discoIntro(onEnd);return}
   const T=THREE;document.querySelector("#intro")?.remove();
   const ERA_D=6000,OPEN_D=4400,FLY_D=3400,FIN_D=4800,TOTAL=OPEN_D+FLY_D+SHOW_ERAS.length*ERA_D+FIN_D;
@@ -2039,8 +2040,8 @@ function stageShow(onEnd){
   prop("earbuds",g=>{for(let i=0;i<8;i++){const e=new T.Group();e.add(part(new T.SphereGeometry(.3,12,10),"#fff"));const st=part(new T.CylinderGeometry(.08,.08,.7,8),"#fff");st.position.y=-.45;e.add(st);e.position.set((Math.random()-.5)*14,3+Math.random()*5,-2-Math.random()*5);e.userData.ph=Math.random()*6;g.add(e)}});
   // familien: runde, tegnede figurer med led, der virker
   const fam=stageFamily(),skin="#f3c9a8";
-  const mkChar=(p,i)=>{const c={};const B=p.build,fem=B==="top"||B==="hofte";c.fem=fem;const s=Math.max(.7,Math.min(1.3,1+(p.height-178)/100*1.6));c.s=s;
-    const root=new T.Group();root.position.set(-3.3+i*2.2,.6,.8-Math.abs(i-1.5)*.5);sc.add(root);c.root=root;c.home=root.position.clone();
+  const mkChar=(p,i)=>{const c={};const B=p.build,fem=B==="top"||B==="hofte";c.fem=fem;c.B=B;const s=Math.max(.7,Math.min(1.3,1+(p.height-178)/100*1.6));c.s=s;
+    const root=new T.Group();root.position.set(-2.85+i*1.9,.6,.8-Math.abs(i-1.5)*.5);sc.add(root);c.root=root;c.home=root.position.clone();
     const body=new T.Group();body.scale.setScalar(s);root.add(body);
     const hips=new T.Group();hips.position.y=1.05;body.add(hips);c.hips=hips;c.shirt=[];
     const pants="#1a1035",T2=(r,x,y,z,k,col)=>{const m=part(new T.SphereGeometry(r,20,16),col||p.color);m.position.set(x,y,z);m.scale.set(...k);hips.add(m);if(!col)c.shirt.push(m);return m};
@@ -2048,9 +2049,9 @@ function stageShow(onEnd){
     if(B==="staerk"){T2(.55,0,.82,0,[1.4,.85,.88]);T2(.42,0,.36,0,[.95,.85,.78])}
     else if(B==="mave"){T2(.55,0,.66,0,[1.1,1.05,.9]);T2(.44,0,.36,.2,[1.02,.9,.95])}
     else if(fem){T2(.52,0,.6,0,[1.06,1.08,.86]);const r=B==="top"?.24:.16;[-1,1].forEach(d=>T2(r,d*.2,.8,.32+(B==="top"?.02:0),[1,.92,.9]));
-      T2(.5,0,.14,0,[B==="hofte"?1.3:1.12,.62,B==="hofte"?1.02:.92],pants);if(B==="hofte")[-1,1].forEach(d=>T2(.29,d*.2,.06,-.26,[1,1,1],pants))}
+      T2(.5,0,.14,0,[B==="hofte"?1.5:1.12,.66,B==="hofte"?1.15:.92],pants);if(B==="hofte")[-1,1].forEach(d=>{T2(.44,d*.27,.02,-.32,[1,1.05,1],pants);T2(.3,d*.52,.08,-.08,[.8,1,1],pants)})}
     else T2(.55,0,.55,0,[1,1.15,.85]);
-    const shX=B==="staerk"?.8:fem?.56:B==="mave"?.64:.6,ar=B==="staerk"?1.5:B==="mave"?1.12:fem?1.05:1,lr=B==="staerk"?1.25:B==="normal"?1:1.12,hipX=fem?(B==="hofte"?.32:.29):.25;
+    const shX=B==="staerk"?.8:fem?.56:B==="mave"?.64:.6,ar=B==="staerk"?1.5:B==="mave"?1.12:fem?1.05:1,lr=B==="staerk"?1.25:B==="normal"?1:1.12,hipX=fem?(B==="hofte"?.36:.29):.25;
     const neck=new T.Group();neck.position.y=1.25;hips.add(neck);c.neck=neck;
     const head=part(new T.SphereGeometry(.55,24,18),skin,1.05);head.position.y=.5;neck.add(head);c.head=head;c.hair=new T.Group();head.add(c.hair);
     c.sh=[];c.el=[];c.hand=[];c.sleeve=[];[-1,1].forEach((sd,k)=>{const sh=new T.Group();sh.position.set(sd*shX,B==="staerk"?1.05:1.0,0);hips.add(sh);const up=part(new T.CylinderGeometry(.13*ar,.12*ar,.5,10),p.color);up.position.y=-.25;sh.add(up);c.sleeve.push(up);
@@ -2067,6 +2068,18 @@ function stageShow(onEnd){
   const clouds=new T.Group();clouds.visible=false;sc.add(clouds);
   for(let i=0;i<18;i++){const g=new T.Group();for(let k=0;k<4;k++){const m=new T.Mesh(new T.SphereGeometry(1+Math.random()*.9,14,10),toon("#ffffff"));m.position.set((k-1.5)*1.3,Math.random()*.7,Math.random()*.9);g.add(m)}const sd=i%2?1:-1;g.position.set(sd*(5.5+Math.random()*9),18+Math.random()*14,0);g.userData.z0=Math.random()*34;clouds.add(g)}
   const dust=new T.Mesh(new T.RingGeometry(.9,1.3,48),new T.MeshBasicMaterial({color:"#ffffff",transparent:true,opacity:0,side:T.DoubleSide}));dust.rotation.x=-Math.PI/2;dust.position.y=.64;sc.add(dust);
+  // familiens brune labrador
+  const dog=(()=>{const g=new T.Group(),br="#6b3e22",dk="#4f2b16",D={g};const B=(geo,col,x,y,z,k,par)=>{const m=part(geo,col||br);m.position.set(x,y,z);if(k)m.scale.set(...k);(par||g).add(m);return m};
+    B(new T.SphereGeometry(.5,20,14),null,0,.78,0,[.78,.72,1.45]);B(new T.SphereGeometry(.4,16,12),null,0,.84,.42,[.95,.95,.9]);
+    const hd=new T.Group();hd.position.set(0,1.2,.72);g.add(hd);D.head=hd;B(new T.SphereGeometry(.32,18,14),null,0,0,0,[1,.95,1.08],hd);B(new T.SphereGeometry(.2,14,10),null,0,-.09,.3,[.95,.78,1.35],hd);
+    B(new T.SphereGeometry(.07,10,8),"#1a0f0a",0,-.03,.56,null,hd);[-1,1].forEach(d=>B(new T.SphereGeometry(.05,8,6),"#140a05",d*.13,.08,.27,null,hd));
+    const tg=B(new T.SphereGeometry(.08,10,8),"#e8607a",0,-.2,.42,[.8,.35,1.2],hd);D.tongue=tg;
+    D.ears=[-1,1].map(d=>{const e=new T.Group();e.position.set(d*.27,.1,-.02);hd.add(e);B(new T.SphereGeometry(.17,12,10),dk,d*.04,-.16,0,[.38,1.05,.8],e);return e});
+    D.legs=[[-1,1],[1,1],[-1,-1],[1,-1]].map(([x,z])=>{const l=new T.Group();l.position.set(x*.2,.58,z*.46);g.add(l);B(new T.CylinderGeometry(.1,.085,.52,10),null,0,-.26,0,null,l);B(new T.SphereGeometry(.11,10,8),null,0,-.52,.04,[1,.7,1.2],l);return l});
+    const tl=new T.Group();tl.position.set(0,.9,-.68);g.add(tl);const tt=B(new T.CylinderGeometry(.04,.08,.6,8),null,0,.3,0,null,tl);void tt;tl.rotation.x=-.7;D.tail=tl;
+    const col=new T.Mesh(new T.TorusGeometry(.27,.045,8,24),new T.MeshBasicMaterial({color:"#e8384f"}));col.position.set(0,1.02,.62);col.rotation.x=1.2;g.add(col);
+    g.scale.setScalar(1.05);g.visible=false;sc.add(g);return D})();
+  const dogRun=(time,speed)=>{dog.legs.forEach((l,k)=>l.rotation.x=Math.sin(time*speed+(k===0||k===3?0:Math.PI))*.7);dog.tail.rotation.z=Math.sin(time*16)*.7;dog.ears.forEach((e,k)=>e.rotation.z=(k?1:-1)*(.2+Math.abs(Math.sin(time*speed))*.4));dog.head.rotation.x=Math.sin(time*speed*2)*.08};
   const setArm=(c,k,out,fwd,elb)=>{const sd=k?1:-1;c.sh[k].rotation.set(-fwd,0,sd*out);c.el[k].rotation.set(-elb,0,0)};
   const setLeg=(c,k,fwd,knee)=>{c.hp[k].rotation.set(-fwd,0,0);c.kn[k].rotation.set(knee,0,0)};
   const hairFor=(c,i,style,cos)=>{while(c.hair.children.length)c.hair.remove(c.hair.children[0]);const hc=["#3a2113","#d9a441","#5a2a14","#151515"][i];const H=(geo,col,x,y,z,s)=>{const m=part(geo,col||hc,1.05);m.position.set(x||0,y||0,z||0);if(s)m.scale.set(...s);c.hair.add(m);return m};
@@ -2086,18 +2099,26 @@ function stageShow(onEnd){
   const segs=[{k:"open",d:OPEN_D},{k:"fly",d:FLY_D}].concat(SHOW_ERAS.map((e,j)=>({k:"era",d:ERA_D,e,j}))).concat([{k:"fin",d:FIN_D}]);
   let si=-1,segStart=performance.now(),ended=false,raf=0,cur=null;const t0=performance.now();introBus();
   const cap=el.querySelector(".st-cap"),title=el.querySelector(".st-title"),flash=el.querySelector(".st-flash");
-  // én afspiller pr. årti, indlæst på forhånd, så sangen starter præcis på klippet og på det mest energiske sted (som regel omkvædet)
+  // lyd: to afspillere på skift. Den ene er spillets egen sang-afspiller, som telefonen allerede har låst op.
   const HK=store("disco.hook")||{};
-  const tr=SHOW_ERAS.map(e=>{const a=new Audio();a.preload="auto";try{a.muted=true;const p=a.play();if(p)p.catch(()=>{});a.pause();a.muted=false}catch(x){}return{e,a,url:null,at:0,id:"show:"+e.song.join("-")}});
-  const hook=async x=>{if(HK[x.id]!=null){x.at=HK[x.id];return}
-    try{const ctx=ac();const buf=await(await fetch(x.url)).arrayBuffer();const au=await new Promise((r,j)=>ctx.decodeAudioData(buf,r,j));const d=au.getChannelData(0),w=Math.floor(au.sampleRate/4),n=Math.floor(d.length/w),en=[];
-      for(let i=0;i<n;i++){let q=0;for(let k=i*w;k<(i+1)*w;k+=16)q+=d[k]*d[k];en.push(q)}
+  const tr=SHOW_ERAS.map(e=>({e,url:null,at:null,id:"show:"+e.song.join("-")}));
+  const mkA=()=>{const a=new Audio();try{a.muted=true;const p=a.play();if(p)p.catch(()=>{});a.pause();a.muted=false}catch(x){}return a};
+  PREV.unlock();const AP=[PREV.el||mkA(),mkA()];let ai=0,playing=null,prepped=null;
+  tr.forEach(x=>{if(HK[x.id]!=null)x.at=HK[x.id]});
+  const analyse=async x=>{if(x.at!=null)return;try{const ctx=ac();if(!ctx)return;const r=await fetch(x.url);if(!r.ok)return;const buf=await r.arrayBuffer();const au=await new Promise((ok,no)=>ctx.decodeAudioData(buf,ok,no));
+      const d=au.getChannelData(0),w=Math.floor(au.sampleRate/4),n=Math.floor(d.length/w),en=[];for(let i=0;i<n;i++){let q=0;for(let k=i*w;k<(i+1)*w;k+=16)q+=d[k]*d[k];en.push(q)}
       const win=Math.round(ERA_D/250);let best=-1,bi=0;for(let i=0;i+win<=n;i++){let q=0;for(let k=i;k<i+win;k++)q+=en[k];if(q>best){best=q;bi=i}}
-      x.at=Math.max(0,bi/4-.3);HK[x.id]=x.at;store("disco.hook",HK)}catch(e){x.at=0}};
-  if(PREV.ok!==false)(async()=>{for(const x of tr){if(ended)return;x.url=await PREV.lookup({id:x.id,main:x.e.song[0],title:x.e.song[1]});if(x.url){x.a.src=x.url;try{x.a.load()}catch(e){}await hook(x)}}})();
-  const ramp=(a,to,ms,stop)=>{clearInterval(a._f);const from=a.volume,t1=performance.now();a._f=setInterval(()=>{const q=Math.min(1,(performance.now()-t1)/ms);a.volume=Math.max(0,Math.min(1,from+(to-from)*q));if(q>=1){clearInterval(a._f);if(stop)a.pause()}},30)};
-  let playing=null;const stopSong=ms=>{if(playing){ramp(playing,0,ms,true);playing=null}};
-  const playEra=j=>{const x=tr[j];stopSong(280);if(x.url){const a=x.a;try{a.currentTime=x.at}catch(e){}a.volume=0;const p=a.play();if(p)p.then(()=>ramp(a,.9,160)).catch(()=>{});playing=a}else eraMusic(x.e.era,now()+.32,ERA_D/1000)};
+      x.at=Math.max(0,Math.min(22,bi/4-.3));HK[x.id]=x.at;store("disco.hook",HK)}catch(e){}};
+  if(PREV.ok!==false)tr.forEach(x=>PREV.lookup({id:x.id,main:x.e.song[0],title:x.e.song[1]}).then(u=>{x.url=u||null;if(u&&!ended)analyse(x)}));
+  const ramp=(a,to,ms,stop)=>{clearInterval(a._f);const from=a.volume,t1=performance.now();a._f=setInterval(()=>{const q=Math.min(1,(performance.now()-t1)/ms);try{a.volume=Math.max(0,Math.min(1,from+(to-from)*q))}catch(e){}if(q>=1){clearInterval(a._f);if(stop){try{a.pause()}catch(e){}}}},30)};
+  const stopSong=ms=>{if(playing){ramp(playing,0,ms,true);playing=null}};
+  const seekTo=(a,t)=>{const go=()=>{try{a.currentTime=t}catch(e){}};if(a.readyState>=1)go();else a.addEventListener("loadedmetadata",go,{once:true})};
+  // klargør næste sang lydløst lidt før klippet, så den starter med det samme
+  const prep=j=>{const x=tr[j];if(!x||!x.url)return;ai=1-ai;const a=AP[ai];clearInterval(a._f);try{a.pause()}catch(e){}a.src=x.url;a.muted=true;a.volume=1;seekTo(a,x.at||0);const p=a.play();if(p)p.catch(()=>{});prepped={j,a}};
+  const playEra=j=>{const x=tr[j];stopSong(260);
+    if(!x.url){eraMusic(x.e.era,now()+.32,ERA_D/1000);return}
+    let a;if(prepped&&prepped.j===j)a=prepped.a;else{ai=1-ai;a=AP[ai];a.src=x.url;seekTo(a,x.at||0)}prepped=null;
+    if(a.readyState>=1){try{a.currentTime=x.at||0}catch(e){}}a.volume=1;a.muted=false;if(a.paused){const p=a.play();if(p)p.catch(()=>eraMusic(x.e.era,now(),ERA_D/1000))}playing=a};
   const startSeg=()=>{si++;if(si>=segs.length)return end(false);const sg=segs[si];segStart=performance.now();flash.classList.remove("on");
     if(sg.k==="open"){cur=SHOW_ERAS[0];dressEra({...cur,props:[],sky:["#05020a","#140a24"],floor:"#0d0818"});chars.forEach(c=>c.root.visible=false);tonearm.visible=true;
       title.className="st-title";setTimeout(()=>{title.innerHTML=`<p class="i-kicker">${esc(fam.map(f=>f.name).join(" · "))} præsenterer</p><h1 class="i-big">Musikkens historie</h1>`;title.className="st-title on"},2300);
@@ -2109,7 +2130,7 @@ function stageShow(onEnd){
     else{cap.classList.remove("on");stopSong(700);Object.values(P).forEach(g=>g.visible=false);["notes","records","flowers","smileys","floppy","phones","earbuds"].forEach(n=>P[n].visible=true);paintSky("#22074a","#ff3fa4");
       title.innerHTML=`${ballHTML(110)}<h1 class="i-logo">DISKO</h1><p class="i-kicker">${SONGS.length} sange. Kan I dem alle?</p>`;title.className="st-title on";setTimeout(spinBalls,30);
       eraMusic("dfinale",now(),FIN_D/1000);setTimeout(()=>shout("Music time!",false,"en-US"),500);confetti(200,.3)}
-    clearTimeout(startSeg.p);const nx=segs[si+1];if(nx&&nx.k!=="fly")startSeg.p=setTimeout(()=>{if(ended)return;flash.classList.add("on");V.noise(now(),.38,.09,{f:500,f2:7000,q:1,wet:.3});if(nx.k==="era")playEra(nx.j)},sg.d-320);
+    clearTimeout(startSeg.p);clearTimeout(startSeg.q);const nx=segs[si+1];if(nx&&nx.k==="era")startSeg.q=setTimeout(()=>{if(!ended)prep(nx.j)},sg.d-1400);if(nx&&nx.k!=="fly")startSeg.p=setTimeout(()=>{if(ended)return;flash.classList.add("on");V.noise(now(),.38,.09,{f:500,f2:7000,q:1,wet:.3});if(nx.k==="era")playEra(nx.j)},sg.d-320);
     clearTimeout(startSeg.t);startSeg.t=setTimeout(startSeg,sg.d)};
   const camTo=(x,y,z,lx,ly,lz)=>{cam.position.set(x,y,z);cam.lookAt(lx,ly,lz)};
   const tmp=new T.Vector3(),tmp2=new T.Vector3();
@@ -2146,7 +2167,7 @@ function stageShow(onEnd){
       });
       // spring ud af årtiet, land i det næste
       const pre=Math.max(0,1-(D-L)/.32),post=Math.max(0,1-L/.42);
-      chars.forEach(c=>{const r=c.root;if(post>0)r.position.y+=post*post*3;if(pre>0){r.position.y+=pre*pre*3;r.rotation.y+=pre*Math.PI}const ld=L>.42&&L<.64?Math.sin((L-.42)/.22*Math.PI)*.2:0;if(ld)r.scale.set(1+ld,1-ld,1+ld)});
+      chars.forEach(c=>{const r=c.root;if(c.B==="hofte"&&st!=="float"&&st!=="drones"&&Math.floor(beat/4)%3===1){const w=Math.min(1,(beat%4)*2,(4-beat%4)*2);r.rotation.y+=w*1.35;c.hips.rotation.z=Math.sin(beat*Math.PI*2)*.22*w}if(post>0)r.position.y+=post*post*3;if(pre>0){r.position.y+=pre*pre*3;r.rotation.y+=pre*Math.PI}const ld=L>.42&&L<.64?Math.sin((L-.42)/.22*Math.PI)*.2:0;if(ld)r.scale.set(1+ld,1-ld,1+ld)});
       const dq=(L-.42)/.6;dust.material.opacity=dq>0&&dq<1?.55*(1-dq):0;dust.scale.setScalar(1+Math.max(0,dq)*5);
       const fv=baseFov+(pre+post*.6)*14;if(cam.fov!==fv){cam.fov=fv;cam.updateProjectionMatrix()}
       // rekvisitter i bevægelse
@@ -2164,10 +2185,16 @@ function stageShow(onEnd){
       if(P.mp3.visible)P.mp3.rotation.y=Math.sin(time)*.5}
     else{camTo(Math.sin(time*.4)*9,4,12,0,3,0);chars.forEach((c,i)=>{const a=time*.8+i*Math.PI/2;c.root.position.set(Math.cos(a)*3,.6+Math.abs(Math.sin(time*3+i))*1.2,Math.sin(a)*2);c.root.rotation.set(0,-a,0);setArm(c,0,2.7,0,.2);setArm(c,1,2.7,0,.2)});
       [P.notes,P.records,P.flowers,P.smileys,P.floppy,P.phones,P.earbuds].forEach(g=>g.children.forEach((n,j)=>{const a=time*.5+j;n.position.x+=Math.cos(a)*.03;n.rotation.y+=.03}))}
+    // labradoren løber rundt om familien, flyver med og lander
+    {const g=dog.g,sg2=segs[si]||segs[0];
+      if(sg2.k==="open"){g.visible=L>3.3;if(g.visible){const q=Math.min(1,(L-3.3)/.5);g.position.set(0,.6+Math.sin(q*Math.PI)*1.6,2.4);g.rotation.set(0,0,0);dogRun(time,10)}}
+      else if(sg2.k==="fly"){g.visible=true;let cy2=0;chars.forEach(c=>cy2+=c.root.position.y/chars.length);g.position.set(Math.sin(time*1.7)*1.2,cy2-.8+Math.sin(time*3)*.3,1.2);g.rotation.set(L/D<.26?L*9:.9,Math.sin(time)*.4,Math.sin(time*2)*.3);dog.legs.forEach((l,k)=>l.rotation.x=(k<2?-1:1)*1.2);dog.tail.rotation.z=Math.sin(time*20)*.8;dog.ears.forEach((e,k)=>e.rotation.z=(k?1:-1)*(1.4+Math.sin(time*18+k)*.5))}
+      else{g.visible=true;const a=time*1.3,rx=3.9,rz=2.3,x=Math.cos(a)*rx,z=Math.sin(a)*rz+.9;g.position.set(x,.6+Math.abs(Math.sin(time*9))*.12,z);g.rotation.set(0,Math.atan2(-Math.sin(a)*rx,Math.cos(a)*rz),0);dogRun(time,11);
+        if(sg2.k==="era"){const pre=Math.max(0,1-(D-L)/.32),post=Math.max(0,1-L/.42);g.position.y+=pre*pre*3+post*post*3;if(Math.floor(time*.5)%4===0){g.position.y+=Math.abs(Math.sin(time*Math.PI))*1.1;g.rotation.x=-.3}}}}
     // ansigter vender altid mod kameraet, navneskilte over hovedet
     chars.forEach(c=>{if(!c.root.visible){c.face.visible=c.tag.visible=false;return}c.face.visible=c.tag.visible=true;c.head.getWorldPosition(tmp);tmp2.copy(cam.position).sub(tmp).normalize();c.face.position.copy(tmp).addScaledVector(tmp2,.58*c.s);c.tag.position.copy(tmp).add(new T.Vector3(0,1.05*c.s,0))});
     R.render(sc,cam);raf=requestAnimationFrame(tick)};
-  const end=skipped=>{if(ended)return;ended=true;clearTimeout(startSeg.t);clearTimeout(startSeg.p);cancelAnimationFrame(raf);removeEventListener("resize",resize);tr.forEach(x=>{try{clearInterval(x.a._f);x.a.pause()}catch(e){}});introBusEnd(skipped?.15:.8);try{speechSynthesis.cancel()}catch(e){}
+  const end=skipped=>{if(ended)return;ended=true;clearTimeout(startSeg.t);clearTimeout(startSeg.p);clearTimeout(startSeg.q);cancelAnimationFrame(raf);removeEventListener("resize",resize);AP.forEach(a=>{try{clearInterval(a._f);a.pause();a.muted=false;a.volume=1}catch(e){}});introBusEnd(skipped?.15:.8);try{speechSynthesis.cancel()}catch(e){}
     el.classList.add("out");setTimeout(()=>{el.remove();R.dispose()},600);onEnd&&onEnd()};
   el.querySelector(".i-skip").onclick=e=>{e.stopPropagation();end(true)};
   startSeg();raf=requestAnimationFrame(tick);
