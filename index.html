@@ -17,7 +17,7 @@
 <title>Skyldig!</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Bungee+Shade&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Bungee+Shade&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Monoton&family=Baloo+2:wght@500;600;800&display=swap">
 <style>
 /* Layout: one-screen game-show stage with spotlight beams; every step is one focused card; the reveal is a detective board with red threads, a seismograph for disagreement and a race track to 21 */
 :root{
@@ -78,6 +78,9 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-with
 .mode button{text-align:left;padding:18px;border-radius:16px;background:var(--stage-2);border:2px solid var(--line);display:flex;flex-direction:column;gap:4px;transition:border-color .2s,transform .2s}
 .mode button:hover{border-color:var(--hot);transform:translateY(-2px)}
 .mode b{font-family:var(--f-display);font-weight:400;font-size:20px;color:var(--bulb)}
+.mode .discobtn{background:linear-gradient(120deg,#ff3fa4,#ff8a00,#ffd400,#00c2ff,#7a3cff);border:3px solid #fffaf0;color:#1a1035}
+.mode .discobtn b{font-family:"Monoton","Arial Black",sans-serif;color:#fffaf0;font-size:26px;text-shadow:2px 2px 0 #1a1035}
+.mode .discobtn span{font-weight:800}
 .pitch{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .pitch div{border-radius:12px;padding:10px 12px;background:var(--stage-2);border-left:4px solid var(--c);font-size:13px;color:var(--muted)}
 .pitch b{display:block;font-family:var(--f-display);font-weight:400;font-size:13px;color:var(--ink);letter-spacing:.04em}
@@ -257,6 +260,70 @@ button[aria-pressed=true].who,button[aria-pressed=true].opt{border-color:var(--t
 .upl input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
 .judgebox{text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center;font-size:18px;animation:deal .5s both}
 .vt.ok .av{box-shadow:0 0 0 3px var(--ok)}.vt.no{opacity:.45}
+/* Disko: solnedgangsfarver, pop-art-kanter og en diskokugle */
+body.disco{background:linear-gradient(135deg,#ff3fa4,#ff8a00,#ffd400,#00c2ff,#7a3cff);background-size:400% 400%;animation:dgrad 16s ease infinite;color:#1a1035;font-family:"Baloo 2",system-ui,sans-serif}
+@keyframes dgrad{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+body.disco .beams,body.disco #bg{display:none}
+body.disco .c{text-align:center}
+#dz{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;mix-blend-mode:screen}
+.dtop{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.dchip{font-family:"Baloo 2",system-ui,sans-serif;font-weight:800;font-size:14px;padding:6px 14px;border-radius:999px;background:#fffaf0;color:#1a1035;border:3px solid #1a1035;box-shadow:3px 3px 0 #1a1035}
+.dchip.solid{background:#1a1035;color:#fffaf0}
+.ball-wrap{display:flex;flex-direction:column;align-items:center;margin-top:-18px}
+.ball-string{width:3px;height:40px;background:#1a1035}
+.ball{animation:swing 3s ease-in-out infinite alternate;transform-origin:50% -40px;filter:drop-shadow(0 10px 20px rgba(26,16,53,.4));max-width:100%}
+@keyframes swing{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+.dlogo{font-family:"Monoton","Arial Black",sans-serif;font-weight:400;font-size:clamp(64px,22vw,120px);line-height:1;margin:0;text-align:center;color:#fffaf0;text-shadow:4px 4px 0 #1a1035,0 0 30px #fff;letter-spacing:.04em}
+.dlogo.sm{font-size:clamp(34px,10vw,58px)}
+.dtag{text-align:center;font-weight:800;font-size:17px;color:#1a1035;margin-top:-6px}
+.dmodes{display:grid;gap:12px}
+.dcard{display:flex;flex-direction:column;gap:2px;text-align:left;padding:16px 18px;border-radius:20px;background:#fffaf0;border:3px solid #1a1035;box-shadow:6px 6px 0 #1a1035;transition:transform .15s,box-shadow .15s}
+.dcard b{font-family:"Monoton","Arial Black",sans-serif;font-weight:400;font-size:26px;color:var(--c);line-height:1.1}
+.dcard span{color:#3b2f6b;font-weight:600}
+.dcard:active{transform:translate(4px,4px);box-shadow:2px 2px 0 #1a1035}
+.drounds{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.drounds span{background:var(--c);color:#fffaf0;font-weight:800;padding:4px 12px;border-radius:999px;border:3px solid #1a1035;font-size:14px}
+.dnote,.dsmall{font-size:14px;color:#2a2050;font-weight:600;margin:0}
+.dnote{background:rgba(255,250,240,.8);border-radius:14px;padding:10px 14px;border:2px solid #1a1035}
+.dh{font-family:"Monoton","Arial Black",sans-serif;font-weight:400;font-size:30px;text-align:center;color:#fffaf0;text-shadow:3px 3px 0 #1a1035;margin:0}
+.dpanel{background:#fffaf0;border:3px solid #1a1035;box-shadow:5px 5px 0 #1a1035;border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.dplayers{display:flex;flex-wrap:wrap;gap:8px}
+.dpl{display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:999px;border:3px solid #1a1035;background:#fff;font-weight:800;color:#1a1035}
+.dpl.on{background:var(--c);color:#fffaf0;text-shadow:1px 1px 0 #1a1035}
+.dpl.gold.on{background:#ffd400;color:#1a1035;text-shadow:none}
+.awv{min-width:18px}
+.gold-dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff6b0,#e0a800);border:2px solid #1a1035}
+.dbtn{display:block;text-align:center;text-decoration:none;font-family:"Baloo 2",system-ui,sans-serif;font-weight:800;font-size:20px;padding:14px;border-radius:18px;background:var(--c);color:#fffaf0;border:3px solid #1a1035;box-shadow:5px 5px 0 #1a1035;width:100%;text-shadow:1px 1px 0 #1a1035}
+.dbtn:active{transform:translate(4px,4px);box-shadow:1px 1px 0 #1a1035}
+.dbanner{background:var(--c);border:3px solid #1a1035;box-shadow:5px 5px 0 #1a1035;border-radius:20px;padding:14px 16px;color:#fffaf0;display:flex;flex-direction:column;gap:2px;animation:typein .6s cubic-bezier(.2,1.3,.4,1) both;text-shadow:1px 1px 0 #1a1035}
+.dbanner b{font-family:"Monoton","Arial Black",sans-serif;font-weight:400;font-size:clamp(24px,8vw,34px);line-height:1.1;text-shadow:2px 2px 0 #1a1035}
+.dbanner span{font-weight:800}.dbanner small{font-weight:700}
+.dprev{background:#fffaf0;border:3px dashed #1a1035;border-radius:14px;padding:10px 12px;font-weight:600}
+.vinyl-wrap{display:grid;place-items:center;padding-block:4px}
+.vinyl{width:min(240px,62vw);max-width:100%;aspect-ratio:1;border-radius:50%;background:repeating-radial-gradient(circle,#14101f 0 2px,#221a33 2px 4px);border:4px solid #1a1035;box-shadow:0 14px 30px rgba(26,16,53,.45),inset 0 0 0 10px #0d0a16;display:grid;place-items:center;animation:spin 2.4s linear infinite;position:relative}
+.vinyl::after{content:"";position:absolute;inset:8%;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 40deg,rgba(255,255,255,.18) 50deg,transparent 70deg 220deg,rgba(255,255,255,.12) 230deg,transparent 250deg);pointer-events:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.label{width:44%;aspect-ratio:1;border-radius:50%;background:var(--c);border:3px solid #1a1035;display:grid;place-items:center;text-align:center;padding:6px;z-index:1;animation:spin 2.4s linear infinite reverse;transition:width .4s}
+.vinyl.revealed,.vinyl.revealed .label{animation-duration:7s}
+.vinyl.revealed .label{width:66%}
+.lab-in{display:flex;flex-direction:column;color:#fffaf0;line-height:1.1;min-width:0;text-shadow:1px 1px 0 #1a1035;overflow:hidden}
+.lab-in b{font-size:15px}.lab-in span{font-size:12px;font-weight:700}.lab-in em{font-style:normal;font-family:"Monoton","Arial Black",sans-serif;font-size:22px}
+.dopts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dopt{background:var(--c);color:#1a1035;border:3px solid #1a1035;box-shadow:4px 4px 0 #1a1035;border-radius:16px;padding:12px 10px;font-weight:800;text-align:center;font-size:17px;min-height:64px;display:grid;place-items:center;word-break:break-word;min-width:0;transition:opacity .3s,transform .3s}
+.dopt.right{transform:scale(1.05) rotate(-2deg);background:#fffaf0;box-shadow:0 0 0 4px #18c26b,4px 4px 0 4px #1a1035}
+.dopt.wrong{opacity:.35}
+.dscores{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.dsc{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:999px;background:#fffaf0;border:3px solid #1a1035;font-weight:800}
+.dsc b{font-size:18px}
+.bgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.bsq{aspect-ratio:1;max-width:100%;border-radius:14px;border:3px solid #1a1035;background:#fffaf0;font-weight:800;font-size:clamp(11px,3.2vw,15px);line-height:1.1;padding:4px;color:#1a1035;box-shadow:3px 3px 0 #1a1035;display:grid;place-items:center;text-align:center;word-break:break-word;position:relative;font-family:"Baloo 2",system-ui,sans-serif}
+.bsq.on{background:var(--c,#ffd400);color:#fffaf0;text-shadow:1px 1px 0 #1a1035;animation:pop .35s cubic-bezier(.2,1.8,.4,1)}
+.bsq.on::after{content:"";position:absolute;inset:12%;border-radius:50%;border:4px solid rgba(26,16,53,.55);pointer-events:none}
+.bsq.free{background:#1a1035;overflow:hidden}.bsq.free::after{display:none}
+.bsq.free .ball-wrap{margin:0}.bsq.free .ball-string{display:none}
+.drow{display:grid;grid-template-columns:24px auto 1fr auto;gap:10px;align-items:center;padding:4px 0}
+.drow em{font-style:normal;font-family:"Monoton","Arial Black",sans-serif;font-size:24px;color:#1a1035}
+.drk{font-weight:800}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -971,8 +1038,8 @@ async function finalScreen(G,players,againLabel,again){
 /* =========================================================
    NAVIGATION
    ========================================================= */
-function go(view,patch){Object.assign(S,patch||{},{view});showTray(false);render()}
-function render(){({home:homeView,studio:studioView,setup:setupView,local:localView,online:onlineView}[S.view]||homeView)()}
+function go(view,patch){if(view!=="disco"&&document.body.classList.contains("disco"))discoLeave();Object.assign(S,patch||{},{view});showTray(false);render()}
+function render(){({home:homeView,studio:studioView,setup:setupView,local:localView,online:onlineView,disco:discoView}[S.view]||homeView)()}
 
 function homeView(){
   setTheme("who");
@@ -982,6 +1049,7 @@ function homeView(){
   <div class="mode">
     <button id="m-online"><b>Hver sin telefon</b><span class="muted">Opret et rum med en kode. Alle telefoner reagerer samtidig.</span></button>
     <button id="m-local"><b>Én telefon</b><span class="muted">Send telefonen rundt om bordet.</span></button>
+    <button id="m-disco" class="discobtn"><b>Disko</b><span>Musikspillet: diskokugle, bingo og sange fra 1939 til i dag.</span></button>
     <button id="m-studio"><b>Familiestudiet</b><span class="muted">Rejser, kælenavne, familieord, citater og jeres egne kastebilleder.</span></button>
   </div>
   <div class="pitch">
@@ -993,7 +1061,7 @@ function homeView(){
   wireMute();
   $("#m-local").onclick=()=>{SFX.whoosh();go("setup")};
   $("#m-online").onclick=()=>{SFX.whoosh();ON.enter()};
-  $("#m-studio").onclick=()=>{SFX.whoosh();go("studio",{tab:"trips"})};
+  $("#m-studio").onclick=()=>{SFX.whoosh();go("studio",{tab:"trips"})};$("#m-disco").onclick=()=>{SFX.whoosh();go("disco",{dv:"home"})};
 }
 
 /* =========================================================
@@ -1220,6 +1288,193 @@ function onlineView(){
     return;
   }
   if(R.status==="end"){if(o.shown==="end")return;o.shown="end";finalScreen(R,S.players,o.isHost()?"Ny omgang i samme rum":"Venter på værten",()=>{if(o.isHost())o.setRoom({status:"lobby"})})}
+}
+
+/* =========================================================
+   DISKO: musik-underspillet
+   ========================================================= */
+/* [kunstner, titel, år, dansk, form, vokal, mindre kendt, eurovision] */
+const SONGS=[
+ ["Glenn Miller","In the Mood",1939,0,"band","i",0,0],["Judy Garland","Over the Rainbow",1939,0,"solo","f",0,0],["Bing Crosby","White Christmas",1942,0,"solo","m",0,0],["Édith Piaf","La Vie en rose",1947,0,"solo","f",0,0],
+ ["Elvis Presley","Heartbreak Hotel",1956,0,"solo","m",0,0],["Chuck Berry","Johnny B. Goode",1958,0,"solo","m",0,0],["The Beatles","Love Me Do",1962,0,"band","m",0,0],["Grethe og Jørgen Ingmann","Dansevise",1963,1,"duo","mix",0,1],
+ ["The Rolling Stones","(I Can't Get No) Satisfaction",1965,0,"band","m",0,0],["The Beatles","Rain",1966,0,"band","m",1,0],["Louis Armstrong","What a Wonderful World",1967,0,"solo","m",0,0],["Elvis Presley","Suspicious Minds",1969,0,"solo","m",0,0],["Frank Sinatra","My Way",1969,0,"solo","m",0,0],
+ ["John Lennon","Imagine",1971,0,"solo","m",0,0],["David Bowie","Starman",1972,0,"solo","m",1,0],["ABBA","Waterloo",1974,0,"band","mix",0,1],["Gasolin'","Rabalderstræde",1975,1,"band","m",0,0],["Gasolin'","Kvinde min",1975,1,"band","m",0,0],
+ ["Queen","Bohemian Rhapsody",1975,0,"band","m",0,0],["Queen","'39",1975,0,"band","m",1,0],["ABBA","Dancing Queen",1976,0,"band","f",0,0],["Bee Gees","Stayin' Alive",1977,0,"band","m",0,0],["Fleetwood Mac","Dreams",1977,0,"band","f",0,0],
+ ["Pink Floyd","Another Brick in the Wall (Part 2)",1979,0,"band","m",0,0],["TV-2","Hele ugen alene",1981,1,"band","m",1,0],["TV-2","Fantastiske Toyota",1981,1,"band","m",0,0],["ABBA","The Day Before You Came",1982,0,"band","f",1,0],["Toto","Africa",1982,0,"band","m",0,0],
+ ["Michael Jackson","Beat It",1983,0,"solo","m",0,0],["Michael Jackson","Human Nature",1983,0,"solo","m",1,0],["Kim Larsen","Midt om natten",1983,1,"solo","m",0,0],["Gnags","Slingrer ned ad Vestergade",1983,1,"band","m",0,0],["Laid Back","Sunshine Reggae",1983,1,"duo","m",0,0],
+ ["Prince","Purple Rain",1984,0,"solo","m",0,0],["a-ha","The Sun Always Shines on T.V.",1985,0,"band","m",1,0],["Prince","Kiss",1986,0,"solo","m",0,0],["Whitney Houston","I Wanna Dance with Somebody",1987,0,"solo","f",0,0],["Madonna","Like a Prayer",1989,0,"solo","f",0,0],
+ ["Roxette","The Look",1989,0,"duo","mix",0,0],["D-A-D","Sleeping My Day Away",1989,1,"band","m",0,0],["Nirvana","Smells Like Teen Spirit",1991,0,"band","m",0,0],["Whitney Houston","I Will Always Love You",1992,0,"solo","f",0,0],["Dizzy Mizz Lizzy","Silverflame",1994,1,"band","m",0,0],
+ ["Spice Girls","Wannabe",1996,0,"band","f",0,0],["Aqua","Roses Are Red",1996,1,"band","mix",1,0],["Aqua","Barbie Girl",1997,1,"band","mix",0,0],["Madonna","Frozen",1998,0,"solo","f",1,0],["Britney Spears","...Baby One More Time",1998,0,"solo","f",0,0],
+ ["Olsen Brothers","Fly on the Wings of Love",2000,1,"duo","m",0,1],["Safri Duo","Played-A-Live (The Bongo Song)",2000,1,"duo","i",0,0],["Eminem","Lose Yourself",2002,0,"solo","m",0,0],["Nik & Jay","Elsker hende mere",2003,1,"duo","m",0,0],["Mew","Comforting Sounds",2003,1,"band","m",1,0],
+ ["Beyoncé","Crazy in Love",2003,0,"solo","f",0,0],["Infernal","From Paris to Berlin",2004,1,"duo","f",0,0],["Nik & Jay","Boing!",2006,1,"duo","m",1,0],["Amy Winehouse","Rehab",2006,0,"solo","f",0,0],["Alphabeat","Fascination",2007,1,"band","mix",0,0],
+ ["Medina","Kun for mig",2008,1,"solo","f",0,0],["Volbeat","Still Counting",2008,1,"band","m",0,0],["Rasmus Seebach","Natteravn",2009,1,"solo","m",0,0],["Robyn","Dancing On My Own",2010,0,"solo","f",0,0],["Adele","Rolling in the Deep",2010,0,"solo","f",0,0],
+ ["Emmelie de Forest","Only Teardrops",2013,1,"solo","f",0,1],["Avicii","Wake Me Up",2013,0,"solo","m",0,0],["Taylor Swift","Shake It Off",2014,0,"solo","f",0,0],["Lukas Graham","7 Years",2015,1,"band","m",0,0],["Lukas Graham","Mama Said",2015,1,"band","m",1,0],
+ ["Major Lazer, DJ Snake & MØ","Lean On",2015,1,"band","f",0,0],["Ed Sheeran","Shape of You",2017,0,"solo","m",0,0],["Billie Eilish","Bad Guy",2019,0,"solo","f",0,0],["The Weeknd","Blinding Lights",2019,0,"solo","m",0,0],["Harry Styles","As It Was",2022,0,"solo","m",0,0],["Miley Cyrus","Flowers",2023,0,"solo","f",0,0],
+].map(([artist,title,year,dk,form,voc,rare,euro],i)=>({id:i,artist,title,year,dk:!!dk,form,voc,rare:!!rare,euro:!!euro}));
+const decadeOf=y=>Math.floor(y/10)*10;
+const decName=d=>d<1960?"Før 1960":`${String(d).slice(2)}'erne`;
+const appleLink=s=>"https://music.apple.com/dk/search?term="+encodeURIComponent(s.artist+" "+s.title);
+const DRT={
+ aar:{name:"Årstals-dart",color:"#ff3fa4",sub:"Gæt udgivelsesåret. Jo tættere, jo flere point.",pts:"Præcist 3 · inden for 2 år 2 · rigtigt årti 1"},
+ kunstner:{name:"Hvem synger?",color:"#00b8ff",sub:"Gæt kunstneren.",pts:"Rigtigt 2"},
+ titel:{name:"Hvad hedder den?",color:"#ff8a00",sub:"Gæt titlen.",pts:"Rigtigt 2"},
+ aarti:{name:"Tidsmaskinen",color:"#7a3cff",sub:"Hvilket årti er den fra?",pts:"Rigtigt 1"},
+ foreller:{name:"Før eller efter?",color:"#18c26b",sub:"Er den ældre eller nyere end forrige plade?",pts:"Rigtigt 1"},
+};
+const DISCO_TARGET=15;
+/* bingo-felter: tekst og test */
+const BINGO_SQ=[
+ ["Før 1960",s=>s.year<1960],["60'erne",s=>decadeOf(s.year)===1960],["70'erne",s=>decadeOf(s.year)===1970],["80'erne",s=>decadeOf(s.year)===1980],["90'erne",s=>decadeOf(s.year)===1990],["00'erne",s=>decadeOf(s.year)===2000],["10'erne",s=>decadeOf(s.year)===2010],["20'erne",s=>s.year>=2020],
+ ["Dansk kunstner",s=>s.dk],["Udenlandsk kunstner",s=>!s.dk],["Et band",s=>s.form==="band"],["En solist",s=>s.form==="solo"],["En duo",s=>s.form==="duo"],["Kvindelig vokal",s=>s.voc==="f"],["Mandlig vokal",s=>s.voc==="m"],["Mand og kvinde synger",s=>s.voc==="mix"],
+ ["Eurovision",s=>s.euro],["Titel på ét ord",s=>!/\s/.test(s.title.replace(/[()'.!]/g,"").trim())],["Fra før 1980",s=>s.year<1980],["Fra efter 2000",s=>s.year>2000],["Lige årstal",s=>s.year%2===0],["Ulige årstal",s=>s.year%2===1],["Mindre kendt sang",s=>s.rare],["En kunstner med to sange her",s=>SONGS.filter(x=>x.artist===s.artist).length>1],
+];
+
+/* ---------- beat ---------- */
+const BEAT={on:false,timer:null,step:0,next:0,want:store("disco.beat")!==false,
+  start(){const a=ac();if(!a||this.on)return;this.on=true;this.step=0;this.next=a.currentTime+.05;const spb=60/118/4;
+    const bass=[55,55,65.4,55,73.4,55,65.4,49];
+    this.timer=setInterval(()=>{const a=ac();if(!a)return;while(this.next<a.currentTime+.12){const s=this.step%16,t=this.next-a.currentTime;
+      if(s%4===0){tone(150,.16,"sine",.16,45,t)}
+      if(s%4===2)noise(.04,.035,8000,t);
+      if(s===4||s===12)noise(.12,.07,1800,t);
+      if(s%2===0)tone(bass[(s/2)|0],.13,"sawtooth",.035,null,t);
+      if(s%8===6)tone(659*(this.step%32<16?1:1.12),.08,"triangle",.025,null,t);
+      this.step++;this.next+=spb}},30)},
+  stop(){this.on=false;clearInterval(this.timer)},
+  toggle(){this.want=!this.want;store("disco.beat",this.want);this.want?this.start():this.stop()}
+};
+const DSFX={
+ scratch:()=>{noise(.25,.2,900,0,3000);noise(.2,.18,3000,.22,600)},
+ chord:()=>[523,659,784,1046].forEach((f,i)=>tone(f,.5,"triangle",.07,null,i*.05)),
+ yay:()=>[784,988,1175,1568].forEach((f,i)=>tone(f,.18,"square",.05,null,i*.09)),
+ pop:()=>tone(880,.06,"sine",.12,1600),
+ bingo:()=>{[523,659,784,1046,1319,1568].forEach((f,i)=>tone(f,.22,"square",.06,null,i*.1));SFX.airhorn()},
+ whoop:()=>tone(300,.4,"sine",.1,1200),
+};
+
+/* ---------- diskokugle og lyspletter ---------- */
+let DZ=null;
+function discoFx(on){
+  if(!on){if(DZ){DZ.alive=false;DZ.c.remove();DZ=null}return}
+  if(DZ)return;const c=document.createElement("canvas");c.id="dz";document.body.prepend(c);const x=c.getContext("2d");
+  const spots=Array.from({length:46},(_,i)=>({a:Math.random()*Math.PI*2,r:.15+Math.random()*.9,s:(Math.random()*.4+.2)*(i%2?1:-1),z:Math.random()*5+3,h:["#fff","#ffe14d","#ff7ad9","#7fe7ff","#b38cff"][i%5]}));
+  DZ={c,alive:true};const loop=t=>{if(!DZ||!DZ.alive)return;const w=c.width=innerWidth*devicePixelRatio,h=c.height=innerHeight*devicePixelRatio;x.clearRect(0,0,w,h);
+    const cx=w/2,cy=-h*.05;spots.forEach(p=>{const a=p.a+t/1000*p.s*.3;const px=cx+Math.cos(a)*p.r*w*.8,py=cy+Math.abs(Math.sin(a))*p.r*h*1.1+h*.1;x.globalAlpha=.35+.25*Math.sin(t/300+p.z);x.fillStyle=p.h;x.beginPath();x.ellipse(px,py,p.z*devicePixelRatio*1.6,p.z*devicePixelRatio,a,0,7);x.fill()});
+    x.globalAlpha=1;if(!RM)requestAnimationFrame(loop)};requestAnimationFrame(loop);
+}
+function ballHTML(size=150){return `<div class="ball-wrap"><span class="ball-string"></span><canvas class="ball" width="${size*2}" height="${size*2}" style="width:${size}px;height:${size}px"></canvas></div>`}
+function spinBalls(){app.querySelectorAll("canvas.ball").forEach(c=>{if(c._on)return;c._on=true;const x=c.getContext("2d"),R=c.width/2;
+  const loop=t=>{if(!c.isConnected)return;x.clearRect(0,0,c.width,c.height);x.save();x.beginPath();x.arc(R,R,R-2,0,7);x.clip();
+    const g=x.createRadialGradient(R*.7,R*.6,R*.1,R,R,R);g.addColorStop(0,"#f6f0ff");g.addColorStop(1,"#3b2f6b");x.fillStyle=g;x.fillRect(0,0,c.width,c.height);
+    const rows=14,rot=(t/4000)%1;for(let i=0;i<rows;i++){const la=-Math.PI/2+(i+.5)/rows*Math.PI,y=R+Math.sin(la)*R,cr=Math.cos(la),cols=Math.max(4,Math.round(26*cr)),th=R*Math.PI/rows;
+      for(let j=0;j<cols;j++){const lo=(j/cols+rot)*Math.PI*2;const cz=Math.cos(lo);if(cz<0)continue;const px=R+Math.sin(lo)*cr*R,w=Math.max(1,(Math.PI*2*R*cr/cols)*cz*.9);
+        const sp=Math.sin(lo*7+i*3+t/180);const b=40+cz*120+(sp>.96?120:0);x.fillStyle=`rgb(${b+20},${b+10},${Math.min(255,b+60)})`;x.fillRect(px-w/2,y-th/2+1,w,th-1.5);
+        if(sp>.985){x.fillStyle="#fff";x.beginPath();x.arc(px,y,th*.5,0,7);x.fill()}}}
+    x.restore();if(!RM)requestAnimationFrame(loop)};requestAnimationFrame(loop)})}
+
+/* ---------- visning ---------- */
+const D={};
+function discoEnter(){document.body.classList.add("disco");discoFx(true);if(BEAT.want)BEAT.start()}
+function discoLeave(){document.body.classList.remove("disco");discoFx(false);BEAT.stop()}
+const beatBtn=()=>`<button class="dchip" id="beat">${BEAT.want?"Beat til":"Beat fra"}</button>`;
+function wireBeat(){const b=$("#beat");if(b)b.onclick=()=>{BEAT.toggle();b.textContent=BEAT.want?"Beat til":"Beat fra"}}
+function discoView(){
+  discoEnter();const v=S.dv||"home";
+  if(v==="home"){
+    app.innerHTML=`<div class="dtop"><button class="dchip" id="dback">Til Skyldig!</button>${beatBtn()}</div>
+    ${ballHTML(150)}<h1 class="dlogo">DISKO</h1><p class="dtag">Musikspillet · 1939 til i dag · med dansk krydderi</p>
+    <div class="dmodes">
+      <button class="dcard" id="d-dj" style="--c:#ff3fa4"><b>DJ-runder</b><span>Én telefon er DJ. Fem slags runder og guldplader. Først til ${DISCO_TARGET}.</span></button>
+      <button class="dcard" id="d-bingo" style="--c:#00b8ff"><b>Disko-bingo</b><span>Din egen bingoplade på din egen telefon. Sæt kryds, når en sang passer.</span></button>
+      <button class="dcard" id="d-bdj" style="--c:#ff8a00"><b>Bingo-DJ</b><span>Afspil sange til bingoen. Ingen point, bare musik.</span></button>
+    </div>
+    <div class="drounds">${Object.values(DRT).map(r=>`<span style="--c:${r.color}">${r.name}</span>`).join("")}</div>
+    <p class="dnote">Sangene åbner i Apple Music. Spil dem over en højttaler, og hold skærmen væk fra de andre.</p>`;
+    spinBalls();wireBeat();$("#dback").onclick=()=>{discoLeave();go("home")};
+    $("#d-dj").onclick=()=>{DSFX.whoop();discoSetup()};$("#d-bingo").onclick=()=>{DSFX.whoop();go("disco",{dv:"bingo"})};$("#d-bdj").onclick=()=>{DSFX.whoop();D.mode="bingo";D.deck=shuffle(SONGS);D.i=-1;D.prev=null;discoNextSong()};
+    return;
+  }
+  if(v==="setup"){
+    const ps=S.lp||store("skyldig.localplayers")||["Mor","Far","Søster","Mig"].map((n,i)=>({id:"p"+i,name:n,color:COLORS[i]}));S.lp=ps;
+    app.innerHTML=`<div class="dtop"><button class="dchip" id="dback">Tilbage</button>${beatBtn()}</div><h2 class="dh">Hvem danser med?</h2>
+    <div class="dpanel"><div class="dplayers">${ps.map(p=>`<span class="dpl" style="--c:${p.color}">${av(p,"m")}${esc(p.name)}</span>`).join("")}</div><p class="dsmall">Spillerne hentes fra Skyldig. Ret dem under "Én telefon" i Skyldig.</p></div>
+    <div class="dpanel"><b>Guldpladen</b><p class="dsmall">Alle har én guldplade pr. spil. Brug den før afsløringen for at få dobbelt point i den runde.</p></div>
+    <button class="dbtn" id="dgo" style="--c:#ff3fa4">Start festen</button>`;
+    wireBeat();$("#dback").onclick=()=>go("disco",{dv:"home"});
+    $("#dgo").onclick=()=>{D.mode="dj";D.players=ps.map((p,i)=>({...p,color:COLORS[i%8]}));D.scores={};D.gold={};D.deck=shuffle(SONGS);D.i=-1;D.prev=null;D.n=0;discoNextSong()};
+    return;
+  }
+  if(v==="song")return discoSongView();
+  if(v==="bingo")return bingoView();
+  if(v==="end")return discoEndView();
+}
+function discoSetup(){go("disco",{dv:"setup"})}
+function discoNextSong(){
+  D.i++;if(D.i>=D.deck.length){D.deck=shuffle(SONGS);D.i=0}
+  D.prev=D.song||null;D.song=D.deck[D.i];D.n=(D.n||0)+1;D.revealed=false;D.award={};D.useGold={};
+  const types=D.prev?["aar","kunstner","titel","aarti","foreller"]:["aar","kunstner","titel","aarti"];
+  D.type=D.mode==="bingo"?null:types[(D.n-1)%types.length];
+  if(D.type==="foreller"&&D.prev&&D.prev.year===D.song.year)D.type="aar";
+  D.opts=discoOpts(D.type,D.song);go("disco",{dv:"song"});
+}
+function discoOpts(type,s){
+  if(type==="kunstner"){const o=shuffle([...new Set(SONGS.map(x=>x.artist))].filter(a=>a!==s.artist)).slice(0,3);return shuffle([s.artist,...o])}
+  if(type==="titel"){const o=shuffle(SONGS.filter(x=>x.id!==s.id)).slice(0,3).map(x=>x.title);return shuffle([s.title,...o])}
+  if(type==="aarti"){const d=decadeOf(s.year),all=[];for(let x=1930;x<=2020;x+=10)all.push(x);const near=all.filter(x=>x!==d).sort((a,b)=>Math.abs(a-d)-Math.abs(b-d)).slice(0,5);return shuffle([d,...shuffle(near).slice(0,3)]).map(decName)}
+  if(type==="foreller")return ["Ældre","Nyere"];
+  return [];
+}
+function discoAnswer(){const s=D.song;if(D.type==="kunstner")return s.artist;if(D.type==="titel")return s.title;if(D.type==="aarti")return decName(decadeOf(s.year));if(D.type==="foreller")return s.year<D.prev.year?"Ældre":"Nyere";return String(s.year)}
+function scoreBar(){if(D.mode!=="dj")return "";return `<div class="dscores">${D.players.map(p=>`<span class="dsc" style="--c:${p.color}">${av(p)}<b>${D.scores[p.id]||0}</b>${D.gold[p.id]?"":`<i class="gold-dot" title="Har guldplade"></i>`}</span>`).join("")}</div>`}
+function discoSongView(){
+  const s=D.song,T=D.type?DRT[D.type]:null;
+  const label=D.revealed?`<div class="lab-in"><b>${esc(s.artist)}</b><span>${esc(s.title)}</span><em>${s.year}</em></div>`:`<div class="lab-in"><b>?</b><span>Plade ${D.n}</span></div>`;
+  app.innerHTML=`<div class="dtop"><button class="dchip" id="dback">Stop</button><span class="dchip solid">${D.mode==="dj"?`Runde ${D.n}`:`Sang ${D.n}`}</span>${beatBtn()}</div>
+  ${scoreBar()}
+  ${T?`<div class="dbanner" style="--c:${T.color}"><b>${esc(T.name)}</b><span>${esc(T.sub)}</span><small>${esc(T.pts)}</small></div>`:`<div class="dbanner" style="--c:#ff8a00"><b>Bingo-DJ</b><span>Afspil, afslør, og lad alle sætte kryds.</span></div>`}
+  ${D.type==="foreller"?`<div class="dprev">Forrige plade: <b>${esc(D.prev.artist)} · ${esc(D.prev.title)}</b> (${D.prev.year})</div>`:""}
+  <div class="vinyl-wrap"><div class="vinyl${D.revealed?" revealed":""}"><div class="label" style="--c:${T?T.color:"#ff8a00"}">${label}</div></div></div>
+  <a class="dbtn play" href="${appleLink(s)}" target="_blank" rel="noopener" id="dplay" style="--c:#fc3c44">Afspil i Apple Music</a>
+  ${D.opts.length?`<div class="dopts">${D.opts.map((o,i)=>`<div class="dopt${D.revealed&&o===discoAnswer()?" right":D.revealed?" wrong":""}" style="--c:${["#ff3fa4","#00b8ff","#ffd400","#18c26b"][i%4]}">${esc(o)}</div>`).join("")}</div>`:""}
+  ${D.mode==="dj"&&!D.revealed?`<div class="dpanel"><b>Guldplader</b><p class="dsmall">Tryk på dem, der satser deres guldplade på denne runde.</p><div class="dplayers">${D.players.filter(p=>!D.gold[p.id]).map(p=>`<button class="dpl gold${D.useGold[p.id]?" on":""}" data-gold="${esc(p.id)}" style="--c:${p.color}">${av(p,"m")}${esc(p.name)}</button>`).join("")||'<span class="dsmall">Alle guldplader er brugt.</span>'}</div></div>`:""}
+  ${D.revealed&&D.mode==="dj"?`<div class="dpanel"><b>Hvem ramte?</b><p class="dsmall">${D.type==="aar"?"Tryk flere gange: 1 = rigtigt årti, 2 = inden for 2 år, 3 = præcist.":"Tryk på alle, der svarede rigtigt."}</p><div class="dplayers">${D.players.map(p=>`<button class="dpl award${D.award[p.id]?" on":""}" data-aw="${esc(p.id)}" style="--c:${p.color}">${av(p,"m")}${esc(p.name)}<b class="awv">${D.award[p.id]?"+"+(D.award[p.id]*(D.useGold[p.id]?2:1)):""}</b>${D.useGold[p.id]?'<i class="gold-dot"></i>':""}</button>`).join("")}</div></div>`:""}
+  ${D.revealed?`<button class="dbtn" id="dnext" style="--c:#7a3cff">${D.mode==="dj"?"Giv point og næste plade":"Næste sang"}</button>`:`<button class="dbtn" id="drev" style="--c:#18c26b">Afslør</button>`}`;
+  spinVinyl();wireBeat();
+  $("#dback").onclick=()=>go("disco",{dv:D.mode==="dj"&&Object.keys(D.scores).length?"end":"home"});
+  $("#dplay").addEventListener("click",()=>{if(BEAT.on){BEAT.stop()}DSFX.pop()});
+  app.querySelectorAll("[data-gold]").forEach(b=>b.onclick=()=>{const id=b.dataset.gold;D.useGold[id]=!D.useGold[id];b.classList.toggle("on",!!D.useGold[id]);DSFX.pop()});
+  app.querySelectorAll("[data-aw]").forEach(b=>b.onclick=()=>{const id=b.dataset.aw,max=DPTS(D.type,3);let v=(D.award[id]||0);v=D.type==="aar"?(v+1)%4:(v?0:max);D.award[id]=v;b.classList.toggle("on",!!v);b.querySelector(".awv").textContent=v?"+"+v*(D.useGold[id]?2:1):"";v?DSFX.pop():SFX.boing()});
+  const rv=$("#drev");if(rv)rv.onclick=()=>{D.revealed=true;DSFX.scratch();setTimeout(()=>{DSFX.chord();confetti(160,.3)},350);discoSongView();if(BEAT.want&&!BEAT.on)setTimeout(()=>BEAT.start(),1200)};
+  const nx=$("#dnext");if(nx)nx.onclick=()=>{
+    if(D.mode==="dj"){Object.entries(D.award).forEach(([id,v])=>{if(v)D.scores[id]=(D.scores[id]||0)+v*(D.useGold[id]?2:1)});Object.keys(D.useGold).forEach(id=>{if(D.useGold[id])D.gold[id]=true});
+      if(Object.values(D.award).some(Boolean))DSFX.yay();if(Object.values(D.scores).some(v=>v>=DISCO_TARGET))return go("disco",{dv:"end"})}
+    discoNextSong()};
+}
+const DPTS=(type,lvl)=>type==="aar"?lvl:type==="kunstner"||type==="titel"?2:1;
+function spinVinyl(){}
+function discoEndView(){
+  const ps=D.players||[],sc=D.scores||{};const list=ps.slice().sort((a,b)=>(sc[b.id]||0)-(sc[a.id]||0)),top=sc[list[0]?.id]||0;
+  app.innerHTML=`<div class="dtop"><span></span>${beatBtn()}</div>${ballHTML(170)}<h1 class="dlogo sm">${list.filter(p=>(sc[p.id]||0)===top).map(p=>esc(p.name)).join(" & ")}</h1><p class="dtag">Aftenens dansegulvskonge · ${top} point</p>
+  <div class="dpanel">${list.map((p,i)=>`<div class="drow" style="--c:${p.color}"><span class="drk">${i+1}</span>${av(p,"m")}<b>${esc(p.name)}</b><em>${sc[p.id]||0}</em></div>`).join("")}</div>
+  <button class="dbtn" id="dagain" style="--c:#ff3fa4">Ny runde på dansegulvet</button><button class="dbtn" id="dhome" style="--c:#7a3cff">Til Disko-menuen</button>`;
+  spinBalls();wireBeat();DSFX.bingo();[0,500,1000].forEach(t=>setTimeout(()=>confetti(140,.25),t));
+  $("#dagain").onclick=discoSetup;$("#dhome").onclick=()=>go("disco",{dv:"home"});
+}
+/* ---------- bingo ---------- */
+function newBingoCard(){const sq=shuffle(BINGO_SQ.map((x,i)=>i)).slice(0,15);sq.splice(7,0,-1);return {sq,mark:{7:true}}}
+function bingoLines(m){const L=[];for(let r=0;r<4;r++)L.push([0,1,2,3].map(c=>r*4+c));for(let c=0;c<4;c++)L.push([0,1,2,3].map(r=>r*4+c));L.push([0,5,10,15],[3,6,9,12]);return L.filter(l=>l.every(i=>m[i])).length}
+function bingoView(){
+  let card=D.card||store("disco.card");if(!card||!card.sq||card.sq.length!==16){card=newBingoCard();store("disco.card",card)}D.card=card;
+  const lines=bingoLines(card.mark);
+  app.innerHTML=`<div class="dtop"><button class="dchip" id="dback">Tilbage</button><span class="dchip solid">${lines?`${lines} × BINGO`:"Disko-bingo"}</span>${beatBtn()}</div>
+  <h2 class="dh">Din bingoplade</h2><p class="dsmall c">Når DJ'en afslører en sang, må du sætte ét kryds i et felt, der passer. Fire på stribe er BINGO.</p>
+  <div class="bgrid">${card.sq.map((k,i)=>k<0?`<div class="bsq free on">${ballHTML(44)}</div>`:`<button class="bsq${card.mark[i]?" on":""}" data-sq="${i}" style="--c:${["#ff3fa4","#00b8ff","#ffd400","#18c26b","#7a3cff","#ff8a00"][(i*7)%6]}">${esc(BINGO_SQ[k][0])}</button>`).join("")}</div>
+  <button class="dbtn" id="dnew" style="--c:#7a3cff">Ny plade</button>`;
+  spinBalls();wireBeat();$("#dback").onclick=()=>go("disco",{dv:"home"});
+  $("#dnew").onclick=()=>{D.card=newBingoCard();store("disco.card",D.card);DSFX.scratch();bingoView()};
+  app.querySelectorAll("[data-sq]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sq;const before=bingoLines(card.mark);card.mark[i]=!card.mark[i];store("disco.card",card);
+    if(card.mark[i]){DSFX.pop();confetti(30,.6)}else SFX.boing();const after=bingoLines(card.mark);
+    if(after>before){DSFX.bingo();siren("BINGO!","Rejs dig og dans");[0,400,800].forEach(t=>setTimeout(()=>confetti(160,.3),t))}bingoView()});
 }
 
 PACKDB.load().then(()=>{if(S.view==="studio")render()});
