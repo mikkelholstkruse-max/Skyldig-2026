@@ -431,6 +431,24 @@ button.dopt{cursor:pointer;font-family:"Baloo 2",system-ui,sans-serif}
 .hub-tool{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;padding:14px 16px;border-radius:16px;background:var(--stage-2);border:1px solid var(--line)}
 .hub-tool b{display:block;font-family:var(--f-display);font-weight:400;font-size:15px;letter-spacing:.04em}.hub-tool span{font-size:13px;color:var(--muted)}
 .hub-tool i{font-style:normal;color:var(--muted);font-size:22px}
+.djbar{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;background:#1a1035;border-radius:999px;padding:6px 8px}
+.djbar span{color:#ffd400;font-weight:800;font-size:12px;letter-spacing:.14em;padding-inline:6px}
+.djbar .dchip{padding:4px 12px;font-size:13px}
+.dqr{display:grid;place-items:center;padding:10px;background:#fffaf0;border-radius:14px;border:3px solid #1a1035;width:max-content;max-width:100%;margin-inline:auto}
+.dqr img,.dqr canvas{display:block;max-width:100%}
+.vinyl-wrap.small .vinyl{width:min(130px,36vw)}
+.stage-intro{padding:0!important;display:block!important}
+.stage-intro canvas#stg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.st-cap{position:absolute;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(28px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:4px;align-items:flex-start;opacity:0;transform:translateY(20px);transition:.5s;font-family:"Baloo 2",system-ui,sans-serif;pointer-events:none}
+.st-cap.on{opacity:1;transform:none}
+.st-dec{font-family:"Monoton","Arial Black",sans-serif;font-size:clamp(44px,14vw,72px);line-height:1;color:#fff;text-shadow:0 0 20px #ff3fa4}
+.st-song{font-size:20px;background:rgba(10,4,20,.65);padding:4px 12px;border-radius:10px;color:#ffd23f}
+.st-names{font-weight:800;font-size:14px;color:#fff;opacity:.85}
+.st-title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;opacity:0;transition:.5s;pointer-events:none;font-family:"Baloo 2",system-ui,sans-serif;padding-inline:16px}
+.st-title.on{opacity:1}
+#bgmchip{position:fixed;left:max(12px,env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:20;display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border-radius:999px;background:rgba(10,4,20,.82);color:#fff4e6;text-decoration:none;font-size:12px;font-weight:700;max-width:calc(100% - 24px);border:1px solid rgba(255,255,255,.2)}
+#bgmchip i{width:10px;height:10px;border-radius:50%;background:#fc3c44;box-shadow:0 0 0 3px rgba(252,60,68,.3);animation:pulse 1s infinite}
+#bgmchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#bgmchip em{font-style:normal;opacity:.7}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -1214,11 +1232,11 @@ async function finalScreen(G,players,againLabel,again){
 /* =========================================================
    NAVIGATION
    ========================================================= */
-function go(view,patch){setQuiet(false);if(view!=="home"&&view!=="hub")THEME.stop();if(view!=="disco"&&document.body.classList.contains("disco"))discoLeave();Object.assign(S,patch||{},{view});showTray(false);render()}
+function go(view,patch){setQuiet(false);if(view!=="home"&&view!=="hub")THEME.stop();if(!(view==="hub"||view==="home"||(view==="disco"&&(patch||{}).dv==="home")))BGM.stop();if(view!=="disco"&&document.body.classList.contains("disco"))discoLeave();Object.assign(S,patch||{},{view});showTray(false);render()}
 function render(){({hub:hubView,home:homeView,studio:studioView,setup:setupView,local:localView,online:onlineView,disco:discoView}[S.view]||hubView)()}
 
 function homeView(){
-  setTheme("who");if(THEME.want&&ac())THEME.start();
+  setTheme("who");BGM.play("skyldig").then(ok=>{if(!ok&&THEME.want&&ac()&&S.view==="home")THEME.start()});
   app.innerHTML=`<div class="row" style="justify-content:space-between;gap:6px"><button class="iconbtn" id="tohub">‹ Alle spil</button><div class="row" style="gap:6px"><button class="iconbtn" id="thm">${THEME.want?"Tema til":"Tema fra"}</button>${muteBtn()}</div></div>
   <div class="marquee"><h1 class="logo">Skyldig!</h1><div class="tag">Familiens egen retssal</div></div>
   <p class="c" style="font-size:17px">Dommeren vælger i hemmelighed. Alle andre gætter. Rigtigt gæt giver 2 point, og dommeren får 1 for hvert. <b style="color:var(--bulb)">Først til ${TARGET}</b> vinder.</p>
@@ -1256,10 +1274,14 @@ function findPlace(q){const n=norm(q);const p=PLACES.find(x=>norm(x[0])===n);if(
   const partial=PLACES.find(x=>norm(x[0]).startsWith(n)&&n.length>=3);if(partial)return {place:partial[0],lat:partial[1],lon:partial[2],country:partial[3]};return null}
 function studioView(){
   setTheme("trip");
-  const tabs={trips:"Rejser",throws:"Kastebilleder",nicks:"Kælenavne",words:"Familieord",quiz:"Minder",quotes:"Citater",who:"Hvem af os",extra:"Mere"};
+  const tabs={family:"Familien",trips:"Rejser",throws:"Kastebilleder",nicks:"Kælenavne",words:"Familieord",quiz:"Minder",quotes:"Citater",who:"Hvem af os",extra:"Mere"};
   const t=S.tab||"trips";const exTag=e=>e.ex?'<span class="ex">Eksempel</span>':"";
   const list=(arr,f)=>arr&&arr.length?`<div class="col-stack" style="gap:8px">${arr.map((e,i)=>`<div class="entry"><div>${f(e)}${exTag(e)}</div><button class="x" data-del="${i}" aria-label="Slet">×</button></div>`).join("")}</div>`:`<p class="muted">Intet endnu.</p>`;
   let body="";
+  if(t==="family"){S.lp=S.lp||store("skyldig.localplayers")||["Mor","Far","Søster","Mig"].map((n,i)=>({id:"p"+i,name:n,color:COLORS[i]}));
+    body=`<p class="muted">Jeres navne og selfies. De bruges på 3D-scenen i Disko og i Skyldig på én telefon. Tryk på cirklen for at tage en selfie lige forfra med godt lys.</p>
+    <div class="col-stack" style="gap:10px">${S.lp.map((p,i)=>`<div class="entry" style="align-items:center"><label class="selfie">${av(p,"l")}<span class="cam">FOTO</span><input type="file" accept="image/*" capture="user" data-fsf="${i}" aria-label="Selfie til ${esc(p.name)}"></label><div><input type="text" data-fn="${i}" value="${esc(p.name)}" maxlength="16" aria-label="Navn"></div><button class="x" data-fdel="${i}" aria-label="Fjern">×</button></div>`).join("")}</div>
+    ${S.lp.length<8?`<button class="btn gold sm" id="fadd" style="width:100%">Tilføj person</button>`:""}<p class="muted" style="font-size:13px">Billederne gemmes kun på denne telefon.</p>`}
   if(t==="trips")body=`<p class="muted">Skriv sted og år. Spillet laver selv runderne: "Toscana 2013: Hvem blev solskoldet først?" og "Hvilket år var vi i Toscana?". Globussen flyver derhen.</p>
     ${globeHTML("sg",false,"")}${list(PACK.trips,e=>`<b>${esc(e.place)}</b><small>${esc(e.year||"")}</small>`)}
     <form id="f" class="col-stack" style="gap:8px"><input type="text" id="a" list="placelist" placeholder="Sted eller land, fx Toscana eller Italien" required autocomplete="off"><datalist id="placelist">${PLACES.map(p=>`<option value="${esc(p[0])}">`).join("")}${Object.keys(DK_COUNTRY).map(k=>`<option value="${esc(k)}">`).join("")}</datalist><input type="number" id="b" placeholder="År, fx 2013" inputmode="numeric" min="1950" max="2030"><button class="btn gold sm" style="width:100%">Tilføj rejse</button><p class="err" id="ferr" hidden></p></form>`;
@@ -1276,6 +1298,11 @@ function studioView(){
   <div class="tabs">${Object.entries(tabs).map(([k,v])=>`<button data-tab="${k}" aria-pressed="${k===t}">${v}</button>`).join("")}</div>
   <div class="panel">${body}</div><p class="muted c" id="saved" style="font-size:13px">${ON.db?"Gemmes i spillet, så alle telefoner får det.":"Gemmes på denne telefon."}</p>`;
   $("#back").onclick=()=>go("hub");
+  if(t==="family"){const save=()=>store("skyldig.localplayers",S.lp);
+    app.querySelectorAll("[data-fsf]").forEach(inp=>inp.onchange=async()=>{if(!inp.files[0])return;try{S.lp[+inp.dataset.fsf].photo=await resizeImage(inp.files[0],200);save();SFX.coin();render()}catch(e){}});
+    app.querySelectorAll("[data-fn]").forEach(inp=>inp.onchange=()=>{const v=inp.value.trim();if(v){S.lp[+inp.dataset.fn].name=v;save()}});
+    app.querySelectorAll("[data-fdel]").forEach(b=>b.onclick=()=>{if(S.lp.length<=1)return;S.lp.splice(+b.dataset.fdel,1);save();SFX.boing();render()});
+    const fa=$("#fadd");if(fa)fa.onclick=()=>{S.lp.push({id:"p"+Date.now(),name:"Ny",color:COLORS[S.lp.length%8]});save();render()}}
   app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{SFX.tap();go("studio",{tab:b.dataset.tab})});
   if(t==="trips"&&$("#sg")){if(GLOBE.mount($("#sg"))){const last=(PACK.trips||[]).slice(-1)[0];if(S.flyTo){const f=S.flyTo;S.flyTo=null;$("#sg .cap").innerHTML=`<b>${esc(f.place)}</b><span>${esc(f.year||"")}</span>`;GLOBE.flyTo(f.lat,f.lon,f.country)}else GLOBE.idleSpin()}}
   const commit=async()=>{const where=await PACKDB.save();render();const s=$("#saved");if(s)s.textContent=where==="db"?"Gemt i spillet til alle telefoner.":"Gemt på denne telefon."};
@@ -1414,7 +1441,7 @@ function onlineView(){
     app.innerHTML=`<div class="hud"><span class="logo sm">Skyldig!</span><button class="link" id="back">Tilbage</button></div>
     <div class="panel"><div class="row" style="flex-wrap:nowrap;gap:16px">${selfieBtn()}<div style="flex:1;min-width:0" class="col-stack"><div class="lbl">Dit navn</div><input type="text" id="myname" maxlength="16" value="${esc(o.name)}" placeholder="Fx Mor" autocomplete="off"></div></div><p class="muted" style="font-size:13px">Tryk på cirklen for en selfie. Den vises i spillet.</p></div>
     <div class="panel"><div class="lbl">Opret nyt rum</div>${catsHTML()}<button class="btn" id="create">Opret rum</button></div>
-    <div class="panel"><div class="lbl">Eller hop ind med en kode</div><form id="jf" class="row" style="flex-wrap:nowrap"><input type="text" id="code" maxlength="4" placeholder="ABCD" style="text-transform:uppercase;font-family:var(--f-display);letter-spacing:.2em" autocomplete="off"><button class="btn gold sm">Hop ind</button></form></div>${o.err?`<p class="err">${esc(o.err)}</p>`:""}`;
+    <div class="panel"><div class="lbl">Eller hop ind med en kode</div><form id="jf" class="row" style="flex-wrap:nowrap"><input type="text" id="code" maxlength="4" value="${esc(S.prefill||"")}" placeholder="ABCD" style="text-transform:uppercase;font-family:var(--f-display);letter-spacing:.2em" autocomplete="off"><button class="btn gold sm">Hop ind</button></form></div>${o.err?`<p class="err">${esc(o.err)}</p>`:""}`;
     const keep=()=>o.name=$("#myname").value;$("#back").onclick=()=>go("home");wireSelfie();$("#myself").addEventListener("change",keep);
     wireCats(()=>{keep();render()});
     $("#create").onclick=()=>{keep();const L="ABCDEFGHJKLMNPRSTUVXYZ";o.join(Array.from({length:4},()=>L[Math.random()*L.length|0]).join(""),true)};
@@ -1426,10 +1453,10 @@ function onlineView(){
   if(R.status==="lobby"||R.status==="starting"){
     o.shown=null;setTheme("who");
     app.innerHTML=`<div class="hud"><span class="logo sm">Skyldig!</span><div class="row" style="gap:6px"><span class="pill">${esc((R.cats||[]).map(c=>CATS[c]).join(" · "))}</span>${muteBtn()}</div></div>
-    <div class="panel c"><div class="lbl">Rumkode</div><div class="code">${esc(o.code)}</div><p class="muted">Åbn spillet på hver telefon, tryk "Hver sin telefon" og skriv koden.</p></div>
+    <div class="panel c"><div class="lbl">${canQR()?"Scan for at være med":"Rumkode"}</div>${canQR()?`<div class="dqr" id="sqr"></div>`:""}<div class="code">${esc(o.code)}</div><p class="muted">${canQR()?"Scan med kameraet, eller tryk \"Hver sin telefon\" og skriv koden.":"Åbn spillet på hver telefon, tryk \"Hver sin telefon\" og skriv koden."}</p></div>
     <div class="panel"><div class="lbl">I rummet (${S.players.length})</div><div class="chips">${S.players.map(p=>`<span class="chip deal">${p.id===o.me?selfieBtn().replace('class="av l"','class="av m"'):av(p,"m")}${esc(p.name)}${p.id===R.host?' <span class="muted" style="font-size:12px">vært</span>':""}${o.isHost()&&p.id!==o.me?`<button class="x" data-kick="${esc(p.id)}" aria-label="Fjern ${esc(p.name)}">×</button>`:""}</span>`).join("")}</div><p class="muted" style="font-size:13px">Tryk på dit eget billede for at tage en selfie.</p></div>
     ${o.isHost()?`<button class="btn" id="st" ${S.players.length<3||R.status==="starting"?"disabled":""}>${S.players.length<3?"Venter på mindst 3":"Start spillet"}</button>`:`<p class="muted c">Venter på at værten starter…</p>`}${err}<button class="link" id="lv">Forlad rummet</button>`;
-    wireMute();wireSelfie();if(o.isHost()&&$("#st"))$("#st").onclick=()=>{SFX.airhorn();o.start()};
+    wireMute();wireSelfie();qrInto($("#sqr"),joinLink("skyldig",o.code));if(o.isHost()&&$("#st"))$("#st").onclick=()=>{SFX.airhorn();o.start()};
     app.querySelectorAll("[data-kick]").forEach(b=>b.onclick=()=>o.kick(b.dataset.kick));$("#lv").onclick=()=>{o.leave();go("home")};return;
   }
   if((R.status==="play"||R.status==="court")&&R.rd){
@@ -1572,7 +1599,7 @@ function spinBalls(){app.querySelectorAll("canvas.ball").forEach(c=>{if(c._on)re
 
 /* ---------- fælles skærmdele ---------- */
 const D={};
-function discoEnter(){if(!document.body.classList.contains("disco")){document.body.classList.add("disco");discoFx(true);const q=D.quietOpen;D.quietOpen=false;if(BEAT.want)setTimeout(()=>{if(document.body.classList.contains("disco"))BEAT.start()},q?600:2800);if(!q)DSFX.open()}}
+function discoEnter(){if(!document.body.classList.contains("disco")){document.body.classList.add("disco");discoFx(true);const q=D.quietOpen;D.quietOpen=false;if(BEAT.want)setTimeout(()=>{if(document.body.classList.contains("disco")&&!(BGM.el&&!BGM.el.paused))BEAT.start()},q?600:2800);if(!q)DSFX.open()}}
 function discoLeave(){document.body.classList.remove("disco");discoFx(false);BEAT.stop();DO.leave()}
 const beatBtn=()=>`<button class="dchip" id="beat">${BEAT.want?"Musik til":"Musik fra"}</button>`;
 function wireBeat(){const b=$("#beat");if(b)b.onclick=()=>{BEAT.toggle();b.textContent=BEAT.want?"Musik til":"Musik fra"}}
@@ -1615,6 +1642,37 @@ function nextSongFor(G,mode){
   return {n,sid:s.id,type,prev:prev?prev.id:null,played:[...(G.played||[]),s.id]};
 }
 
+/* ---------- rigtige sange: Apples 30-sekunders klip (virker på jeres egen hjemmeside) ---------- */
+const PREV={ok:null,cache:store("disco.prev")||{},el:null,
+  lookup(s){if(this.cache[s.id]!==undefined)return Promise.resolve(this.cache[s.id]);
+    return new Promise(res=>{const cb="itcb"+Math.random().toString(36).slice(2);const sc=document.createElement("script");let fin=false;
+      const done=(v,keep)=>{if(fin)return;fin=true;clearTimeout(t);try{delete window[cb]}catch(e){}sc.remove();if(keep){this.cache[s.id]=v;store("disco.prev",this.cache)}res(v)};
+      const t=setTimeout(()=>done(null,false),5000);
+      window[cb]=d=>{const want=fold(s.main),wt=fold(s.title.replace(/\(.*?\)/g,""));const rs=(d&&d.results)||[];
+        const r=rs.find(x=>fold(x.artistName||"").includes(want.split(" ")[0])&&fold(x.trackName||"").startsWith(wt.slice(0,5)))||rs.find(x=>fold(x.trackName||"").startsWith(wt.slice(0,5)));done(r&&r.previewUrl||null,true)};
+      sc.onerror=()=>done(null,false);
+      sc.src="https://itunes.apple.com/search?country=dk&entity=song&limit=8&callback="+cb+"&term="+encodeURIComponent(s.main+" "+s.title.replace(/\(.*?\)/g,""));document.head.appendChild(sc)})},
+  async test(){if(this.ok!==null)return this.ok;if(window.claude){this.ok=false;return false}const u=await this.lookup(SONGS.find(x=>x.title==="Dancing Queen")||SONGS[0]);this.ok=!!u;return this.ok},
+  unlock(){try{if(!this.el){this.el=new Audio();this.el.preload="auto"}this.el.muted=true;const p=this.el.play();if(p)p.catch(()=>{});this.el.pause();this.el.muted=false}catch(e){}},
+  async play(url){if(!url)return false;this.unlock();const a=this.el;BEAT.stop();try{a.src=url;a.volume=0;await a.play();let v=0;const f=setInterval(()=>{v=Math.min(1,v+.08);a.volume=v;if(v>=1)clearInterval(f)},60);return true}catch(e){return false}},
+  stop(){const a=this.el;if(!a||a.paused)return;let v=a.volume;const f=setInterval(()=>{v=Math.max(0,v-.1);a.volume=v;if(v<=0){clearInterval(f);a.pause()}},50)}
+};
+/* QR-kode til at hoppe ind (kun på jeres egen hjemmeside, hvor linket kan åbnes direkte) */
+function canQR(){return /^https?:$/.test(location.protocol)&&!window.claude&&!/claude\.ai|claudeusercontent/.test(location.hostname)}
+function qrInto(el,text){if(!el||!canQR())return;const draw=()=>{try{el.innerHTML="";new QRCode(el,{text,width:200,height:200,colorDark:"#1a1035",colorLight:"#fffaf0"})}catch(e){}};
+  if(window.QRCode)return draw();const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";sc.onload=draw;document.head.appendChild(sc)}
+const joinLink=(game,code)=>location.origin+location.pathname+"#"+game+"-"+code;
+/* automatik: værten styrer tiden, når sangene kan afspilles i spillet */
+const AUTO={t:null,
+  clear(){clearTimeout(this.t);this.t=null},
+  onPlay(){this.clear();const R=DO.R;if(!R||!R.auto||!DO.isHost())return;if(R.mode==="bingo"&&!D.paused)this.t=setTimeout(()=>DO.reveal(),24000)},
+  onReveal(){this.clear();const R=DO.R;if(!R||!R.auto||!DO.isHost()||D.paused)return;this.t=setTimeout(()=>DO.next(),R.mode==="bingo"?14000:8000)},
+  check(){const R=DO.R;if(!R||!R.auto||!DO.isHost()||R.status!=="play"||R.mode!=="quiz")return;const v=DO.roundAns(),ps=DO.colored();if(ps.length&&ps.every(p=>p.id in v)){this.clear();DO.reveal()}}
+};
+function djBar(R){if(!R.auto||!DO.isHost())return "";return `<div class="djbar"><span>DJ</span><button class="dchip" id="dpause">${D.paused?"Fortsæt":"Pause"}</button><button class="dchip" id="dskip2">Spring over</button><button class="dchip" id="dend2">Afslut</button></div>`}
+function wireDjBar(R){const p=$("#dpause");if(p)p.onclick=()=>{D.paused=!D.paused;p.textContent=D.paused?"Fortsæt":"Pause";if(D.paused){AUTO.clear();PREV.stop()}else{R.status==="reveal"?AUTO.onReveal():(PREV.el&&PREV.el.src&&PREV.el.play().catch(()=>{}),AUTO.onPlay())}};
+  const s=$("#dskip2");if(s)s.onclick=()=>{s.disabled=true;AUTO.clear();DO.next()};const e=$("#dend2");if(e)e.onclick=()=>{AUTO.clear();PREV.stop();if(R.mode==="quiz")DO.setRoom({status:"end"});else{DO.leave();go("disco",{dv:"home"})}}}
+
 /* ---------- online-rum til Disko (bruger samme database som Skyldig) ---------- */
 const DO={code:null,R:null,players:[],answers:[],bingos:[],cheats:[],unsub:[],shown:null,
   ref(p=""){return ON.db.doc("disco/"+this.code+p)},
@@ -1627,14 +1685,17 @@ const DO={code:null,R:null,players:[],answers:[],bingos:[],cheats:[],unsub:[],sh
     const fail=e=>{D.err="Forbindelsen stoppede ("+e.code+").";render()};
     this.unsub.push(ON.db.doc(base).onSnapshot(s=>{this.R=s.exists?s.data():null;if(S.view==="disco")render()},fail));
     this.unsub.push(ON.db.collection(base+"/players").onSnapshot(s=>{this.players=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.joined-b.joined);if(S.view==="disco"&&this.R?.status==="lobby")render()},fail));
-    this.unsub.push(ON.db.collection(base+"/answers").onSnapshot(s=>{this.answers=s.docs.map(d=>d.data());if(S.view==="disco"&&this.R?.status==="play")render()},fail));
+    this.unsub.push(ON.db.collection(base+"/answers").onSnapshot(s=>{this.answers=s.docs.map(d=>d.data());AUTO.check();if(S.view==="disco"&&this.R?.status==="play")render()},fail));
     this.unsub.push(ON.db.collection(base+"/bingos").onSnapshot(s=>{const before=this.bingos.length;this.bingos=s.docs.map(d=>d.data()).sort((a,b)=>a.at-b.at);if(this.bingos.length>before&&this._ready){const b=this.bingos[this.bingos.length-1];if(b.uid!==ON.me){if(this.isHost()){DSFX.bingo();siren("BINGO!",b.name+" har bingo");confetti(160,.3)}else dToast(b.name+" har BINGO!")}}this._ready=true;if(S.view==="disco")render()},()=>{}));
     this.unsub.push(ON.db.collection(base+"/cheats").onSnapshot(s=>{const before=this.cheats.length;this.cheats=s.docs.map(d=>d.data()).sort((a,b)=>a.at-b.at);if(this._cready&&this.cheats.length>before){const c=this.cheats[this.cheats.length-1];if(c.uid!==ON.me){dToast(c.name+" prøvede at snyde!");if(this.isHost())DSFX.nope()}}this._cready=true;if(S.view==="disco")render()},()=>{}));
   },
-  leave(){this.unsub.forEach(u=>u());this.unsub=[];this.code=null;this.R=null;this.players=[];this.answers=[];this.bingos=[];this.shown=null;this._ready=false;this.cheats=[];this._cready=false},
-  async create(mode){await ON.init();if(!ON.db){D.err="Hver sin telefon kræver en forbindelse til spillets database.";return render()}
+  leave(){AUTO.clear();try{PREV.stop();MK.stop()}catch(e){}this.unsub.forEach(u=>u());this.unsub=[];this.code=null;this.R=null;this.players=[];this.answers=[];this.bingos=[];this.shown=null;this._ready=false;this.cheats=[];this._cready=false},
+  async create(mode){PREV.unlock();await ON.init();if(!ON.db){D.err="Hver sin telefon kræver en forbindelse til spillets database.";return render()}
+    const name=(ON.name||"").trim();if(!name){D.err="Skriv dit navn først, så du kan være med.";return render()}store("skyldig.myname",name);
+    const full=!!window.SKYLDIG_MUSICKIT&&await MK.authorize();const auto=full||await PREV.test();
     const L="ABCDEFGHJKLMNPRSTUVXYZ";this.code=Array.from({length:4},()=>L[Math.random()*L.length|0]).join("");
-    if(!await this.write(()=>this.ref().set({host:ON.me,mode,status:"lobby",n:0,sid:null,played:[],scores:{},gold:{},created:Date.now()})))return;
+    if(!await this.write(()=>this.ref().set({host:ON.me,mode,auto,full,status:"lobby",n:0,sid:null,played:[],scores:{},gold:{},created:Date.now()})))return;
+    if(auto)await this.write(()=>this.ref("/players/"+ON.me).set({name,photo:ON.photo||null,joined:Date.now()}));
     this.subscribe();go("disco",{dv:"room"})},
   async join(code){await ON.init();if(!ON.db){D.err="Hver sin telefon kræver en forbindelse til spillets database.";return render()}
     const name=(ON.name||"").trim();if(!name){D.err="Skriv dit navn først.";return render()}store("skyldig.myname",name);
@@ -1643,11 +1704,15 @@ const DO={code:null,R:null,players:[],answers:[],bingos:[],cheats:[],unsub:[],sh
     this.subscribe();DSFX.whoop();go("disco",{dv:"room"})},
   roundAns(){const R=this.R,v={};this.answers.filter(x=>x.n===R?.n).forEach(x=>v[x.uid]={a:x.a,g:!!x.g});return v},
   async answer(a,g){const R=this.R;await this.write(()=>this.ref(`/answers/r${R.n}-${ON.me}`).set({n:R.n,uid:ON.me,a,g:!!g}))},
-  async next(){D.hint=null;const R=this.R;if(R.mode==="quiz"&&Object.values(R.scores||{}).some(v=>v>=DISCO_TARGET))return this.setRoom({status:"end"});await this.setRoom({...nextSongFor(R,R.mode),status:"play",result:null})},
-  async reveal(){const R=this.R,s=SONGS[R.sid],prev=R.prev!=null?SONGS[R.prev]:null;if(R.mode==="bingo")return this.setRoom({status:"reveal",result:{}});
+  async next(){D.hint=null;AUTO.clear();PREV.stop();MK.stop();const R=this.R;if(R.mode==="quiz"&&Object.values(R.scores||{}).some(v=>v>=DISCO_TARGET))return this.setRoom({status:"end"});
+    let pick=nextSongFor(R,R.mode),url=null;
+    if(R.auto&&!R.full){for(let k=0;k<6;k++){url=await PREV.lookup(SONGS[pick.sid]);if(url)break;pick=nextSongFor({...R,played:pick.played},R.mode);pick.n=(R.n||0)+1}}
+    await this.setRoom({...pick,status:"play",result:null});
+    if(R.auto){D.paused=false;if(R.full){if(!await MK.play(SONGS[pick.sid])){url=await PREV.lookup(SONGS[pick.sid]);PREV.play(url)}}else if(url)PREV.play(url);AUTO.onPlay()}},
+  async reveal(){AUTO.clear();const R=this.R,s=SONGS[R.sid],prev=R.prev!=null?SONGS[R.prev]:null;if(R.mode==="bingo"){await this.setRoom({status:"reveal",result:{}});AUTO.onReveal();return}
     const v=this.roundAns(),gain={},gold={...(R.gold||{})};Object.entries(v).forEach(([uid,x])=>{const p=isRight(R.type,s,x.a,prev)*(x.g&&!gold[uid]?2:1);if(x.g)gold[uid]=true;if(p)gain[uid]=p});
     const scores={...(R.scores||{})};Object.entries(gain).forEach(([u,p])=>scores[u]=(scores[u]||0)+p);
-    await this.setRoom({status:"reveal",result:{ans:v,gain},scores,gold,prevScores:R.scores||{}})},
+    await this.setRoom({status:"reveal",result:{ans:v,gain},scores,gold,prevScores:R.scores||{}});AUTO.onReveal()},
   async cheat(){await this.write(()=>ON.db.collection("disco/"+this.code+"/cheats").add({uid:ON.me,name:ON.name,at:Date.now()}))},
   async callBingo(){await this.write(()=>ON.db.collection("disco/"+this.code+"/bingos").add({uid:ON.me,name:ON.name,at:Date.now()}))}
 };
@@ -1658,22 +1723,23 @@ function discoView(){
   if(v==="home"){
     app.innerHTML=`${dTop(`<button class="dchip" id="dback">‹ Alle spil</button>`)}
     ${ballHTML(150)}<h1 class="dlogo">DISKO</h1><p class="dtag">${SONGS.length} sange fra 1939 til i dag · med dansk krydderi</p>
+    <div class="dpanel"><b>Dit navn</b><input class="dinput" type="text" id="dname0" maxlength="16" value="${esc(ON.name||store("skyldig.myname")||"")}" placeholder="Fx Mor" autocomplete="off"></div>
     <div class="dmodes">
-      <button class="dcard" id="d-quiz" style="--c:#ff3fa4"><b>Musikquiz</b><span>DJ-telefonen spiller, alle svarer fra egen telefon. Point tælles automatisk. Først til ${DISCO_TARGET}.</span></button>
+      <button class="dcard" id="d-quiz" style="--c:#ff3fa4"><b>Musikquiz</b><span>Sangen spiller, alle svarer fra egen telefon, også DJ'en. Point og næste sang kører af sig selv. Først til ${DISCO_TARGET}.</span></button>
       <button class="dcard" id="d-bingo" style="--c:#00b8ff"><b>Disko-bingo</b><span>Alle får en plade. Man kan kun krydse af, hvis en sang, der faktisk er spillet, passer.</span></button>
-      <button class="dcard" id="d-join" style="--c:#ff8a00"><b>Hop ind</b><span>Har nogen startet en Disko? Skriv koden her.</span></button>
+      <button class="dcard" id="d-join" style="--c:#ff8a00"><b>Hop ind</b><span>Har nogen startet en Disko? Scan QR-koden på deres skærm, eller skriv koden her.</span></button>
     </div>
     <div class="drounds">${Object.values(DRT).map(r=>`<span style="--c:${r.color}">${r.name}</span>`).join("")}</div>
     ${D.err?`<p class="dnote" style="background:#fff">${esc(D.err)}</p>`:""}
-    <p class="dnote">DJ'en spiller sangen i Apple Music over en højttaler og holder skærmen væk fra de andre.</p><button class="dchip skipbtn" id="dreintro">Se introen igen</button>`;
-    spinBalls();wireBeat();$("#dback").onclick=()=>{go("hub")};D.err="";const dri=$("#dreintro");if(dri)dri.onclick=()=>{discoLeave();openGame("disko",true)};
-    $("#d-quiz").onclick=()=>{DSFX.whoop();DO.create("quiz")};$("#d-bingo").onclick=()=>{DSFX.whoop();DO.create("bingo")};$("#d-join").onclick=()=>{DSFX.whoop();go("disco",{dv:"join"})};
+    <p class="dnote">På jeres egen hjemmeside spiller sangene direkte i spillet som 30 sekunders klip fra Apple Music, uden at titlen vises. Inde i Claude åbner DJ'en sangen i Apple Music i stedet.</p><button class="dchip skipbtn" id="dreintro">Se introen igen</button>`;
+    spinBalls();wireBeat();BGM.play("disko").then(ok=>{if(ok)BEAT.stop()});$("#dback").onclick=()=>{go("hub")};D.err="";const dri=$("#dreintro");if(dri)dri.onclick=()=>{discoLeave();openGame("disko",true)};
+    const nm=()=>{ON.name=$("#dname0").value};$("#d-quiz").onclick=()=>{nm();DSFX.whoop();DO.create("quiz")};$("#d-bingo").onclick=()=>{nm();DSFX.whoop();DO.create("bingo")};$("#d-join").onclick=()=>{DSFX.whoop();go("disco",{dv:"join"})};
     return;
   }
   if(v==="join"){
     app.innerHTML=`${dTop(`<button class="dchip" id="dback">Tilbage</button>`)}<h2 class="dh">Hop ind</h2>
     <div class="dpanel"><b>Dit navn</b><input class="dinput" type="text" id="dname" maxlength="16" value="${esc(ON.name||"")}" placeholder="Fx Mor" autocomplete="off"></div>
-    <div class="dpanel"><b>Koden fra DJ'en</b><form id="djf" class="row" style="flex-wrap:nowrap"><input class="dinput" type="text" id="dcode" maxlength="4" placeholder="ABCD" style="text-transform:uppercase;letter-spacing:.2em;font-weight:800" autocomplete="off"><button class="dbtn" style="--c:#18c26b;width:auto;padding-inline:18px">Hop ind</button></form></div>
+    <div class="dpanel"><b>Koden fra DJ'en</b><form id="djf" class="row" style="flex-wrap:nowrap"><input class="dinput" type="text" id="dcode" maxlength="4" value="${esc(D.prefill||"")}" placeholder="ABCD" style="text-transform:uppercase;letter-spacing:.2em;font-weight:800" autocomplete="off"><button class="dbtn" style="--c:#18c26b;width:auto;padding-inline:18px">Hop ind</button></form></div>
     ${D.err?`<p class="dnote" style="background:#fff">${esc(D.err)}</p>`:""}`;
     wireBeat();D.err="";$("#dback").onclick=()=>go("disco",{dv:"home"});
     $("#djf").onsubmit=e=>{e.preventDefault();ON.name=$("#dname").value;const c=$("#dcode").value.trim().toUpperCase();if(c.length===4)DO.join(c)};return;
@@ -1682,15 +1748,15 @@ function discoView(){
 }
 function discoRoom(){
   const R=DO.R;if(!R){app.innerHTML=`${dTop()}<p class="dnote">Henter Disko…</p>`;return}
-  const players=DO.colored();S.players=players;setQuiet(!DO.isHost());const host=DO.isHost(),me=ON.me,s=R.sid!=null?SONGS[R.sid]:null,prev=R.prev!=null?SONGS[R.prev]:null,T=R.type?DRT[R.type]:null;
+  BGM.stop();const players=DO.colored();S.players=players;setQuiet(!DO.isHost());const host=DO.isHost(),me=ON.me,s=R.sid!=null?SONGS[R.sid]:null,prev=R.prev!=null?SONGS[R.prev]:null,T=R.type?DRT[R.type]:null;
   const err=D.err?`<p class="dnote" style="background:#fff">${esc(D.err)}</p>`:"";D.err="";
   if(R.status==="lobby"){
     DO.shown=null;
     app.innerHTML=`${dTop(`<button class="dchip" id="dlv">Forlad</button>`,R.mode==="quiz"?"Musikquiz":"Disko-bingo")}
-    ${ballHTML(110)}<div class="dpanel c"><b>Koden</b><div class="dcode">${esc(DO.code)}</div><p class="dsmall">Alle andre åbner Disko, trykker "Hop ind" og skriver koden.${host?" Din telefon er DJ.":""}</p></div>
+    ${canQR()?"":ballHTML(110)}<div class="dpanel c"><b>${canQR()?"Scan for at være med":"Koden"}</b>${canQR()?`<div class="dqr" id="dqr"></div>`:""}<div class="dcode">${esc(DO.code)}</div><p class="dsmall">${canQR()?"Scan med kameraet, eller tryk \"Hop ind\" og skriv koden.":"Alle andre åbner Disko, trykker \"Hop ind\" og skriver koden."}${host?(R.auto?" Din telefon spiller musikken, og du er med som spiller.":" Din telefon er DJ."):""}</p></div>
     <div class="dpanel"><b>På dansegulvet (${players.length})</b><div class="dplayers">${players.map(p=>`<span class="dpl" style="--c:${p.color}">${av(p,"m")}${esc(p.name)}</span>`).join("")||'<span class="dsmall">Venter på de første…</span>'}</div></div>
     ${host?`<button class="dbtn" id="dstart" style="--c:#ff3fa4" ${players.length<1?"disabled":""}>Start ${R.mode==="quiz"?"quizzen":"bingoen"}</button>`:`<p class="dnote">Venter på at DJ'en starter…</p>`}${err}`;
-    spinBalls();wireBeat();$("#dlv").onclick=()=>{DO.leave();go("disco",{dv:"home"})};const st=$("#dstart");if(st)st.onclick=()=>{DSFX.chord();DO.next()};return;
+    spinBalls();wireBeat();qrInto($("#dqr"),joinLink("disko",DO.code));$("#dlv").onclick=()=>{DO.leave();go("disco",{dv:"home"})};const st=$("#dstart");if(st)st.onclick=()=>{PREV.unlock();DSFX.chord();DO.next()};return;
   }
   if(R.status==="end"){
     if(DO.shown==="end")return;DO.shown="end";const sc=R.scores||{};const list=players.slice().sort((a,b)=>(sc[b.id]||0)-(sc[a.id]||0)),top=sc[list[0]?.id]||0;
@@ -1701,8 +1767,8 @@ function discoRoom(){
     const ag=$("#dagain");if(ag)ag.onclick=()=>DO.setRoom({status:"lobby",n:0,sid:null,prev:null,played:[],scores:{},gold:{}});$("#dhome").onclick=()=>{DO.leave();go("disco",{dv:"home"})};return;
   }
   const key=R.status+R.n;
-  /* ---- DJ ---- */
-  if(host){
+  /* ---- DJ (kun når sangene ikke kan spilles i spillet) ---- */
+  if(host&&!R.auto){
     const v=DO.roundAns(),done=Object.keys(v).length;
     if(DO.shown===key){if(R.status==="play"){const c=$("#dcount");if(c)c.textContent=`${done} af ${players.length} har svaret`}return}
     DO.shown=key;const rev=R.status==="reveal";
@@ -1724,25 +1790,27 @@ function discoRoom(){
     return;
   }
   /* ---- spiller ---- */
-  if(R.mode==="bingo")return bingoCard(R,players);
+  if(R.mode==="bingo"){const r=bingoCard(R,players);if(host&&R.auto&&!$("#dpause")){app.insertAdjacentHTML("afterbegin",djBar(R));wireDjBar(R)}return r}
   if(R.status==="play"){
-    const mine=DO.roundAns()[me];const pk=key+(mine?"m":"");if(DO.shown===pk)return;DO.shown=pk;let pick=null,gold=false;const hasGold=!(R.gold||{})[me];
-    if(mine){app.innerHTML=`${dTop("",`Runde ${R.n}`)}${scoreRow(players,R.scores||{},R.gold)}${vinylHTML(s,false,T.color)}<div class="dpanel c"><b>Svar låst</b><span class="dsmall">Venter på DJ'en…</span></div>`;wireBeat();return}
+    const mine=DO.roundAns()[me];const pk=key+(mine?"m":"");if(DO.shown===pk){const c=$("#dcount");if(c)c.textContent=`${Object.keys(DO.roundAns()).length} af ${players.length} har svaret`;return}DO.shown=pk;let pick=null,gold=false;const hasGold=!(R.gold||{})[me];
+    if(mine){app.innerHTML=`${djBar(R)}${dTop("",`Runde ${R.n}`)}${scoreRow(players,R.scores||{},R.gold)}${vinylHTML(s,false,T.color)}<div class="dpanel c"><b>Svar låst</b><span class="dsmall" id="dcount">${Object.keys(DO.roundAns()).length} af ${players.length} har svaret</span><span class="dsmall">${R.auto?"Svaret kommer, når alle har svaret.":"Venter på DJ'en…"}</span></div>`;wireBeat();wireDjBar(R);return}
     const w=answerWidget(R.type,v=>{pick=v;const l=$("#dlock");if(l)l.disabled=false});
-    app.innerHTML=`${dTop("",`Runde ${R.n}`)}${scoreRow(players,R.scores||{},R.gold)}
+    app.innerHTML=`${djBar(R)}${dTop("",`Runde ${R.n}`)}${scoreRow(players,R.scores||{},R.gold)}
+    ${R.auto?`<div class="vinyl-wrap small"><div class="vinyl"><div class="label" style="--c:${T.color}"><div class="lab-in"><b>?</b></div></div></div></div>`:""}
     <div class="dbanner" style="--c:${T.color}"><b>${esc(T.name)}</b><span>${esc(T.sub)}</span><small>${esc(T.pts)}</small></div>
     ${R.type==="foreller"&&prev?`<div class="dprev">Forrige plade: <b>${esc(prev.main)} · ${esc(prev.title)}</b> (${prev.year})</div>`:""}
     ${w.html}
     ${hasGold?`<button type="button" class="dpl gold" id="dgold" style="--c:#ffd400"><i class="gold-dot"></i> Brug min guldplade (dobbelt point)</button>`:""}
     <button class="dbtn" id="dlock" style="--c:#18c26b" disabled>Lås svaret</button>`;
-    wireBeat();w.wire();const g=$("#dgold");if(g)g.onclick=()=>{gold=!gold;g.classList.toggle("on",gold);DSFX.pop()};
+    wireBeat();wireDjBar(R);w.wire();const g=$("#dgold");if(g)g.onclick=()=>{gold=!gold;g.classList.toggle("on",gold);DSFX.pop()};
     $("#dlock").onclick=e=>{if(pick==null)return;e.target.disabled=true;DSFX.chord();DO.answer(pick,gold)};return;
   }
   if(R.status==="reveal"){
     if(DO.shown===key)return;DO.shown=key;const x=(R.result?.ans||{})[me],got=(R.result?.gain||{})[me]||0;
     app.innerHTML=`${dTop("",`Runde ${R.n}`)}${vinylHTML(s,true,T.color)}
     <div class="dpanel c"><b style="font-size:22px">${got?`+${got} point!`:x?"Ikke denne gang":"Du nåede ikke at svare"}</b><span class="dsmall">Rigtigt svar: <b>${esc(answerText(R.type,s,prev))}</b>${x?` · Dit svar: ${esc(R.type==="aarti"?decName(x.a):x.a)}`:""}${x?.g?" · guldplade brugt":""}</span></div>
-    ${revealList(R,players,s,prev)}${scoreRow(players,R.scores||{},R.gold)}<p class="dsmall c">DJ'en starter næste plade.</p>`;
+    ${revealList(R,players,s,prev)}${scoreRow(players,R.scores||{},R.gold)}<a class="dchip skipbtn" href="${appleLink(s)}" target="_blank" rel="noopener">Hør hele sangen i Apple Music</a><p class="dsmall c">${R.auto?"Næste sang starter om lidt.":"DJ'en starter næste plade."}</p>`;
+    if(host&&R.auto){app.insertAdjacentHTML("afterbegin",djBar(R));wireDjBar(R)}
     wireBeat();if(got){DSFX.yay();confetti(120,.35)}else DSFX.nope();return;
   }
 }
@@ -1852,11 +1920,136 @@ function skyldigIntro(onEnd){
 }
 
 /* =========================================================
+   RIGTIG MUSIK: baggrundssange, fulde sange via MusicKit, 3D-scenen
+   ========================================================= */
+/* Fulde sange for Apple Music-abonnenter (slår til, når config.js har en MusicKit-nøgle) */
+const MK={ready:false,music:null,
+  async init(){if(this.music)return true;const tok=window.SKYLDIG_MUSICKIT;if(!tok||window.claude)return false;
+    try{if(!window.MusicKit)await new Promise((r,j)=>{const s=document.createElement("script");s.src="https://js-cdn.music.apple.com/musickit/v3/musickit.js";s.onload=r;s.onerror=j;document.head.appendChild(s)});
+      await MusicKit.configure({developerToken:tok,app:{name:"Hjemmebane",build:"1.0"}});this.music=MusicKit.getInstance();return true}catch(e){return false}},
+  async authorize(){if(!await this.init())return false;try{await this.music.authorize();this.ready=this.music.isAuthorized;return this.ready}catch(e){return false}},
+  async play(s){if(!this.ready)return false;try{const r=await this.music.api.music("/v1/catalog/dk/search",{term:s.main+" "+s.title.replace(/\(.*?\)/g,""),types:"songs",limit:5});
+      const items=r?.data?.results?.songs?.data||[];const want=fold(s.title.replace(/\(.*?\)/g,"")).slice(0,5);const hit=items.find(x=>fold(x.attributes?.name||"").startsWith(want))||items[0];if(!hit)return false;
+      BEAT.stop();BGM.stop();await this.music.setQueue({song:hit.id,startPlaying:true});return true}catch(e){return false}},
+  stop(){try{this.music&&this.music.pause()}catch(e){}}
+};
+/* baggrundssange: 30-sekunders klip fra Apple, med link til sangen */
+const BGM_LISTS={hub:[["Pharrell Williams","Happy"]],skyldig:[["George Michael","Careless Whisper"],["Rockwell","Somebody's Watching Me"]],disko:[["Village People","Y.M.C.A."],["Boney M.","Daddy Cool"]]};
+const BGM={ctx:null,i:0,el:null,want:store("hub.bgm")!==false,cur:null,
+  async play(ctx){if(!this.want||SND.mode==="quiet"||this.ctx===ctx&&this.el&&!this.el.paused)return false;if(!await PREV.test())return false;
+    this.ctx=ctx;const list=BGM_LISTS[ctx];const pick=list[this.i++%list.length];const so={id:"bg:"+pick.join("-"),main:pick[0],title:pick[1]};
+    const url=await PREV.lookup(so);if(!url||this.ctx!==ctx)return false;
+    THEME.stop();BEAT.stop();if(!this.el){this.el=new Audio();this.el.onended=()=>{const c=this.ctx;this.ctx=null;if(c)this.play(c)}}
+    const a=this.el;try{a.src=url;a.volume=0;await a.play();let v=0;const f=setInterval(()=>{v=Math.min(.45,v+.03);a.volume=v;if(v>=.45)clearInterval(f)},60)}catch(e){return false}
+    this.cur=so;this.chip();return true},
+  stop(){this.ctx=null;const a=this.el;$("#bgmchip")?.remove();if(!a||a.paused)return;let v=a.volume;const f=setInterval(()=>{v=Math.max(0,v-.05);a.volume=v;if(v<=0){clearInterval(f);a.pause()}},40)},
+  unlock(){try{if(!this.el){this.el=new Audio();this.el.onended=()=>{const c=this.ctx;this.ctx=null;if(c)this.play(c)}}this.el.muted=true;const p=this.el.play();if(p)p.catch(()=>{});this.el.pause();this.el.muted=false}catch(e){}},
+  chip(){$("#bgmchip")?.remove();if(!this.cur)return;document.body.insertAdjacentHTML("beforeend",`<a id="bgmchip" href="${appleLink(this.cur)}" target="_blank" rel="noopener"><i></i><span>${esc(this.cur.main)} · ${esc(this.cur.title)}</span><em>Apple Music</em></a>`)},
+  toggle(){this.want=!this.want;store("hub.bgm",this.want);if(!this.want)this.stop()}
+};
+/* ---------- 3D-scenen: familien på scenen gennem fire årtier ---------- */
+const STAGE_SETS=[
+ {dec:"70'erne",song:["ABBA","Dancing Queen"],bpm:100,era:"disco70",style:"disco",wall:["#ff7a00","#ffd400"],cos:["#ffd400","#ff3fa4","#ffffff","#ff7a00"],hair:"afro"},
+ {dec:"80'erne",song:["Kim Larsen","Midt om natten"],bpm:128,era:"synth80",style:"rock",wall:["#ff3fd8","#00e5ff"],cos:["#00e5ff","#ff3fd8","#7a3cff","#ffffff"],hair:"band"},
+ {dec:"90'erne",song:["Aqua","Barbie Girl"],bpm:130,era:"euro90",style:"euro",wall:["#ff5fb0","#7fdcff"],cos:["#ff5fb0","#7fdcff","#ffd400","#18c26b"],hair:"cap"},
+ {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:118,era:"edm10",style:"sway",wall:["#3a1aff","#ff3fa4"],cos:["#222244","#f2f2f2","#3a1aff","#111111"],hair:"short"},
+];
+function stageFamily(){let ps=(S.lp||store("skyldig.localplayers")||[]).slice(0,4);const def=["Mor","Far","Søster","Mig"];while(ps.length<4)ps.push({name:def[ps.length],color:COLORS[ps.length]});
+  return ps.map((p,i)=>({name:p.name,photo:p.photo||(ON.photo&&norm(p.name)===norm(ON.name)?ON.photo:null),color:p.color||COLORS[i]}))}
+function faceTex(p,T){const c=document.createElement("canvas");c.width=c.height=256;const x=c.getContext("2d");x.fillStyle="#f1c9a5";x.fillRect(0,0,256,256);
+  const tex=new T.CanvasTexture(c);x.beginPath();x.arc(128,128,124,0,7);x.clip();
+  if(p.photo){const im=new Image();im.onload=()=>{x.drawImage(im,0,0,256,256);tex.needsUpdate=true};im.src=p.photo}else{x.fillStyle=p.color;x.fillRect(0,0,256,256);x.fillStyle="#1a1035";x.font="bold 150px Bungee, sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText((p.name||"?")[0].toUpperCase(),128,140)}
+  tex.needsUpdate=true;return tex}
+function stageShow(onEnd){
+  if(!window.THREE){discoIntro(onEnd);return}
+  const T=THREE;document.querySelector("#intro")?.remove();
+  const el=document.createElement("div");el.id="intro";el.className="stage-intro";
+  el.innerHTML=`<canvas id="stg"></canvas><div class="st-cap"><span class="st-dec"></span><b class="st-song"></b><span class="st-names"></span></div><div class="st-title"></div><button class="i-skip" type="button">Spring over</button><div class="i-bar"><i style="animation-duration:${2600+STAGE_SETS.length*7200+3400}ms"></i></div>`;
+  document.body.appendChild(el);const cv=el.querySelector("#stg");
+  const R=new T.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.shadowMap.enabled=false;
+  const sc=new T.Scene();sc.background=new T.Color("#07030f");sc.fog=new T.Fog("#07030f",14,34);
+  const cam=new T.PerspectiveCamera(50,1,.1,100);
+  sc.add(new T.HemisphereLight("#b9a3ff","#120620",.55));
+  // gulv og scene
+  const floor=new T.Mesh(new T.CircleGeometry(14,48),new T.MeshStandardMaterial({color:"#140a24",metalness:.6,roughness:.25}));floor.rotation.x=-Math.PI/2;sc.add(floor);
+  const stage=new T.Mesh(new T.CylinderGeometry(6,6.3,.5,48),new T.MeshStandardMaterial({color:"#22133a",metalness:.4,roughness:.4}));stage.position.y=.25;sc.add(stage);
+  const rim=new T.Mesh(new T.TorusGeometry(6.05,.07,8,64),new T.MeshBasicMaterial({color:"#ffd23f"}));rim.rotation.x=Math.PI/2;rim.position.y=.5;sc.add(rim);
+  // LED-væg
+  const wc=document.createElement("canvas");wc.width=1024;wc.height=512;const wx=wc.getContext("2d");const wtex=new T.CanvasTexture(wc);
+  const wall=new T.Mesh(new T.PlaneGeometry(18,9),new T.MeshBasicMaterial({map:wtex}));wall.position.set(0,4.6,-6.5);sc.add(wall);
+  // diskokugle
+  const ball=new T.Mesh(new T.IcosahedronGeometry(.9,2),new T.MeshStandardMaterial({color:"#dcdcff",metalness:1,roughness:.15,flatShading:true}));ball.position.set(0,7.2,-1);sc.add(ball);
+  // spotlys med synlige kegler
+  const spots=[];["#ff3fa4","#00c2ff","#ffd400","#7a3cff"].forEach((c,i)=>{const L=new T.SpotLight(c,2.2,30,.38,.5);L.position.set(-6+i*4,9,3);sc.add(L);sc.add(L.target);
+    const cone=new T.Mesh(new T.ConeGeometry(1.8,9,24,1,true),new T.MeshBasicMaterial({color:c,transparent:true,opacity:.05,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide}));cone.position.copy(L.position);sc.add(cone);spots.push({L,cone,ph:i*1.7})});
+  // publikum: siluetter
+  for(let i=0;i<40;i++){const h=new T.Mesh(new T.SphereGeometry(.28,8,6),new T.MeshBasicMaterial({color:"#05020a"}));const a=-.9+Math.random()*1.8,r=8.5+Math.random()*3;h.position.set(Math.sin(a)*r,.9+Math.random()*.3,Math.cos(a)*r);h.userData.ph=Math.random()*6;sc.add(h);spots.push({crowd:h})}
+  // familien
+  const fam=stageFamily(),M=c=>new T.MeshStandardMaterial({color:c,roughness:.6}),skin="#f1c9a5";
+  const avs=fam.map((p,i)=>{const g=new T.Group();g.position.set(-3.3+i*2.2,.5,.6-Math.abs(i-1.5)*.5);sc.add(g);
+    const legL=new T.Mesh(new T.CylinderGeometry(.16,.13,1.1,10),M("#1a1035")),legR=legL.clone();legL.position.set(-.2,.55,0);legR.position.set(.2,.55,0);
+    const body=new T.Mesh(new T.CylinderGeometry(.42,.36,1.1,14),M(p.color));body.position.y=1.65;
+    const head=new T.Group();head.position.y=2.55;const skull=new T.Mesh(new T.SphereGeometry(.42,20,16),M(skin));head.add(skull);
+    const face=new T.Mesh(new T.CircleGeometry(.4,32),new T.MeshBasicMaterial({map:faceTex(p,T)}));face.position.z=.43;head.add(face);
+    const mkArm=side=>{const pv=new T.Group();pv.position.set(side*.52,2.05,0);const arm=new T.Mesh(new T.CylinderGeometry(.11,.1,.95,8),M(p.color));arm.position.y=-.45;pv.add(arm);const hand=new T.Mesh(new T.SphereGeometry(.13,8,6),M(skin));hand.position.y=-.95;pv.add(hand);return pv};
+    const aL=mkArm(-1),aR=mkArm(1);
+    const hair=new T.Group();head.add(hair);
+    const nm=document.createElement("canvas");nm.width=256;nm.height=64;const nx=nm.getContext("2d");nx.fillStyle="rgba(10,4,20,.7)";nx.fillRect(0,0,256,64);nx.fillStyle="#fff";nx.font="bold 36px sans-serif";nx.textAlign="center";nx.textBaseline="middle";nx.fillText(p.name,128,34);
+    const tag=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(nm),transparent:true}));tag.scale.set(1.4,.35,1);tag.position.y=3.35;
+    g.add(legL,legR,body,head,aL,aR,tag);return {g,legL,legR,body,head,aL,aR,hair,i}});
+  const dress=set=>{avs.forEach((a,i)=>{a.body.material.color.set(set.cos[i]);a.aL.children[0].material.color.set(set.cos[i]);a.aR.children[0].material.color.set(set.cos[i]);
+    while(a.hair.children.length)a.hair.remove(a.hair.children[0]);const hc=["#2a160c","#d9a441","#5a2a14","#111"][i];
+    if(set.hair==="afro"){const h=new T.Mesh(new T.SphereGeometry(.58,14,10),M(hc));h.position.set(0,.2,-.32);a.hair.add(h)}
+    if(set.hair==="band"){const h=new T.Mesh(new T.SphereGeometry(.45,14,10,0,Math.PI*2,0,Math.PI/2),M(hc));h.position.y=.08;a.hair.add(h);const b=new T.Mesh(new T.TorusGeometry(.43,.05,6,24),new T.MeshBasicMaterial({color:set.cos[(i+1)%4]}));b.rotation.x=Math.PI/2;b.position.y=.2;a.hair.add(b)}
+    if(set.hair==="cap"){const c=new T.Mesh(new T.SphereGeometry(.45,14,10,0,Math.PI*2,0,Math.PI/2),M(set.cos[(i+2)%4]));c.position.y=.1;a.hair.add(c);const brim=new T.Mesh(new T.CylinderGeometry(.3,.3,.04,16),M(set.cos[(i+2)%4]));brim.position.set(0,.14,.42);brim.scale.z=1.5;a.hair.add(brim)}
+    if(set.hair==="short"){const h=new T.Mesh(new T.SphereGeometry(.45,14,10,0,Math.PI*2,0,Math.PI/2.4),M(hc));h.position.y=.06;a.hair.add(h)}});
+    // LED-væg
+    const g=wx.createLinearGradient(0,0,1024,512);g.addColorStop(0,set.wall[0]);g.addColorStop(1,set.wall[1]);wx.fillStyle=g;wx.fillRect(0,0,1024,512);
+    wx.fillStyle="rgba(0,0,0,.25)";for(let x=0;x<1024;x+=16)for(let y=0;y<512;y+=16)if((x+y)%32===0)wx.fillRect(x,y,8,8);
+    wx.fillStyle="#fff";wx.font="bold 210px Monoton, Bungee, sans-serif";wx.textAlign="center";wx.textBaseline="middle";wx.shadowColor="rgba(0,0,0,.5)";wx.shadowBlur=20;wx.fillText(set.dec.replace("'erne",""),512,256);wx.shadowBlur=0;wtex.needsUpdate=true};
+  const resize=()=>{R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.fov=cam.aspect<1?68:50;cam.updateProjectionMatrix()};resize();addEventListener("resize",resize);
+  // tidslinje
+  const segs=[{k:"open",d:2600}].concat(STAGE_SETS.map(s=>({k:"set",d:7200,set:s}))).concat([{k:"fin",d:3400}]);
+  let si=-1,segStart=0,ended=false,raf=0,cur=null;const t0=performance.now();introBus();
+  const cap=el.querySelector(".st-cap"),title=el.querySelector(".st-title");
+  const urls={};const audA=new Audio(),audB=new Audio();let flip=false;[audA,audB].forEach(a=>{a.muted=true;const p=a.play();if(p)p.catch(()=>{});a.pause();a.muted=false});
+  if(PREV.ok!==false)STAGE_SETS.forEach(s=>PREV.lookup({id:"stg:"+s.song.join("-"),main:s.song[0],title:s.song[1]}).then(u=>urls[s.dec]=u));
+  const startSeg=()=>{si++;if(si>=segs.length)return end(false);const sg=segs[si];segStart=performance.now();
+    if(sg.k==="open"){title.innerHTML=`<p class="i-kicker">Familien på scenen</p><h1 class="i-big">Gennem tiderne</h1>`;title.className="st-title on";cap.classList.remove("on");eraMusic("dintro",now(),2.6);dress(STAGE_SETS[0]);cur=STAGE_SETS[0]}
+    else if(sg.k==="set"){cur=sg.set;dress(cur);title.className="st-title";cap.classList.add("on");cap.querySelector(".st-dec").textContent=cur.dec;cap.querySelector(".st-song").textContent=`${cur.song[0]} · ${cur.song[1]}`;cap.querySelector(".st-names").textContent=fam.map(f=>f.name).join(" · ");
+      const u=urls[cur.dec];if(u){const a=flip?audB:audA,o=flip?audA:audB;flip=!flip;a.src=u;a.currentTime=0;a.volume=0;a.play().then(()=>{let v=0;const f=setInterval(()=>{v=Math.min(.9,v+.08);a.volume=v;if(v>=.9)clearInterval(f)},50)}).catch(()=>eraMusic(cur.era,now(),7.2));
+        let ov=o.volume;const ff=setInterval(()=>{ov=Math.max(0,ov-.08);o.volume=ov;if(ov<=0){clearInterval(ff);o.pause()}},50)}
+      else eraMusic(cur.era,now(),7.2)}
+    else{cap.classList.remove("on");title.innerHTML=`${ballHTML(110)}<h1 class="i-logo">DISKO</h1><p class="i-kicker">${SONGS.length} sange. Kan I dem alle?</p>`;title.className="st-title on";setTimeout(spinBalls,30);
+      [audA,audB].forEach(a=>{let v=a.volume;const f=setInterval(()=>{v=Math.max(0,v-.06);a.volume=v;if(v<=0){clearInterval(f);a.pause()}},50)});eraMusic("dfinale",now(),3.4);setTimeout(()=>shout("Music time!",false,"en-US"),400);confetti(180,.3)}
+    clearTimeout(startSeg.t);startSeg.t=setTimeout(startSeg,sg.d)};
+  const tick=t=>{if(ended)return;const time=(t-t0)/1000,sg=segs[si]||segs[0],local=(t-segStart)/1000,bpm=cur?cur.bpm:100,beat=time*bpm/60;
+    // kamera: ny vinkel for hvert afsnit
+    const shots=[[0,3.4,12,0,2,0],[-5,3.6,10,0,2,0],[5,2.6,9,-.5,2.2,0],[0,5.5,11,0,1.6,0],[2.5,2,8.5,0,2.4,0]];const sh=shots[(si+1)%shots.length],k=Math.min(1,local/(sg.d/1000));
+    cam.position.set(sh[0]+Math.sin(time*.3)*1.2-k*sh[0]*.25,sh[1]+Math.sin(time*.5)*.2,sh[2]-k*1.5);cam.lookAt(sh[3],sh[4],sh[5]);
+    // dans
+    avs.forEach((a,i)=>{const b=beat+i*.25,bo=Math.abs(Math.sin(b*Math.PI));a.g.position.y=.5+bo*.18;const st=cur?cur.style:"disco";
+      if(st==="disco"){a.aR.rotation.z=(Math.floor(b)%2?-2.6:-.3);a.aL.rotation.z=(Math.floor(b)%2?.3:2.6)*.4;a.body.rotation.y=Math.sin(b*Math.PI)*.3;a.g.rotation.y=Math.sin(b*Math.PI/2)*.25}
+      if(st==="rock"){a.aR.rotation.z=-.4-bo*.9;a.aL.rotation.z=.4+bo*.9;a.head.rotation.x=bo*.35;a.g.rotation.y=Math.sin(b*.5)*.2}
+      if(st==="euro"){a.aR.rotation.x=Math.sin(b*Math.PI)*1.6;a.aL.rotation.x=-Math.sin(b*Math.PI)*1.6;a.aR.rotation.z=-.3;a.aL.rotation.z=.3;a.g.rotation.y=Math.sin(b*Math.PI/2)*.5}
+      if(st==="sway"){a.aR.rotation.z=-.3-Math.sin(b*Math.PI/2)*.3;a.aL.rotation.z=.3+Math.sin(b*Math.PI/2)*.3;a.g.rotation.z=Math.sin(b*Math.PI/2)*.08;a.head.rotation.z=Math.sin(b*Math.PI/2)*.15}
+      a.legL.rotation.x=Math.sin(b*Math.PI)*.25;a.legR.rotation.x=-Math.sin(b*Math.PI)*.25});
+    spots.forEach(s=>{if(s.L){const x=Math.sin(time*.7+s.ph)*4,z=Math.cos(time*.5+s.ph)*2;s.L.target.position.set(x,0,z);s.cone.lookAt(x,0,z);s.cone.rotateX(-Math.PI/2);s.cone.position.copy(s.L.position).lerp(new T.Vector3(x,0,z),.5);s.L.intensity=1.6+Math.abs(Math.sin(beat*Math.PI))*1.2}
+      else if(s.crowd)s.crowd.position.y=.9+Math.abs(Math.sin(beat*Math.PI+s.crowd.userData.ph))*.25});
+    ball.rotation.y=time*.8;rim.material.color.setHSL((time*.1)%1,.9,.6);
+    R.render(sc,cam);raf=requestAnimationFrame(tick)};
+  const end=skipped=>{if(ended)return;ended=true;clearTimeout(startSeg.t);cancelAnimationFrame(raf);removeEventListener("resize",resize);[audA,audB].forEach(a=>{try{a.pause()}catch(e){}});introBusEnd(skipped?.15:.8);try{speechSynthesis.cancel()}catch(e){}
+    el.classList.add("out");setTimeout(()=>{el.remove();R.dispose()},600);onEnd&&onEnd()};
+  el.querySelector(".i-skip").onclick=e=>{e.stopPropagation();end(true)};
+  startSeg();raf=requestAnimationFrame(tick);
+}
+
+/* =========================================================
    STARTMENU: Hjemmebane
    ========================================================= */
 const SEEN_INTRO={};
 function hubView(){
-  setTheme("who");if(THEME.want&&ac())THEME.start();
+  setTheme("who");BGM.play("hub").then(ok=>{if(!ok&&THEME.want&&ac()&&S.view==="hub")THEME.start()});
   app.innerHTML=`<div class="row" style="justify-content:flex-end;gap:6px"><button class="iconbtn" id="thm">${THEME.want?"Tema til":"Tema fra"}</button>${muteBtn()}</div>
   <div class="hub"><div class="hub-head"><h1>Hjemmebane</h1><span class="k">SPIL, DER KUN GIVER MENING MED JERES FAMILIE</span></div>
     <button class="hub-card hub-sk" id="h-sk"><span class="hk-logo">Skyldig!</span><span class="hk-txt">Dommeren vælger i hemmelighed. Resten gætter, hvem det passer på.</span><span class="hk-meta">3 til 8 spillere · hver sin telefon eller én</span></button>
@@ -1864,12 +2057,14 @@ function hubView(){
     <div class="hub-tools"><button class="hub-tool" id="h-studio"><div><b>Familiestudiet</b><span>Rejser, kælenavne, citater og kastebilleder</span></div><i aria-hidden="true">›</i></button></div>
   </div>`;
   spinBalls();wireMute();$("#thm").onclick=()=>{THEME.toggle();$("#thm").textContent=THEME.want?"Tema til":"Tema fra"};
-  if(!THEME.on&&THEME.want){const kick=()=>{document.removeEventListener("pointerdown",kick);if((S.view==="hub"||S.view==="home")&&ac())THEME.start()};document.addEventListener("pointerdown",kick)}
-  $("#h-sk").onclick=()=>openGame("skyldig");$("#h-dz").onclick=()=>openGame("disko");$("#h-studio").onclick=()=>{SFX.whoosh();go("studio",{tab:"trips"})};
+  if(!THEME.on&&THEME.want){const kick=()=>{document.removeEventListener("pointerdown",kick);BGM.unlock();if(S.view==="hub")BGM.play("hub").then(ok=>{if(!ok&&ac()&&S.view==="hub")THEME.start()})};document.addEventListener("pointerdown",kick)}
+  $("#h-sk").onclick=()=>openGame("skyldig");$("#h-dz").onclick=()=>openGame("disko");$("#h-studio").onclick=()=>{SFX.whoosh();go("studio",{tab:"family"})};
 }
-function openGame(g,force){THEME.stop();ac();
+function openGame(g,force){THEME.stop();BGM.stop();BGM.unlock();ac();
   if(g==="skyldig"){if(SEEN_INTRO.sk&&!force)return go("home");SEEN_INTRO.sk=true;skyldigIntro(()=>go("home"))}
-  else{if(SEEN_INTRO.dz&&!force){D.quietOpen=false;return go("disco",{dv:"home"})}SEEN_INTRO.dz=true;D.quietOpen=true;discoIntro(()=>go("disco",{dv:"home"}))}}
+  else{if(SEEN_INTRO.dz&&!force){D.quietOpen=false;return go("disco",{dv:"home"})}SEEN_INTRO.dz=true;D.quietOpen=true;BGM.unlock();PREV.unlock();stageShow(()=>go("disco",{dv:"home"}))}}
+(function(){const m=/^#(disko|skyldig)-([A-Z]{4})$/.exec(location.hash||"");if(!m)return;try{history.replaceState(null,"",location.pathname)}catch(e){}
+  if(m[1]==="disko"){D.prefill=m[2];SEEN_INTRO.dz=true;D.quietOpen=true;S.view="disco";S.dv="join"}else{S.prefill=m[2];SEEN_INTRO.sk=true;S.view="online";S.sub="wait";setTimeout(()=>ON.enter(),0)}})();
 PACKDB.load().then(()=>{if(S.view==="studio")render()});
 render();
 </script>
