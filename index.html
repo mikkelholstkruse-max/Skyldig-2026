@@ -255,6 +255,8 @@ button[aria-pressed=true].who,button[aria-pressed=true].opt{border-color:var(--t
 .thumbs button{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:rgba(11,4,24,.8);color:var(--ink)}
 .upl{position:relative;display:block}
 .upl input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+.judgebox{text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center;font-size:18px;animation:deal .5s both}
+.vt.ok .av{box-shadow:0 0 0 3px var(--ok)}.vt.no{opacity:.45}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -270,39 +272,142 @@ button[aria-pressed=true].who,button[aria-pressed=true].opt{border-color:var(--t
    INDHOLD
    ========================================================= */
 const WHO={
- mild:[
-  ["Hvem kommer for sent til sin egen begravelse?","Evigt forsinket"],
-  ["Hvem ville overleve længst alene på en øde ø?","Robinson"],
-  ["Hvem bruger længst tid på badeværelset?","Badeværelsesbaronen"],
+ kaerligt:[
+  ["Hvem kender sig selv bedst?","Selvindsigtens mester"],
+  ["Hvem er klogest?","Familiens hjerne"],
+  ["Hvem er den mest håbløse romantiker?","Romeo"],
+  ["Hvem er bedst til at trøste?","Familiens skulder"],
+  ["Hvem ville man ringe til først i en krise?","Krisetelefonen"],
+  ["Hvem ville man ringe til først med gode nyheder?","Jubelkoret"],
+  ["Hvem laver den bedste mad?","Mesterkokken"],
+  ["Hvem er mest modig?","Løvehjertet"],
+  ["Hvem giver de bedste kram?","Krammebjørnen"],
+  ["Hvem er bedst til at holde på en hemmelighed?","Pengeskabet"],
+  ["Hvem er mest hjælpsom, uden at nogen beder om det?","Den stille helt"],
+  ["Hvem er bedst til at lytte?","Det store øre"],
+  ["Hvem giver de bedste gaver?","Gavegeniet"],
+  ["Hvem er mest generøs?","Gavmildheden selv"],
+  ["Hvem er mest tålmodig?","Zen-mesteren"],
+  ["Hvem er mest kreativ?","Kunstneren"],
+  ["Hvem husker altid de små ting om andre?","Familiens hukommelse"],
+  ["Hvem ville være den bedste rejseleder?","Rejselederen"],
+  ["Hvem bliver den bedste bedsteforælder?","Fremtidens yndlingsbedste"],
+  ["Hvem er familiens lim?","Limen"],
+  ["Hvem har det største hjerte?","Hjertet"],
+  ["Hvem er bedst til at få andre til at føle sig set?","Spotlyset"],
+  ["Hvem har udviklet sig mest de sidste fem år?","Opgraderingen"],
+  ["Hvem er mest loyal?","Klippen"],
+  ["Hvem giver de bedste råd?","Orakelet"],
+  ["Hvem er mest positiv?","Solstrålen"],
+  ["Hvem er bedst til at fejre andre?","Festkomitéen"],
+  ["Hvem ville man stole på med sit liv?","Livvagten"],
+  ["Hvem er mest nysgerrig på verden?","Opdagelsesrejsende"],
+  ["Hvem ville man helst have med på en øde ø?","Ø-makkeren"],
+  ["Hvem er bedst til at sige undskyld?","Fredsmægleren"],
+  ["Hvem står altid op for andre?","Forsvarsadvokaten"],
+  ["Hvem ville være den bedste statsminister?","Statsministeren"],
+  ["Hvem er mest hjemmekær?","Hjemmefødningen"],
+  ["Hvem ville man helst have som nabo?","Drømmenaboen"],
+ ],
+ sjove:[
+  ["Hvem tager de længste bade?","Brusebaronen"],
+  ["Hvem er oftest ude med venner?","Den sociale sommerfugl"],
+  ["Hvem er mest stædig?","Æslet"],
+  ["Hvem er altid længst oppe?","Natuglen"],
+  ["Hvem kommer oftest for sent?","Evigt forsinket"],
+  ["Hvem bruger længst tid foran spejlet?","Spejlets bedste ven"],
   ["Hvem spiser de sidste chips uden at spørge?","Chipstyven"],
   ["Hvem græder først til en film?","Tudefjæs"],
   ["Hvem snorker højest?","Motorsaven"],
-  ["Hvem har den dårligste stedsans?","Altid faret vild"],
-  ["Hvem siger 'fem minutter' og mener en time?","Fem-minutters-løgneren"],
-  ["Hvem bliver surest, når de taber i spil?","Dårlig taber"],
-  ["Hvem har flest ting liggende, de aldrig bruger?","Samleren"],
-  ["Hvem er bedst til at lyve med et stenansigt?","Pokerfjæset"],
-  ["Hvem er mest stædig?","Æslet"],
-  ["Hvem falder først i søvn foran fjernsynet?","Sofasoveren"],
+  ["Hvem har den dårligste stedsans?","Kompasløs"],
+  ["Hvem bliver surest over at tabe?","Dårlig taber"],
   ["Hvem har altid ret, også når de tager fejl?","Højesteret"],
-  ["Hvem er dårligst til at holde en hemmelighed?","Sladrehanken"],
-  ["Hvem ville klare sig dårligst uden telefon i en uge?","Skærmzombien"],
+  ["Hvem er dårligst til at holde på en hemmelighed?","Sladrehanken"],
+  ["Hvem falder først i søvn foran fjernsynet?","Sofasoveren"],
+  ["Hvem får alle til at grine?","Familiens klovn"],
+  ["Hvem er mest konkurrencemindet?","Vinderinstinktet"],
+  ["Hvem er mest nærig?","Pengepugeren"],
+  ["Hvem køber flest ting, de ikke har brug for?","Impulskøberen"],
+  ["Hvem er mest rodet?","Rodehovedet"],
+  ["Hvem er mest pertentlig?","Ordensmesteren"],
+  ["Hvem er mest teknisk håbløs?","Teknikforskrækkelsen"],
+  ["Hvem er mest afhængig af sin telefon?","Skærmzombien"],
+  ["Hvem er det største morgenmenneske?","Morgenfuglen"],
+  ["Hvem er sværest at vække?","Dynedyret"],
+  ["Hvem tænker mest på mad?","Madøret"],
+  ["Hvem er mest kræsen?","Kræsenpinden"],
+  ["Hvem er mest dramatisk?","Dramaets mester"],
+  ["Hvem siger 'jeg er på vej', mens de stadig er hjemme?","På-vej-løgneren"],
+  ["Hvem er mest nostalgisk?","Mindebogen"],
+  ["Hvem er mest eventyrlysten?","Eventyreren"],
+  ["Hvem bekymrer sig mest?","Bekymringsmesteren"],
+  ["Hvem har den korteste lunte?","Lunten"],
+  ["Hvem glemmer oftest fødselsdage?","Kalenderkatastrofen"],
+  ["Hvem ville klare sig bedst alene på en øde ø?","Robinson"],
+  ["Hvem ville vinde en quiz på tv?","Quizmesteren"],
+  ["Hvem er bedst til at danse?","Dansestjernen"],
+  ["Hvem synger højest i bilen?","Bil-karaoke-kongen"],
+  ["Hvem har den værste musiksmag?","DJ Katastrofe"],
+  ["Hvem er mest sporty?","Atleten"],
+  ["Hvem er mest doven?","Sofakartoflen"],
+  ["Hvem er bedst til at lyve med et stenansigt?","Pokerfjæset"],
+  ["Hvem er mest naiv?","Den godtroende"],
+  ["Hvem er mest skeptisk?","Tvivleren"],
+  ["Hvem vil helst have det sidste ord?","Sidste-ord-mesteren"],
+  ["Hvem bliver mest sur, når de er sultne?","Sultesuren"],
+  ["Hvem bruger flest emojis?","Emoji-mesteren"],
+  ["Hvem tager flest selfies?","Selfie-stjernen"],
+  ["Hvem er nemmest at overtale?","Den bløde"],
+  ["Hvem har den bedste hukommelse?","Elefanten"],
+  ["Hvem er mest overtroisk?","Overtroens vogter"],
+  ["Hvem er mest perfektionist?","Perfektionisten"],
+  ["Hvem bruger længst tid på toilettet?","Tronen"],
+  ["Hvem ignorerer oftest familiechatten?","Spøgelset"],
+  ["Hvem har flest ulæste beskeder?","Ulæst-mesteren"],
+  ["Hvem farer først vild i IKEA?","IKEA-forsvundet"],
+  ["Hvem er mest kilden?","Kildekongen"],
+  ["Hvem pakker altid alt for meget?","Kuffertkongen"],
+  ["Hvem er dårligst til at slappe af på ferie?","Ferie-workaholic"],
+  ["Hvem ser flest serier?","Serie-slugeren"],
+  ["Hvem ville overleve længst uden kaffe?","Koffeinfri"],
+  ["Hvem ville være den værste deltager i Robinson?","Første ud af øen"],
+  ["Hvem siger oftest 'det har jeg jo sagt'?","Profeten"],
  ],
- krydret:[
+ spicy:[
   ["Hvem lugter mest efter en løbetur?","Stinkebomben"],
   ["Hvem har det mest pinlige billede på telefonen?","Kamerarullens skam"],
   ["Hvem lyver om, hvad tingene har kostet?","Prisløgneren"],
-  ["Hvem kigger mest i spejlet?","Spejlets bedste ven"],
   ["Hvem ville blive smidt først ud af et realityshow?","Første exit"],
   ["Hvem har sagt noget, de fortrød, til en julefrokost?","Julefrokostens legende"],
   ["Hvem har den mest pinlige søgehistorik?","Søgehistorikkens hemmelighed"],
-  ["Hvem har sagt 'jeg er på vej', mens de lå i sengen?","På-vej-løgneren"],
   ["Hvem ville snyde i det her spil?","Snydepelsen"],
   ["Hvem prutter og giver en anden skylden?","Syndebukkemesteren"],
-  ["Hvem har den værste musiksmag i bilen?","DJ Katastrofe"],
   ["Hvem er mest dramatisk, når de er syge?","Mandeinfluenza"],
- ],
- vild:[
+  ["Hvem flirter mest?","Charmetrolden"],
+  ["Hvem er mest forfængelig?","Påfuglen"],
+  ["Hvem sladrer mest?","Sladderbladet"],
+  ["Hvem bliver hurtigst fuld?","Billig i drift"],
+  ["Hvem har den værste bordskik?","Smaskeren"],
+  ["Hvem er mest jaloux?","Den grønne"],
+  ["Hvem er mest kontrollerende?","Kontroltårnet"],
+  ["Hvem tager længst tid om at blive klar?","Klar-om-to-minutter"],
+  ["Hvem regner altid ud, hvem der skylder hvad?","Regnemaskinen"],
+  ["Hvem siger 'det var ikke mig', når det var?","Benægteren"],
+  ["Hvem lader oftest opvasken stå?","Opvaskeflygtningen"],
+  ["Hvem er mest passiv-aggressiv?","Den søde trussel"],
+  ["Hvem er værst til at sige undskyld?","Undskyld-allergikeren"],
+  ["Hvem blev mest forkælet som barn?","Den forkælede"],
+  ["Hvem kritiserer mest andres madlavning?","Madanmelderen"],
+  ["Hvem forsvinder altid, når der skal ryddes op?","Usynlighedsmesteren"],
+  ["Hvem ville læse en andens dagbog?","Den nysgerrige"],
+  ["Hvem har googlet sig selv?","Selvgoogleren"],
+  ["Hvem bliver mest sur, hvis de ikke får ret?","Surmulen"],
+  ["Hvem spiser i smug om natten?","Køleskabsnatteravnen"],
+  ["Hvem bander mest?","Bandeordbogen"],
+  ["Hvem ville være den værste chef?","Tyrannen"],
+  ["Hvem kører værst bil?","Kørelærerens mareridt"],
+  ["Hvem kommenterer mest på andres tøj?","Modepolitiet"],
+  ["Hvem har den mærkeligste vane?","Vanedyret"],
   ["Hvem ville overleve kortest i en zombieapokalypse?","Zombiefrokost"],
   ["Hvem kommer hjem fra ferie med en tatovering?","Spontan-tatoveringen"],
   ["Hvem ender med at rage uklar med naboen?","Naboens mareridt"],
@@ -311,23 +416,22 @@ const WHO={
   ["Hvem ville gifte sig i Las Vegas efter én aften?","Vegas-bruden"],
   ["Hvem starter oftest et skænderi ved middagsbordet?","Gnisten"],
   ["Hvem ville blive anholdt først på en ferie?","Feriefangen"],
-  ["Hvem ville man aldrig give sin pinkode?","Aldrig-pinkoden"],
+  ["Hvem ville deltage i Paradise Hotel?","Paradisgæsten"],
+  ["Hvem ville kunne starte en sekt?","Sektlederen"],
+  ["Hvem ville bruge en million på noget helt ubrugeligt?","Millionødsleren"],
+  ["Hvem ville sige ja til et frieri på første date?","Første-date-forlovet"],
+  ["Hvem ville blive smidt ud af en bar først?","Udsmiderens favorit"],
+  ["Hvem ville flytte til udlandet med en uges varsel?","Udvandreren"],
+  ["Hvem har sendt en besked til den forkerte person?","Forkert-modtager"],
+  ["Hvem ville gå viral af en pinlig grund?","Viral-ulykken"],
+  ["Hvem ville vinde en ægte slåskamp?","Bokseren"],
+  ["Hvem ville få os alle smidt ud af en restaurant?","Restaurantforbuddet"],
+  ["Hvem har lavet den største brøler i familiens historie?","Brølerkongen"],
+  ["Hvem har haft den mest pinlige frisure?","Frisurekatastrofen"],
+  ["Hvem har flest hemmelige crushes på kendte?","Fan-girl"],
  ]
 };
-const KIND=[
- ["Hvem af os er bedst til at trøste?","Familiens skulder"],
- ["Hvem ville man ringe til i en krise?","Krisetelefonen"],
- ["Hvem får alle til at grine?","Familiens klovn"],
- ["Hvem laver den bedste mad?","Mesterkokken"],
- ["Hvem er mest modig?","Løvehjertet"],
- ["Hvem ville være den bedste rejseleder?","Rejselederen"],
- ["Hvem giver de bedste kram?","Krammebjørnen"],
- ["Hvem er bedst til at holde på en hemmelighed?","Pengeskabet"],
- ["Hvem ville vinde Vild med dans?","Dansestjernen"],
- ["Hvem husker altid de små ting om andre?","Familiens hukommelse"],
- ["Hvem er mest hjælpsom, uden at nogen beder om det?","Den stille helt"],
- ["Hvem ville man helst have med på en øde ø?","Ø-makkeren"],
-];
+const CATS={kaerligt:"Kærligt",sjove:"Sjove",spicy:"Spicy"};
 const HOT=[
  ["Hvad ville {n} helst undvære resten af livet?",["Kaffe","Telefonen","Ost","Sofaen"]],
  ["Hvad er {n}s drømmeferie?",["Storby","Strand og palmer","Skiferie","Sommerhus i Danmark"]],
@@ -407,20 +511,18 @@ const DEFAULT_PACK={
  victory:"Familien har talt"
 };
 const TYPES={
- who:{name:"Hvem af os?",color:"#ff3d7f",sub:"Tre i spil. Peg på den skyldige.",pts:"Jo mere uenige, jo flere point"},
- kind:{name:"Hvem af os?",color:"#ff6fa3",sub:"Den kærlige udgave.",pts:"Jo mere uenige, jo flere point"},
- trip:{name:"Rejsedommen",color:"#4de0c5",sub:"Hvad husker familien?",pts:"Flertallet bestemmer sandheden"},
- tripyear:{name:"Rejsedommen",color:"#4de0c5",sub:"Hvilket år var det?",pts:"Tættest: +3, præcist: +5"},
- hot:{name:"Hot seat",color:"#ff8a3d",sub:"Én svarer ærligt. Resten gætter.",pts:"Rigtigt gæt: +3"},
- hotnum:{name:"Hot seat",color:"#ff8a3d",sub:"Gæt tallet. Tættest vinder.",pts:"Tættest: +3, præcist: +5"},
- quiz:{name:"Familiearkivet",color:"#62d1ff",sub:"Hvor godt husker I jer selv?",pts:"Rigtigt: +3"},
- quote:{name:"Hvem sagde det?",color:"#c38bff",sub:"Et citat fra familiens arkiv.",pts:"Rigtigt: +3"},
- trivia:{name:"Hjernevrider",color:"#8fa8ff",sub:"Almen viden.",pts:"Rigtigt: +2"},
- est:{name:"Tættest på",color:"#ffd23f",sub:"Gæt et tal. Tættest vinder.",pts:"Tættest: +3, præcist: +5"},
+ who:{name:"Hvem af os?",color:"#ff3d7f",sub:"Dommeren bestemmer svaret.",pts:"Rigtigt gæt +2 · dommeren +1 pr. rigtigt gæt"},
+ trip:{name:"Rejsedommen",color:"#4de0c5",sub:"Dommeren husker sandheden.",pts:"Rigtigt gæt +2 · dommeren +1 pr. rigtigt gæt"},
+ tripyear:{name:"Rejsedommen",color:"#4de0c5",sub:"Hvilket år var det?",pts:"Tættest +2 · præcist +3"},
+ hot:{name:"Hot seat",color:"#ff8a3d",sub:"Dommeren svarer ærligt om sig selv.",pts:"Rigtigt gæt +2 · dommeren +1 pr. rigtigt gæt"},
+ quiz:{name:"Familiearkivet",color:"#62d1ff",sub:"Hvor godt husker I jer selv?",pts:"Rigtigt +2"},
+ quote:{name:"Hvem sagde det?",color:"#c38bff",sub:"Et citat fra familiens arkiv.",pts:"Rigtigt +2"},
+ trivia:{name:"Hjernevrider",color:"#8fa8ff",sub:"Almen viden.",pts:"Rigtigt +2"},
+ est:{name:"Tættest på",color:"#ffd23f",sub:"Gæt et tal. Tættest vinder.",pts:"Tættest +2 · præcist +3"},
 };
-const MAJ=t=>t==="who"||t==="kind"||t==="trip";
+const MAJ=t=>t==="who"||t==="trip";
 const COLORS=["#ff3d7f","#ffd23f","#4de0c5","#8fa8ff","#ff8a3d","#c38bff","#7ae35f","#ff6b6b"];
-const TARGET=21,COURT_SEC={splid:15,indsigelse:20};
+const TARGET=21,COURT_SEC={indsigelse:20};
 const HOME={lat:55.9,lon:10.5};
 /* steder: [navn, lat, lon, land på engelsk] */
 const PLACES=[["Blokhus",57.25,9.58,"Denmark"],["Skagen",57.72,10.58,"Denmark"],["Bornholm",55.13,14.92,"Denmark"],["Lalandia Billund",55.73,9.11,"Denmark"],["Legoland",55.735,9.13,"Denmark"],["Fanø",55.42,8.41,"Denmark"],["Løkken",57.37,9.71,"Denmark"],["Henne Strand",55.73,8.17,"Denmark"],["Hvide Sande",56.0,8.13,"Denmark"],["Samsø",55.87,10.6,"Denmark"],["Ærø",54.88,10.4,"Denmark"],["Rømø",55.13,8.5,"Denmark"],["Marielyst",54.67,11.95,"Denmark"],["København",55.68,12.57,"Denmark"],["Aarhus",56.16,10.2,"Denmark"],
@@ -622,113 +724,91 @@ function globeHTML(id,tall,cap){return `<div class="globe${tall?" tall":""}" id=
 function tripCap(rd){return `<b>${esc(rd.trip.place)}</b><span>${esc(rd.trip.year||"")}</span>`}
 
 /* =========================================================
-   EFTERLYST-PLAKATER
-   ========================================================= */
-const POSTER_CACHE={};
-async function makePoster(p,title){
-  const key=p.id+"|"+title+"|"+(p.photo?p.photo.length:0);if(POSTER_CACHE[key])return POSTER_CACHE[key];
-  try{await document.fonts.load("60px Bungee")}catch(e){}
-  const W=480,H=660,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
-  x.fillStyle="#efd9a8";x.fillRect(0,0,W,H);
-  const id=x.getImageData(0,0,W,H);for(let i=0;i<id.data.length;i+=4){const n=(Math.random()-.5)*26;id.data[i]+=n;id.data[i+1]+=n;id.data[i+2]+=n*.8}x.putImageData(id,0,0);
-  const g=x.createRadialGradient(W/2,H/2,H*.25,W/2,H/2,H*.72);g.addColorStop(0,"rgba(120,70,20,0)");g.addColorStop(1,"rgba(90,45,10,.55)");x.fillStyle=g;x.fillRect(0,0,W,H);
-  x.fillStyle="#3b1d0c";x.textAlign="center";x.font="64px Bungee, 'Arial Black', sans-serif";x.fillText("EFTERLYST",W/2,92);
-  x.font="700 18px 'Bricolage Grotesque', sans-serif";x.fillText("AF HELE FAMILIEN",W/2,124);
-  x.strokeStyle="#3b1d0c";x.lineWidth=3;x.strokeRect(70,148,340,300);
-  if(p.photo){const im=await new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=p.photo});
-    if(im){x.drawImage(im,74,152,332,292);const d=x.getImageData(74,152,332,292);for(let i=0;i<d.data.length;i+=4){const r=d.data[i],gg=d.data[i+1],b=d.data[i+2];d.data[i]=Math.min(255,r*.393+gg*.769+b*.189);d.data[i+1]=Math.min(255,r*.349+gg*.686+b*.168);d.data[i+2]=Math.min(255,r*.272+gg*.534+b*.131)}x.putImageData(d,74,152)}}
-  else{x.fillStyle="#c9a36a";x.fillRect(74,152,332,292);x.fillStyle="#3b1d0c";x.font="170px Bungee, sans-serif";x.fillText((p.name||"?")[0].toUpperCase(),W/2,365)}
-  x.fillStyle="#3b1d0c";x.font="40px Bungee, 'Arial Black', sans-serif";x.fillText(String(p.name).toUpperCase().slice(0,14),W/2,505);
-  x.font="800 22px 'Bricolage Grotesque', sans-serif";x.fillText("for at være",W/2,540);
-  x.fillStyle="#8a1f1f";let fs=34;x.font=`${fs}px Bungee, sans-serif`;while(x.measureText(title).width>420&&fs>18){fs-=2;x.font=`${fs}px Bungee, sans-serif`}x.fillText(title,W/2,584);
-  x.fillStyle="#3b1d0c";x.font="700 18px 'Bricolage Grotesque', sans-serif";x.fillText("DUSØR: 21 POINT",W/2,630);
-  x.save();x.translate(W-92,H-120);x.rotate(-.3);x.strokeStyle="rgba(170,20,20,.75)";x.lineWidth=5;x.strokeRect(-70,-26,140,52);x.fillStyle="rgba(170,20,20,.75)";x.font="28px Bungee, sans-serif";x.fillText("DØMT",0,10);x.restore();
-  const url=c.toDataURL("image/jpeg",.85);POSTER_CACHE[key]=url;return url;
-}
-async function savePoster(url,name){
-  try{const dl=await (window.claude?.use?.("downloads"));if(!dl)throw 0;const blob=await (await fetch(url)).blob();await dl.save({filename:`efterlyst-${name}.jpg`,data:blob});return true}catch(e){return false}
-}
-
-/* =========================================================
    SPILMOTOR (ens for én telefon og online)
    ========================================================= */
-function buildSeq(spice,pack,count=40){
-  let who=[...WHO.mild];if(spice!=="mild")who=who.concat(WHO.krydret);if(spice==="vild")who=who.concat(WHO.vild);
+/* Dommer-modellen: den, det handler om (dommeren), sætter svaret. Alle andre gætter.
+   Rigtigt gæt: +2. Forkert: 0. Dommeren: +1 for hvert rigtigt gæt. */
+const JUDGE=t=>t==="who"||t==="trip"||t==="hot";
+const BOARD=t=>t==="who"||t==="trip";
+let SEEN=new Set(store("skyldig.seen")||[]);
+function markSeen(k){if(!k||SEEN.has(k))return;SEEN.add(k);const a=[...SEEN].slice(-800);store("skyldig.seen",a);if(ON.db&&(!ON.code||ON.isHost()))try{ON.db.doc("pack/seen").set({k:a}).catch(()=>{})}catch(e){}}
+function freshFirst(list,key){const a=shuffle(list);return a.filter(x=>!SEEN.has(key(x))).concat(a.filter(x=>SEEN.has(key(x))))}
+function buildSeq(cats,pack,count=90){
+  cats=(cats&&cats.length?cats:["kaerligt","sjove","spicy"]).filter(c=>WHO[c]);
+  let who=[];cats.forEach(c=>who=who.concat(WHO[c]));
   const own=(pack.who||[]).map(x=>[x.q,x.title||"Familiens dom"]);
   (pack.words||[]).forEach(w=>own.push([`Hvem siger oftest "${w.w}"?`,`Mester i "${w.w}"`]));
-  const trips=(pack.trips||[]).filter(t=>t.lat!=null);
-  const pools={who:shuffle(own).concat(shuffle(who)),kind:shuffle(KIND),hot:shuffle(HOT),hotnum:shuffle(HOTNUM),trivia:shuffle(TRIVIA),est:shuffle(EST),
-    trip:trips.length?shuffle(trips).flatMap((t,i)=>shuffle(TRIPQ).slice(0,3).map(q=>({t,q}))):[],
-    tripyear:shuffle(trips.filter(t=>t.year)),
-    quiz:shuffle((pack.quiz||[]).map(x=>({q:x.q,a:x.a,w:x.w,ex:x.ex})).concat((pack.words||[]).map(w=>({q:`Hvad betyder "${w.w}" i vores familie?`,a:w.def,w:shuffle((pack.words||[]).filter(o=>o!==w).map(o=>o.def).concat(shuffle(FAKE_DEFS))).slice(0,3),ex:w.ex})))),
-    quote:shuffle(pack.quotes||[])};
-  // trip-spørgsmål blandes, så samme rejse ikke kommer to gange i træk
-  pools.trip=pools.trip.sort(()=>Math.random()-.5);
-  const idx={};const take=k=>{const p=pools[k];if(!p.length)return null;idx[k]=idx[k]||0;return p[idx[k]++%p.length]};
-  const pattern=["who","hot","trip","who","kind","trivia","who","hot","tripyear","quote","who","trip","est","kind","hot","quiz","who","trip","hotnum","who"];
+  const trips=(pack.trips||[]).filter(t=>t.lat!=null);const K=x=>x[0];
+  const tripItems=trips.flatMap(t=>TRIPQ.map(q=>({t,q,k:t.place+": "+q[0]})));
+  const pools={who:freshFirst(own,K).concat(freshFirst(who,K)),hot:freshFirst(HOT,K),trivia:freshFirst(TRIVIA,K),est:freshFirst(EST,K),
+    trip:freshFirst(tripItems,x=>x.k),tripyear:freshFirst(trips.filter(t=>t.year),t=>"år:"+t.place),
+    quiz:freshFirst((pack.quiz||[]).map(x=>({q:x.q,a:x.a,w:x.w,ex:x.ex})).concat((pack.words||[]).map(w=>({q:`Hvad betyder "${w.w}" i vores familie?`,a:w.def,w:shuffle((pack.words||[]).filter(o=>o!==w).map(o=>o.def).concat(shuffle(FAKE_DEFS))).slice(0,3),ex:w.ex}))),x=>x.q),
+    quote:freshFirst(pack.quotes||[],x=>x.q)};
+  // samme rejse ikke to gange i træk
+  const tr=[];let rest=pools.trip.slice();while(rest.length){const last=tr[tr.length-1];let i=rest.findIndex(x=>!last||x.t.place!==last.t.place);if(i<0)i=0;tr.push(rest.splice(i,1)[0])}pools.trip=tr;
+  const idx={};const take=k=>{const p=pools[k];idx[k]=idx[k]||0;return idx[k]<p.length?p[idx[k]++]:null};
+  const pattern=["who","who","hot","who","trip","who","trivia","who","hot","who","trip","quote","who","est","who","hot","quiz","who","trip","tripyear"];
   const seq=[];
-  for(let i=0;seq.length<count&&i<500;i++){
-    let k=pattern[i%pattern.length];
-    if((k==="trip"||k==="tripyear")&&!pools[k].length)k=i%2?"who":"kind";
-    if((k==="quiz"||k==="quote")&&!pools[k].length)k=i%2?"hot":"who";
-    const it=take(k);if(!it)continue;let rd;
-    if(k==="who"||k==="kind")rd={type:k,q:it[0],title:it[1]};
-    else if(k==="hot")rd={type:"hot",q:it[0],opts:it[1]};
-    else if(k==="hotnum")rd={type:"hotnum",q:it[0],unit:it[1]};
-    else if(k==="trivia")rd={type:"trivia",q:it[0],ans:it[1][0],opts:shuffle(it[1])};
-    else if(k==="est")rd={type:"est",q:it[0],ans:it[1],unit:it[2]};
-    else if(k==="trip")rd={type:"trip",q:`${it.t.place}${it.t.year?" "+it.t.year:""}: ${it.q[0]}`,title:`${it.q[1]} · ${it.t.place}`,trip:it.t,ex:!!it.t.ex};
-    else if(k==="tripyear")rd={type:"tripyear",q:`Hvilket år var vi i ${it.place}?`,ans:Number(it.year),unit:"",trip:it,ex:!!it.ex};
-    else if(k==="quiz")rd={type:"quiz",q:it.q,ans:it.a,opts:shuffle([it.a,...(it.w||[]).filter(Boolean)].slice(0,4)),ex:!!it.ex};
-    else if(k==="quote")rd={type:"quote",q:it.q,ans:it.who,ex:!!it.ex};
-    if((seq.length+1)%5===0)rd.golden=true;
+  for(let i=0;seq.length<count&&i<1200;i++){
+    let k=pattern[i%pattern.length];let it=take(k);
+    if(!it&&k!=="who"){k="who";it=take(k)}
+    if(!it){k="hot";it=take(k)}
+    if(!it)continue;let rd;
+    if(k==="who")rd={type:"who",q:it[0],title:it[1],key:it[0]};
+    else if(k==="hot")rd={type:"hot",q:it[0],opts:it[1],key:it[0]};
+    else if(k==="trivia")rd={type:"trivia",q:it[0],ans:it[1][0],opts:shuffle(it[1]),key:it[0]};
+    else if(k==="est")rd={type:"est",q:it[0],ans:it[1],unit:it[2],key:it[0]};
+    else if(k==="trip")rd={type:"trip",q:`${it.t.place}${it.t.year?" "+it.t.year:""}: ${it.q[0]}`,title:`${it.q[1]} · ${it.t.place}`,trip:it.t,ex:!!it.t.ex,key:it.k};
+    else if(k==="tripyear")rd={type:"tripyear",q:`Hvilket år var vi i ${it.place}?`,ans:Number(it.year),unit:"",trip:it,ex:!!it.ex,key:"år:"+it.place};
+    else if(k==="quiz")rd={type:"quiz",q:it.q,ans:it.a,opts:shuffle([it.a,...(it.w||[]).filter(Boolean)].slice(0,4)),ex:!!it.ex,key:it.q};
+    else if(k==="quote")rd={type:"quote",q:it.q,ans:it.who,ex:!!it.ex,key:it.q};
+    if((seq.length+1)%6===0)rd.golden=true;
     seq.push(rd);
   }
   return seq;
 }
-function newGame(seq){return {status:"play",n:0,ph:"a",seq,scores:{},titles:{},hotCount:{},lastCand:null,stats:{},posters:[],trips:[],objUsed:{},rd:null,result:null,court:null,snap:null}}
-function prepRound(G,players){
-  const n=G.n+1,base=clone(G.seq[(n-1)%G.seq.length]),ids=players.map(p=>p.id);let hotCount=G.hotCount||{},lastCand=G.lastCand||null;
-  if(base.type==="who"||base.type==="kind"){const pool=shuffle(ids).sort((a,b)=>((lastCand||[]).includes(a)?1:0)-((lastCand||[]).includes(b)?1:0));base.cand=shuffle(pool.slice(0,Math.min(3,pool.length)));lastCand=base.cand}
-  if(base.type==="trip")base.cand=shuffle(ids).slice(0,Math.min(4,ids.length));
-  if(base.type==="hot"||base.type==="hotnum"){const min=Math.min(...ids.map(i=>hotCount[i]||0));base.hot=shuffle(ids.filter(i=>(hotCount[i]||0)===min))[0];base.q=base.q.split("{n}").join(players.find(p=>p.id===base.hot).name);hotCount={...hotCount,[base.hot]:(hotCount[base.hot]||0)+1}}
+function newGame(seq){return {status:"play",n:0,qi:0,ji:0,sk:0,ph:"a",seq,scores:{},titles:{},stats:{},trips:[],objUsed:{},rd:null,result:null,court:null,snap:null}}
+function prepRound(G,players,skip){
+  const ids=players.map(p=>p.id);let qi=G.qi||0;if(qi>=(G.seq||[]).length)return null;
+  const base=clone(G.seq[qi]);qi++;let ji=G.ji||0;
+  const keep=skip&&G.rd&&G.rd.judge&&ids.includes(G.rd.judge);
+  const judge=keep?G.rd.judge:ids[ji%ids.length];if(!keep)ji++;
+  if(JUDGE(base.type))base.judge=judge;
+  if(BOARD(base.type))base.cand=ids.length>6?shuffle(ids).slice(0,6):ids.slice();
+  if(base.type==="hot")base.q=base.q.split("{n}").join(players.find(p=>p.id===judge).name);
   if(base.type==="quote"){const m=players.find(p=>norm(p.name)===norm(base.ans));base.ans=m?m.name:base.ans;base.opts=shuffle([base.ans,...shuffle(players.map(p=>p.name).filter(x=>norm(x)!==norm(base.ans))).slice(0,3)])}
-  return {status:"play",n,ph:"a",rd:base,hotCount,lastCand,result:null,court:null};
-}
-function tallyMaj(cands,ans){
-  const counts={};cands.forEach(c=>counts[c]=0);Object.values(ans).forEach(t=>{if(t in counts)counts[t]++});
-  const votes=Object.values(counts).reduce((a,b)=>a+b,0),max=Math.max(0,...Object.values(counts));
-  const winners=max>0?cands.filter(c=>counts[c]===max):[];const distinct=Object.values(counts).filter(v=>v>0).length;
-  const tie=winners.length>1&&votes>1;const maxD=Math.min(cands.length,votes)||1;
-  const level=tie?1:maxD>1?(distinct-1)/(maxD-1):0;
-  return {counts,winners,distinct,tie,level,pot:Math.min(3,Math.max(1,distinct))};
+  const sk=skip?(G.sk||0)+1:0;
+  return {status:"play",n:skip?G.n:G.n+1,qi,ji,sk,ph:skip?"a"+sk:"a",rd:base,result:null,court:null};
 }
 function scoreAll(rd,ans,players){
   const gain={};const add=(id,n)=>gain[id]=(gain[id]||0)+n;const ids=players.map(p=>p.id);let r={truth:null,winners:[]};
-  if(MAJ(rd.type)){const t=tallyMaj(rd.cand,ans);r={...t};ids.forEach(id=>{if(t.winners.includes(ans[id]))add(id,t.pot)})}
-  else if(rd.type==="hot"){const truth=ans[rd.hot];let right=0;const picks=new Set();ids.forEach(id=>{if(id===rd.hot)return;picks.add(ans[id]);if(ans[id]===truth){add(id,3);right++}});if(right)add(rd.hot,Math.min(3,right));r={truth,winners:[],distinct:picks.size,level:picks.size>=3?1:picks.size===2?.5:0}}
-  else if(rd.type==="hotnum"||rd.type==="est"||rd.type==="tripyear"){const truth=rd.type==="hotnum"?Number(ans[rd.hot]):Number(rd.ans);const g=ids.filter(id=>!(rd.type==="hotnum"&&id===rd.hot)&&ans[id]!==undefined&&ans[id]!==""&&!isNaN(Number(ans[id])));let winners=[];if(g.length){const d=id=>Math.abs(Number(ans[id])-truth);const min=Math.min(...g.map(d));winners=g.filter(id=>d(id)===min);winners.forEach(id=>add(id,min===0?5:3))}if(rd.type==="hotnum")add(rd.hot,1);r={truth,winners}}
-  else{const truth=rd.ans,pts=rd.type==="trivia"?2:3;const picks=new Set(Object.values(ans));ids.forEach(id=>{if(norm(ans[id])===norm(truth))add(id,pts)});r={truth,winners:[],distinct:picks.size,level:picks.size>=3?1:picks.size===2?.5:0}}
+  if(JUDGE(rd.type)){
+    const truth=ans[rd.judge];const guesses={};ids.forEach(id=>{if(id!==rd.judge&&ans[id]!=null)guesses[id]=ans[id]});
+    const winners=Object.keys(guesses).filter(id=>guesses[id]===truth);winners.forEach(id=>add(id,2));if(winners.length)add(rd.judge,winners.length);
+    const vals=Object.values(guesses),distinct=new Set(vals).size,opts=(BOARD(rd.type)?rd.cand:rd.opts).length;
+    const maxD=Math.min(vals.length,opts);r={truth,winners,guesses,distinct,level:maxD>1?(distinct-1)/(maxD-1):0};
+  }else if(rd.type==="est"||rd.type==="tripyear"){const truth=Number(rd.ans);const g=ids.filter(id=>ans[id]!==undefined&&ans[id]!==""&&!isNaN(Number(ans[id])));let winners=[];if(g.length){const d=id=>Math.abs(Number(ans[id])-truth);const min=Math.min(...g.map(d));winners=g.filter(id=>d(id)===min);winners.forEach(id=>add(id,min===0?3:2))}r={truth,winners}}
+  else{const truth=rd.ans;const picks=new Set(Object.values(ans));const winners=ids.filter(id=>norm(ans[id])===norm(truth));winners.forEach(id=>add(id,2));r={truth,winners,distinct:picks.size,level:picks.size>=3?1:picks.size===2?.5:0}}
   if(rd.golden)Object.keys(gain).forEach(k=>gain[k]*=2);
   r.gain=gain;return r;
 }
-/* alle har svaret: enten retssal (fuld splid) eller afsløring */
+/* alle har svaret (i en indsigelse kun dommeren) */
 function resolve(G,ans,players){
-  const rd=G.rd;
-  if(MAJ(rd.type)&&G.ph==="a"){const t=tallyMaj(rd.cand,ans);if(t.tie&&G.n-(G.lastCourt||-9)>=3)return {status:"court",ph:"b",lastCourt:G.n,court:{reason:"splid",ids:t.winners,firstAns:ans},result:null}}
-  const res=scoreAll(rd,ans,players);
-  const snap={scores:G.scores,titles:G.titles,stats:G.stats,posters:G.posters,trips:G.trips};
+  const rd=G.rd;const all=G.ph==="b"&&G.court?.firstAns?{...G.court.firstAns,[rd.judge]:ans[rd.judge]}:ans;
+  const res=scoreAll(rd,all,players);
+  const snap={scores:G.scores,titles:G.titles,stats:G.stats,trips:G.trips};
   const scores={...G.scores};Object.entries(res.gain).forEach(([id,n])=>scores[id]=(scores[id]||0)+n);
-  const titles=clone(G.titles)||{},posters=(G.posters||[]).slice(),stats=clone(G.stats)||{},trips=(G.trips||[]).slice();
-  if(MAJ(rd.type)){res.winners.forEach(w=>{(titles[w]=titles[w]||[]).push(rd.title);posters.push({uid:w,title:rd.title,n:G.n})});
-    const ids=players.map(p=>p.id);for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++){const a=ids[i],b=ids[j];if(ans[a]==null||ans[b]==null)continue;const k=a<b?a+"|"+b:b+"|"+a;stats[k]=stats[k]||{agree:0,dis:0};ans[a]===ans[b]?stats[k].agree++:stats[k].dis++}}
-  if(rd.trip){const verdict=MAJ(rd.type)?(res.winners.length?`${res.winners.map(w=>(players.find(p=>p.id===w)||{name:"?"}).name).join(" & ")}: ${rd.title.split(" · ")[0]}`:"Ingen dom"):`Året var ${rd.trip.year}`;trips.push({place:rd.trip.place,year:rd.trip.year,lat:rd.trip.lat,lon:rd.trip.lon,country:rd.trip.country,verdict})}
-  return {status:"reveal",result:{ans,...res,afterCourt:G.ph==="b",firstAns:G.court?.firstAns||null},scores,titles,posters,stats,trips,snap,prevScores:G.scores,court:G.court?{...G.court,done:true}:null};
+  const titles=clone(G.titles)||{},stats=clone(G.stats)||{},trips=(G.trips||[]).slice();
+  if(BOARD(rd.type)&&res.truth)(titles[res.truth]=titles[res.truth]||[]).push(rd.title);
+  if(JUDGE(rd.type)){const ids=players.map(p=>p.id);for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++){const a=ids[i],b=ids[j];if(all[a]==null||all[b]==null)continue;const k=a<b?a+"|"+b:b+"|"+a;stats[k]=stats[k]||{agree:0,dis:0};all[a]===all[b]?stats[k].agree++:stats[k].dis++}}
+  if(rd.trip){const nm=id=>(players.find(p=>p.id===id)||{name:"?"}).name;const verdict=BOARD(rd.type)?(res.truth?`${nm(res.truth)}: ${rd.title.split(" · ")[0]}`:"Ingen dom"):`Året var ${rd.trip.year}`;trips.push({place:rd.trip.place,year:rd.trip.year,lat:rd.trip.lat,lon:rd.trip.lon,country:rd.trip.country,verdict})}
+  return {status:"reveal",result:{ans:all,...res,afterCourt:G.ph==="b"},scores,titles,stats,trips,snap,prevScores:G.scores,court:G.court?{...G.court,done:true}:null};
 }
 function objection(G,uid){
-  const s=G.snap||{};return {status:"court",ph:"b",lastCourt:G.n,court:{reason:"indsigelse",by:uid,ids:G.rd.cand,firstAns:G.result?.ans||null},objUsed:{...(G.objUsed||{}),[uid]:true},scores:s.scores||G.scores,titles:s.titles||G.titles,stats:s.stats||G.stats,posters:s.posters||G.posters,trips:s.trips||G.trips,result:null,snap:null};
+  const s=G.snap||{};return {status:"court",ph:"b",court:{reason:"indsigelse",by:uid,firstAns:G.result?.ans||null},objUsed:{...(G.objUsed||{}),[uid]:true},scores:s.scores||G.scores,titles:s.titles||G.titles,stats:s.stats||G.stats,trips:s.trips||G.trips,result:null,snap:null};
 }
-const canObject=(G,uid)=>G.status==="reveal"&&MAJ(G.rd.type)&&!G.result.afterCourt&&G.result.winners.length===1&&G.result.winners[0]===uid&&!(G.objUsed||{})[uid];
+const canObject=(G,uid)=>G.status==="reveal"&&BOARD(G.rd.type)&&!G.result.afterCourt&&G.result.truth===uid&&uid!==G.rd.judge&&!(G.objUsed||{})[uid];
+const needsAnswer=(G,uid)=>G.ph!=="b"||uid===G.rd.judge;
 const someoneWon=sc=>Object.values(sc||{}).some(v=>v>=TARGET);
 
 /* =========================================================
@@ -738,14 +818,15 @@ const app=$("#app");
 const muteBtn=()=>`<button class="iconbtn" id="mute">${MUTED?"Lyd fra":"Lyd til"}</button>`;
 function wireMute(){const b=$("#mute");if(b)b.onclick=()=>{MUTED=!MUTED;store("skyldig.muted",MUTED);b.textContent=MUTED?"Lyd fra":"Lyd til";if(!MUTED)SFX.coin()}}
 const hud=n=>`<div class="hud"><span class="logo sm">Skyldig!</span><div class="row" style="gap:6px"><span class="pill">Runde ${n}</span>${muteBtn()}</div></div>`;
-function typeCard(rd){const T=TYPES[rd.type],h=rd.hot?P(rd.hot):null;
-  return `<div class="typecard"><div class="big">${esc(T.name)}</div><div class="sub">${esc(T.sub)}</div>${h?`<div class="sub" style="font-size:20px;margin-top:12px">I stolen: ${esc(h.name)}</div>`:""}<div class="sub" style="opacity:.75;font-size:14px">${esc(T.pts)}</div></div>${rd.golden?`<div class="event"><b>Gylden runde</b>Alle point tæller dobbelt.</div>`:""}`}
+function typeCard(rd){const T=TYPES[rd.type],h=rd.judge?P(rd.judge):null;
+  return `<div class="typecard"><div class="big">${esc(T.name)}</div><div class="sub">${esc(T.sub)}</div>${h?`<div class="sub" style="font-size:20px;margin-top:12px">${rd.type==="hot"?"I stolen":"Dommer"}: ${esc(h.name)}</div>`:""}<div class="sub" style="opacity:.75;font-size:14px">${esc(T.pts)}</div></div>${rd.golden?`<div class="event"><b>Gylden runde</b>Alle point tæller dobbelt.</div>`:""}`}
 function qcard(rd,stamp){return `<div class="qcard deal"><span class="stamp">${esc(stamp)}</span><div class="lbl">${esc(TYPES[rd.type].name)}${rd.ex?'<span class="ex">Eksempel</span>':""}</div><div class="q${rd.type==="quote"?" quote":""}">${rd.type==="quote"?"“"+esc(rd.q)+"”":esc(rd.q)}</div></div>`}
-function answerUI(rd,meId,cb,onlyIds){
-  let pick=null;const isHot=rd.hot===meId,num=["est","hotnum","tripyear"].includes(rd.type);let body="";
-  if(MAJ(rd.type)){const list=onlyIds||rd.cand;body=`<div class="lbl c">${rd.type==="kind"?"Hvem passer det bedst på?":"Hvem er skyldig?"}</div><div class="cands" style="--n:${list.length}">${list.map(c=>{const x=P(c);return `<button class="who deal" data-v="${esc(c)}" aria-pressed="false">${av(x,list.length>3?"m":"l")}${nameAka(x)}${c===meId?'<span class="muted" style="font-size:12px;font-weight:600">(dig)</span>':""}</button>`}).join("")}</div>`}
-  else if(num)body=`${isHot?`<div class="hotnote">Du sidder i stolen. Skriv det rigtige tal.</div>`:""}<div class="numwrap"><input type="number" inputmode="decimal" id="num" placeholder="?" autocomplete="off"><span>${esc(rd.unit||"")}</span></div>`;
-  else body=`${isHot?`<div class="hotnote">Du sidder i stolen. Svar ærligt om dig selv.</div>`:rd.hot?`<div class="lbl c">Hvad svarer ${esc(P(rd.hot).name)}?</div>`:""}<div class="opts">${rd.opts.map(o=>{const pm=(S.players||[]).find(p=>norm(p.name)===norm(o));return `<button class="opt deal" data-v="${esc(o)}" aria-pressed="false">${rd.type==="quote"&&pm?av(pm):""}${esc(o)}</button>`}).join("")}</div>`;
+function answerUI(rd,meId,cb){
+  let pick=null;const isJ=rd.judge===meId,num=["est","tripyear"].includes(rd.type);let body="";const jn=rd.judge?esc(P(rd.judge).name):"";
+  if(BOARD(rd.type)){const list=rd.cand,n=list.length<=4?list.length:3;
+    body=`${isJ?`<div class="hotnote">Du er dommer. Vælg ærligt, hvem det passer bedst på.</div>`:`<div class="lbl c">Hvem vælger dommeren ${jn}?</div>`}<div class="cands" style="--n:${n}">${list.map(c=>{const x=P(c);return `<button class="who deal" data-v="${esc(c)}" aria-pressed="false">${av(x,list.length>3?"m":"l")}${nameAka(x)}${c===meId?'<span class="muted" style="font-size:12px;font-weight:600">(dig)</span>':""}</button>`}).join("")}</div>`}
+  else if(num)body=`<div class="numwrap"><input type="number" inputmode="decimal" id="num" placeholder="?" autocomplete="off"><span>${esc(rd.unit||"")}</span></div>`;
+  else body=`${isJ?`<div class="hotnote">Du sidder i stolen. Svar ærligt om dig selv.</div>`:rd.judge?`<div class="lbl c">Hvad svarer ${jn}?</div>`:""}<div class="opts">${rd.opts.map(o=>{const pm=(S.players||[]).find(p=>norm(p.name)===norm(o));return `<button class="opt deal" data-v="${esc(o)}" aria-pressed="false">${rd.type==="quote"&&pm?av(pm):""}${esc(o)}</button>`}).join("")}</div>`;
   let locked=false;return {html:`${body}<button class="btn" id="lock" disabled>Lås svaret</button>`,wire(){
     app.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{if(locked)return;pick=b.dataset.v;app.querySelectorAll("[data-v]").forEach(x=>x.setAttribute("aria-pressed",x===b));$("#lock").disabled=false;SFX.select()});
     const ni=$("#num");if(ni){ni.oninput=()=>{pick=ni.value;$("#lock").disabled=ni.value===""||isNaN(Number(ni.value))};ni.onkeydown=e=>{if(e.key==="Enter"&&!$("#lock").disabled)$("#lock").click()}}
@@ -780,57 +861,57 @@ function drawThread(board,voterId,candId,i){
 }
 
 /* afsløringen: bygger tavlen og spiller dramaet. opts.me = denne telefons spiller (online) */
+
 async function reveal(G,players,afterHTML,opts={}){
-  const rd=G.rd,R=G.result,ans=R.ans;S.revealing=true;
+  const rd=G.rd,R=G.result,ans=R.ans;S.revealing=true;const J=rd.judge?P(rd.judge):null;
+  const splid=`<div class="splid" id="splid"><canvas></canvas><span class="sl">SPLID-MÅLER</span><span class="sv" id="sv"></span></div>`;
   let stage="";
-  if(MAJ(rd.type)){
-    stage=`<div class="splid" id="splid"><canvas></canvas><span class="sl">SPLID-MÅLER</span><span class="sv" id="sv"></span></div>
-    <div class="tboard" id="tb"><svg class="threads"></svg><div class="voters">${players.filter(p=>ans[p.id]!=null).map(p=>`<div class="vt" data-p="${esc(p.id)}">${av(p,"m")}<span>${esc(p.name)}</span></div>`).join("")}</div>
-    <div class="cands" style="--n:${rd.cand.length}">${rd.cand.map(c=>{const p=P(c);return `<div class="who" data-c="${esc(c)}"><span class="pin" aria-hidden="true"></span><span class="cnt" data-cnt="0">0</span>${av(p,rd.cand.length>3?"m":"l")}<span>${esc(p.name)}</span></div>`}).join("")}</div></div>`;
-  }else if(["est","hotnum","tripyear"].includes(rd.type)){
-    const g=players.filter(p=>!(rd.type==="hotnum"&&p.id===rd.hot)&&ans[p.id]!==undefined).sort((a,b)=>Math.abs(ans[b.id]-R.truth)-Math.abs(ans[a.id]-R.truth));
+  if(BOARD(rd.type)){
+    const gs=players.filter(p=>p.id!==rd.judge&&ans[p.id]!=null),n=rd.cand.length<=4?rd.cand.length:3;
+    stage=`${splid}<div class="tboard" id="tb"><svg class="threads"></svg><div class="voters">${gs.map(p=>`<div class="vt" data-p="${esc(p.id)}">${av(p,"m")}<span>${esc(p.name)}</span></div>`).join("")}</div>
+    <div class="cands" style="--n:${n}">${rd.cand.map(c=>{const p=P(c);return `<div class="who" data-c="${esc(c)}"><span class="pin" aria-hidden="true"></span><span class="cnt">0</span>${av(p,rd.cand.length>3?"m":"l")}<span>${esc(p.name)}</span></div>`}).join("")}</div></div>`;
+  }else if(rd.type==="est"||rd.type==="tripyear"){
+    const g=players.filter(p=>ans[p.id]!==undefined).sort((a,b)=>Math.abs(ans[b.id]-R.truth)-Math.abs(ans[a.id]-R.truth));
     stage=`<div class="rlist">${g.map(p=>`<div class="rrow" data-p="${esc(p.id)}" hidden><div class="top"><span class="row" style="gap:8px">${av(p)}${esc(p.name)}</span><span style="font-family:var(--f-display);font-size:20px">${fmt(ans[p.id])}</span></div></div>`).join("")}</div>`;
-  }else stage=`<div class="splid" id="splid"><canvas></canvas><span class="sl">SPLID-MÅLER</span><span class="sv" id="sv"></span></div><div class="rlist">${rd.opts.map(o=>`<div class="rrow" data-o="${esc(o)}"><div class="top"><span>${esc(o)}</span></div><div class="who-list"></div></div>`).join("")}</div>`;
-  app.innerHTML=`${hud(G.n)}${rd.trip?globeHTML("rg",false,tripCap(rd)):""}${qcard(rd,R.afterCourt?"Genstemning":"Afsløring")}${stage}<div class="verdict" id="verdict" hidden></div><div id="gains" class="gains" hidden></div><div id="trk" hidden>${track(players,G.scores,G.prevScores)}</div><div id="after" hidden class="col-stack">${afterHTML}</div>`;
+  }else stage=`${splid}<div class="rlist">${rd.opts.map(o=>`<div class="rrow" data-o="${esc(o)}"><div class="top"><span>${esc(o)}</span></div><div class="who-list"></div></div>`).join("")}</div>`;
+  app.innerHTML=`${hud(G.n)}${rd.trip?globeHTML("rg",false,tripCap(rd)):""}${qcard(rd,R.afterCourt?"Ny dom":"Afsløring")}${stage}<div class="judgebox" id="jb" hidden></div><div class="verdict" id="verdict" hidden></div><div id="gains" class="gains" hidden></div><div id="trk" hidden>${track(players,G.scores,G.prevScores)}</div><div id="after" hidden class="col-stack">${afterHTML}</div>`;
   const anchor=app.firstElementChild,dead=()=>!anchor.isConnected;wireMute();if(rd.trip&&$("#rg")){GLOBE.mount($("#rg"));GLOBE.flyTo(rd.trip.lat,rd.trip.lon,rd.trip.country,{route:false,zoom:2.3})}
   const sm=$("#splid")?seismo($("#splid")):null;
+  const splidText=()=>R.distinct>=3?`SPLID · ${R.distinct} forskellige gæt`:R.distinct===2?"Uenige":"Enige";
   await sleep(500);if(dead())return;
-  if(MAJ(rd.type)){
-    const tb=$("#tb");const entries=shuffle(Object.entries(ans));const shown={};rd.cand.forEach(c=>shown[c]=0);
+  if(BOARD(rd.type)){
+    const tb=$("#tb");const entries=shuffle(Object.entries(R.guesses||{}));const shown={},seen=new Set();
     for(let i=0;i<entries.length;i++){const [v,t]=entries[i];drawThread(tb,v,t,i);SFX.thread(i);await sleep(380);if(dead())return;
       const cn=tb.querySelector(`.who[data-c="${CSS.escape(t)}"] .cnt`);if(cn){shown[t]=(shown[t]||0)+1;cn.textContent=shown[t];cn.classList.remove("bump");void cn.offsetWidth;cn.classList.add("bump")}
-      const partial=tallyMaj(rd.cand,Object.fromEntries(entries.slice(0,i+1)));sm?.set(Math.max(.08,partial.level));$("#sv").textContent=partial.distinct>1?"Uenighed stiger…":"…";await sleep(260);if(dead())return}
-    SFX.drumroll(1300);await sleep(1350);if(dead())return;
-    sm?.set(R.tie?1:Math.max(.08,R.level));$("#sv").textContent=splidLabel(R);if(R.level>=.99)crackScreen();
-    tb.querySelectorAll(".who").forEach(w=>w.classList.add(R.winners.includes(w.dataset.c)?"win":"lose"));
-    const v=$("#verdict");
-    if(R.winners.length){
-      const names=R.winners.map(w=>esc(P(w).name)).join(" & ");const kind=rd.type==="kind";
-      v.innerHTML=`<div class="big">${kind?"Kåret!":"Skyldig!"}</div><div style="font-weight:800;font-size:20px">${names}</div><span class="title-badge">${esc(rd.title)}</span><p class="potline">${R.afterCourt&&R.tie?"Stadig uafgjort. Alle dømt. ":""}${R.level>0?`Splid gav ${R.pot} point til hver, der stemte med flertallet.`:"I var enige. Kun 1 point."}${rd.golden?" Dobbelt op i den gyldne runde.":""}</p><p class="muted">${esc(PACK.victory||"Familien har talt")}.</p><div id="posters" class="row" style="justify-content:center"></div>`;
-      v.hidden=false;
-      const meHit=opts.me&&R.winners.includes(opts.me);
-      if(!kind&&meHit)siren("DØMT!",rd.title);else if(!kind&&!opts.me)siren("SKYLDIG!",`${R.winners.map(w=>P(w).name).join(" & ")} · ${rd.title}`);
-      setTimeout(()=>{if(kind){SFX.fanfare();confetti()}else{shake();SFX.airhorn();confetti()}},meHit||!opts.me?1500:0);
-      if(!kind)R.winners.forEach(async w=>{const url=await makePoster(P(w),rd.title);const ps=$("#posters");if(ps)ps.insertAdjacentHTML("beforeend",`<img class="poster" src="${url}" alt="Efterlyst-plakat for ${esc(P(w).name)}">`)});
-      showTray(true,`.who.win .av`);
-    }else{v.innerHTML=`<div class="big">Frifundet</div>`;v.hidden=false}
-  }else if(["est","hotnum","tripyear"].includes(rd.type)){
+      seen.add(t);const maxD=Math.min(entries.length,rd.cand.length);sm?.set(Math.max(.08,maxD>1?(seen.size-1)/(maxD-1):0));$("#sv").textContent=seen.size>1?"Uenighed stiger…":"…";await sleep(240);if(dead())return}
+    $("#sv").textContent=splidText();if(R.level>=.99&&entries.length>=3)crackScreen();
+    const jb=$("#jb");jb.hidden=false;jb.innerHTML=`<div class="lbl">Dommeren har talt</div><div class="row" style="justify-content:center;gap:10px">${av(J,"m")}<b>${esc(J.name)} valgte…</b></div>`;
+    SFX.drumroll(1500);await sleep(1550);if(dead())return;
+    tb.querySelectorAll(".who").forEach(w=>w.classList.add(w.dataset.c===R.truth?"win":"lose"));
+    tb.querySelectorAll(".vt").forEach(v=>v.classList.add(R.winners.includes(v.dataset.p)?"ok":"no"));
+    const T=P(R.truth),right=R.winners.length,total=entries.length;
+    const v=$("#verdict");v.innerHTML=`<div class="big">Skyldig!</div><div style="font-weight:800;font-size:22px">${esc(T.name)}</div><span class="title-badge">${esc(rd.title)}</span><p class="potline">${right} af ${total} gættede rigtigt. ${esc(J.name)} får ${right} point.${rd.golden?" Dobbelt op i den gyldne runde.":""}</p><p class="muted">${esc(PACK.victory||"Familien har talt")}.</p>`;v.hidden=false;
+    const meHit=opts.me&&R.truth===opts.me;
+    if(meHit)siren("DØMT!",rd.title);else if(!opts.me)siren("SKYLDIG!",`${T.name} · ${rd.title}`);
+    setTimeout(()=>{shake();SFX.airhorn();confetti()},meHit||!opts.me?1500:0);
+    showTray(true,`.who.win .av`);
+  }else if(rd.type==="est"||rd.type==="tripyear"){
     const rows=[...app.querySelectorAll(".rrow")];for(let i=0;i<rows.length;i++){rows[i].hidden=false;rows[i].classList.add("deal");SFX.drop(i);await sleep(450);if(dead())return}
-    SFX.drumroll(1200);const v=$("#verdict");v.hidden=false;v.innerHTML=`<div class="truth"><span class="lbl">${rd.type==="hotnum"?"Sandheden er":"Det rigtige svar"}</span><span class="num" id="cnt">0</span><span class="muted">${esc(rd.unit||"")}</span></div>`;
+    SFX.drumroll(1200);const v=$("#verdict");v.hidden=false;v.innerHTML=`<div class="truth"><span class="lbl">Det rigtige svar</span><span class="num" id="cnt">0</span><span class="muted">${esc(rd.unit||"")}</span></div>`;
     const T=Number(R.truth)||0,t0=performance.now(),D=1300,start=rd.type==="tripyear"?T-40:0;
     await new Promise(r=>{const f=t=>{const k=Math.min(1,(t-t0)/D),e=1-Math.pow(1-k,3);const c=$("#cnt");if(c)c.textContent=rd.type==="tripyear"?Math.round(start+(T-start)*e):fmt(Math.round(T*e*10)/10);if(k<1){if(Math.random()<.3)SFX.tick();requestAnimationFrame(f)}else r()};requestAnimationFrame(f)});
-    const c=$("#cnt");if(c)c.textContent=rd.type==="tripyear"?T:fmt(T);SFX.cymbal();
+    if(dead())return;const c=$("#cnt");if(c)c.textContent=rd.type==="tripyear"?T:fmt(T);SFX.cymbal();
     R.winners.forEach(w=>{const r=app.querySelector(`.rrow[data-p="${CSS.escape(w)}"]`);if(r){r.classList.add("right");r.querySelector(".top").insertAdjacentHTML("beforeend",`<span class="mark">Tættest</span>`)}});
     if(R.winners.length){confetti(90);SFX.fanfare()}
   }else{
-    const entries=shuffle(Object.entries(ans)).filter(([id])=>!(rd.type==="hot"&&id===rd.hot));const seen=new Set();
+    const entries=shuffle(Object.entries(ans)).filter(([id])=>!(rd.judge&&id===rd.judge));const seen=new Set();
     for(const [id,a] of entries){const row=app.querySelector(`.rrow[data-o="${CSS.escape(String(a))}"] .who-list`);if(row){const p=P(id);row.insertAdjacentHTML("beforeend",`<span class="vote" style="--pc:${p.color}">${av(p)}${esc(p.name)}</span>`)}seen.add(a);sm?.set(Math.max(.08,(seen.size-1)/Math.max(1,Math.min(entries.length,rd.opts.length)-1)));SFX.drop(Math.random()*6|0);await sleep(420);if(dead())return}
-    $("#sv").textContent=R.distinct>=3?"SPLID":R.distinct===2?"Uenige":"Enige";
+    $("#sv").textContent=splidText();
     SFX.drumroll(1300);await sleep(1350);if(dead())return;
     const right=app.querySelector(`.rrow[data-o="${CSS.escape(String(R.truth))}"]`);app.querySelectorAll(".rrow").forEach(r=>r.classList.add(r===right?"right":"wrong"));
-    right?.querySelector(".top").insertAdjacentHTML("beforeend",`<span class="mark">${rd.type==="hot"?esc(P(rd.hot).name)+" svarede":"Rigtigt"}</span>`);
-    const anyRight=Object.keys(R.gain).some(id=>id!==rd.hot&&R.gain[id]>0);if(anyRight){SFX.ding();confetti(100)}else{SFX.sad();rain();shake()}
-    if(rd.hot)showTray(true,null);
+    right?.querySelector(".top").insertAdjacentHTML("beforeend",`<span class="mark">${J?esc(J.name)+" svarede":"Rigtigt"}</span>`);
+    if(R.winners.length){SFX.ding();confetti(100)}else{SFX.sad();rain();shake()}
+    if(J)showTray(true,null);
   }
   await sleep(900);if(dead())return;
   const g=$("#gains");if(!g)return;const list=Object.entries(R.gain).filter(([,n])=>n);
@@ -838,16 +919,15 @@ async function reveal(G,players,afterHTML,opts={}){
   g.hidden=false;list.forEach((_,i)=>setTimeout(SFX.coin,i*120));
   await sleep(500);if(dead())return;$("#trk").hidden=false;animateTrack();await sleep(800);if(dead())return;const af=$("#after");if(af)af.hidden=false;S.revealing=false;opts.done&&opts.done();
 }
-
 /* retssalen */
+
 function courtHTML(G,sec){
-  const c=G.court,obj=c.reason==="indsigelse";
+  const c=G.court,J=P(G.rd.judge),B=P(c.by);
   return `${hud(G.n)}<div class="court"><div class="gavel" aria-hidden="true"><svg viewBox="0 0 120 80"><rect x="10" y="66" width="70" height="10" rx="3" fill="#8a5a2a"/><g class="hd"><rect x="44" y="6" width="44" height="22" rx="5" fill="#b07a3c"/><rect x="62" y="26" width="8" height="46" rx="3" fill="#8a5a2a" transform="rotate(40 66 28)"/></g></svg></div>
-  <h2>${obj?"Indsigelse!":"Fuld splid!"}</h2>
-  <p style="position:relative;font-weight:800">${obj?`${esc(P(c.by).name)} protesterer mod dommen.`:"Familien er helt uenig. Nu skal der argumenteres."}</p>
-  <div class="accused">${(obj?[c.by]:c.ids).map(id=>`<div class="who acc" data-c="${esc(id)}">${av(P(id),"l")}<span>${esc(P(id).name)}</span></div>`).join("")}</div>
+  <h2>Indsigelse!</h2><p style="position:relative;font-weight:800">${esc(B.name)} protesterer mod dommen.</p>
+  <div class="accused"><div class="who acc" data-c="${esc(c.by)}">${av(B,"l")}<span>${esc(B.name)}</span></div></div>
   <div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,244,230,.12)" stroke-width="10"/><circle id="rc" cx="60" cy="60" r="52" fill="none" stroke="#ffd23f" stroke-width="10" stroke-linecap="round" stroke-dasharray="327" stroke-dashoffset="0"/></svg><b id="cd">${sec}</b></div>
-  <p class="muted" style="position:relative">${obj?"Forsvar dig højt. Resten må gerne afbryde.":"Alle forsvarer deres stemme højt."} Når tiden er gået, stemmer alle igen${obj?"":` mellem ${c.ids.map(id=>esc(P(id).name)).join(" og ")}`}.</p></div>`;
+  <p class="muted" style="position:relative">Forsvar dig højt. Resten må gerne blande sig. Når tiden er gået, beslutter dommeren ${esc(J.name)} igen. Alle andres gæt står ved magt.</p></div>`;
 }
 function runCourt(sec,onDone){
   SFX.gavel();setTimeout(SFX.gavel,1050);const t0=Date.now();let last=sec;
@@ -857,7 +937,7 @@ function runCourt(sec,onDone){
     if(left<=0){clearInterval(it);SFX.gavel();showTray(false);onDone()}},100);
 }
 
-/* finalen: rejsefilm, uenighedskort, plakater */
+/* finalen: rejsefilm og uenighedskort */
 function networkSVG(players,stats){
   const n=players.length,W=320,H=280,cx=W/2,cy=H/2,R=n<=2?80:105;const pos={};players.forEach((p,i)=>{const a=-Math.PI/2+i/n*Math.PI*2;pos[p.id]=[cx+Math.cos(a)*R,cy+Math.sin(a)*R]});
   let lines="",best=null,worst=null;
@@ -879,12 +959,9 @@ async function finalScreen(G,players,againLabel,again){
   ${trips.length?`<div class="panel"><div class="row" style="justify-content:space-between"><span class="lbl">Rejsefilmen</span><button class="iconbtn" id="replay">Afspil igen</button></div>${globeHTML("film",true,"")}</div>`:""}
   <div class="panel"><span class="lbl">Familiens uenighedskort</span>${networkSVG(players,G.stats)}</div>
   <div class="scores">${list.map(p=>`<div class="score${(sc[p.id]||0)===top?" lead":""}">${av(p,"m")}<div style="min-width:0"><div style="font-weight:800">${esc(p.name)}</div><div class="ttl">${(titles[p.id]||[]).length?esc(titles[p.id].join(" · ")):"Ingen titler. Mistænkeligt."}</div></div><span class="pts">${sc[p.id]||0}</span></div>`).join("")}</div>
-  ${(G.posters||[]).length?`<div class="panel"><span class="lbl">Aftenens efterlysninger</span><div class="postergrid" id="pg"></div></div>`:""}
   <button class="btn" id="again">${esc(againLabel)}</button><button class="link" id="home">Til forsiden</button>`;
   [0,600,1200].forEach(t=>setTimeout(()=>confetti(120,.2+Math.random()*.3),t));SFX.airhorn();setTimeout(SFX.fanfare,900);
   $("#again").onclick=again;$("#home").onclick=()=>{ON.leave();go("home")};
-  const pg=$("#pg");if(pg)for(const ps of G.posters){const p=P(ps.uid);const url=await makePoster(p,ps.title);pg.insertAdjacentHTML("beforeend",`<figure><img src="${url}" alt="Efterlyst: ${esc(p.name)}"><button class="iconbtn" data-save="${esc(url)}" data-n="${esc(p.name)}">Gem plakat</button></figure>`)}
-  app.querySelectorAll("[data-save]").forEach(b=>b.onclick=async()=>{b.textContent="Gemmer…";const ok=await savePoster(b.dataset.save,b.dataset.n);b.textContent=ok?"Gemt":"Hold fingeren på billedet for at gemme"});
   if(trips.length&&$("#film")){const playFilm=async()=>{const el=$("#film");if(!el)return;GLOBE.mount(el);const cap=el.querySelector(".cap");
     for(const t of trips){if(!document.body.contains(el))return;cap.innerHTML=`<b>${esc(t.place)}${t.year?" "+esc(t.year):""}</b>`;await GLOBE.flyTo(t.lat,t.lon,t.country,{route:true,zoom:2.4});cap.innerHTML+=`<span>${esc(t.verdict)}</span>`;await sleep(2200)}
     if(document.body.contains(el)){cap.innerHTML=`<b>Slut</b><span>${trips.length} ${trips.length===1?"stop":"stop"} på aftenens rejse</span>`;GLOBE.idleSpin()}};
@@ -901,7 +978,7 @@ function homeView(){
   setTheme("who");
   app.innerHTML=`<div class="row" style="justify-content:flex-end">${muteBtn()}</div>
   <div class="marquee"><h1 class="logo">Skyldig!</h1><div class="tag">Jo mere uenige, jo bedre</div></div>
-  <p class="c" style="font-size:17px">Peg på den skyldige. Uenighed giver flere point. Står det helt lige, går I i retssal. <b style="color:var(--bulb)">Først til ${TARGET}</b> vinder.</p>
+  <p class="c" style="font-size:17px">Dommeren vælger i hemmelighed. Alle andre gætter. Rigtigt gæt giver 2 point, og dommeren får 1 for hvert. <b style="color:var(--bulb)">Først til ${TARGET}</b> vinder.</p>
   <div class="mode">
     <button id="m-online"><b>Hver sin telefon</b><span class="muted">Opret et rum med en kode. Alle telefoner reagerer samtidig.</span></button>
     <button id="m-local"><b>Én telefon</b><span class="muted">Send telefonen rundt om bordet.</span></button>
@@ -909,7 +986,7 @@ function homeView(){
   </div>
   <div class="pitch">
     <div style="--c:#ff2d4d"><b>Røde tråde</b>Se hvem der pegede på hvem.</div>
-    <div style="--c:#ffd23f"><b>Splid-måleren</b>Jo mere uenige, jo flere point.</div>
+    <div style="--c:#ffd23f"><b>Dommeren</b>Den, det handler om, sætter svaret.</div>
     <div style="--c:#b07a3c"><b>Indsigelse!</b>Dømt? Forsvar dig én gang pr. spil.</div>
     <div style="--c:#4de0c5"><b>Rejsedommen</b>Jeres ferier på globussen.</div>
   </div>`;
@@ -923,7 +1000,7 @@ function homeView(){
    FAMILIESTUDIET
    ========================================================= */
 const PACKDB={
-  async load(){await ON.init();if(!ON.db)return;try{const s=await ON.db.doc("pack/family").get();if(s.exists){PACK=Object.assign(clone(DEFAULT_PACK),s.data());store("skyldig.pack",PACK)}}catch(e){}
+  async load(){await ON.init();if(!ON.db)return;try{const sn=await ON.db.doc("pack/seen").get();if(sn.exists)(sn.data().k||[]).forEach(k=>SEEN.add(k))}catch(e){}try{const s=await ON.db.doc("pack/family").get();if(s.exists){PACK=Object.assign(clone(DEFAULT_PACK),s.data());store("skyldig.pack",PACK)}}catch(e){}
     try{const q=await ON.db.collection("throws").get();THROWS=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.at||0)-(b.at||0));store("skyldig.throws",THROWS)}catch(e){}},
   async save(){store("skyldig.pack",PACK);if(!ON.db)return "local";try{await ON.db.doc("pack/family").set(clone(PACK));return "db"}catch(e){return "local"}},
   async addThrow(img){const t={img,at:Date.now()};if(ON.db){try{const ref=await ON.db.collection("throws").add(t);THROWS.push({id:ref.id,...t});store("skyldig.throws",THROWS);return}catch(e){}}THROWS.push({id:"l"+Date.now(),...t});store("skyldig.throws",THROWS)},
@@ -976,56 +1053,56 @@ function studioView(){
 /* =========================================================
    ÉN TELEFON
    ========================================================= */
+
+function catsHTML(){const c=S.cats||(S.cats=store("skyldig.cats")||["kaerligt","sjove","spicy"]);return `<div class="seg" id="cats">${Object.entries(CATS).map(([k,v])=>`<button type="button" data-cat="${k}" aria-pressed="${c.includes(k)}">${v}</button>`).join("")}</div><p class="muted" style="font-size:13px">Vælg en eller flere kategorier.</p>`}
+function wireCats(after){app.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{const k=b.dataset.cat;let c=(S.cats||[]).slice();c=c.includes(k)?c.filter(x=>x!==k):c.concat(k);if(!c.length){SFX.boing();return}S.cats=c;store("skyldig.cats",c);SFX.select();after()})}
 function setupView(){
   setTheme("who");
-  S.lp=S.lp||store("skyldig.localplayers")||["Mor","Far","Søster","Mig"].map((n,i)=>({id:"p"+i,name:n,color:COLORS[i]}));S.spice=S.spice||"krydret";
+  S.lp=S.lp||store("skyldig.localplayers")||["Mor","Far","Søster","Mig"].map((n,i)=>({id:"p"+i,name:n,color:COLORS[i]}));
   const paint=()=>{
     app.innerHTML=`<div class="hud"><span class="logo sm">Skyldig!</span><button class="link" id="back">Tilbage</button></div>
     <div class="panel"><div class="lbl">Spillere (${S.lp.length}) · tryk på cirklen for en selfie</div>
       <div class="chips">${S.lp.map((p,i)=>`<span class="chip"><label class="selfie">${av(p,"m")}<span class="cam">FOTO</span><input type="file" accept="image/*" capture="user" data-sf="${i}" aria-label="Selfie til ${esc(p.name)}"></label>${esc(p.name)}<button class="x" data-i="${i}" aria-label="Fjern ${esc(p.name)}">×</button></span>`).join("")}</div>
       <form id="addf" class="row" style="flex-wrap:nowrap"><input type="text" id="nm" placeholder="Tilføj navn" maxlength="16" autocomplete="off"><button class="btn gold sm">+</button></form></div>
-    <div class="panel"><div class="lbl">Styrke</div><div class="seg" id="spice">${["mild","krydret","vild"].map(s=>`<button type="button" data-s="${s}" aria-pressed="${S.spice===s}">${s[0].toUpperCase()+s.slice(1)}</button>`).join("")}</div></div>
+    <div class="panel"><div class="lbl">Kategorier</div>${catsHTML()}</div>
     <button class="btn" id="start" ${S.lp.length<3?"disabled":""}>${S.lp.length<3?"Mindst 3 spillere":"Start spillet"}</button>`;
     $("#back").onclick=()=>go("home");
     $("#addf").onsubmit=e=>{e.preventDefault();const n=$("#nm").value.trim();if(n&&S.lp.length<8&&!S.lp.some(p=>p.name===n)){S.lp.push({id:"p"+Date.now(),name:n,color:COLORS[S.lp.length%8]});SFX.coin();paint();$("#nm").focus()}};
     app.querySelectorAll(".x").forEach(b=>b.onclick=()=>{S.lp.splice(+b.dataset.i,1);SFX.boing();paint()});
     app.querySelectorAll("[data-sf]").forEach(inp=>inp.onchange=async()=>{if(!inp.files[0])return;try{S.lp[+inp.dataset.sf].photo=await resizeImage(inp.files[0],160);SFX.coin();paint()}catch(e){}});
-    app.querySelectorAll("#spice button").forEach(b=>b.onclick=()=>{S.spice=b.dataset.s;SFX.select();paint()});
-    $("#start").onclick=()=>{store("skyldig.localplayers",S.lp);S.players=S.lp.map((p,i)=>({...p,color:COLORS[i%8]}));S.G=newGame(buildSeq(S.spice,PACK));localNext()};
+    wireCats(paint);
+    $("#start").onclick=()=>{store("skyldig.localplayers",S.lp);S.players=S.lp.map((p,i)=>({...p,color:COLORS[i%8]}));S.G=newGame(buildSeq(S.cats,PACK));localNext()};
   };
   paint();
 }
-function localNext(){
-  const G=S.G;if(someoneWon(G.scores))return finalScreen(G,S.players,"Spil igen",()=>go("setup"));
-  Object.assign(G,prepRound(G,S.players));S.ans={};S.order=S.players.map(p=>p.id);if(G.rd.hot)S.order.sort((a,b)=>(b===G.rd.hot)-(a===G.rd.hot));S.ai=0;S.lstep="intro";S.view="local";showTray(false);render();
+function localNext(skip){
+  const G=S.G;if(!skip&&someoneWon(G.scores))return finalScreen(G,S.players,"Spil igen",()=>go("setup"));
+  const p=prepRound(G,S.players,skip);if(!p)return finalScreen(G,S.players,"Spil igen",()=>go("setup"));
+  Object.assign(G,p);markSeen(G.rd.key);S.ans={};S.order=S.players.map(x=>x.id);if(G.rd.judge)S.order.sort((a,b)=>(b===G.rd.judge)-(a===G.rd.judge));S.ai=0;S.lstep="intro";S.view="local";showTray(false);render();
 }
 function localView(){
   const G=S.G,rd=G.rd;setTheme(rd.type);
   if(S.lstep==="intro"){
     SFX.intro();
-    app.innerHTML=`${hud(G.n)}${typeCard(rd)}${rd.trip?globeHTML("ig",false,tripCap(rd)):""}${qcard(rd,"Runde "+G.n)}${MAJ(rd.type)?`<div class="lbl c">I spil</div><div class="cands" style="--n:${rd.cand.length}">${rd.cand.map(c=>`<div class="who deal">${av(P(c),rd.cand.length>3?"m":"l")}${nameAka(P(c))}</div>`).join("")}</div>`:""}<button class="btn" id="go">Send telefonen rundt</button>`;
+    app.innerHTML=`${hud(G.n)}${typeCard(rd)}${rd.trip?globeHTML("ig",false,tripCap(rd)):""}${qcard(rd,"Runde "+G.n)}<button class="btn" id="go">${rd.judge?`Start med dommeren ${esc(P(rd.judge).name)}`:"Send telefonen rundt"}</button><button class="link" id="skipq">Vi har haft den · nyt spørgsmål</button>`;
     wireMute();if(rd.trip&&$("#ig")){GLOBE.mount($("#ig"));GLOBE.flyTo(rd.trip.lat,rd.trip.lon,rd.trip.country)}
-    $("#go").onclick=()=>{SFX.whoosh();S.lstep="handoff";render()};return;
+    $("#go").onclick=()=>{SFX.whoosh();S.lstep="handoff";render()};$("#skipq").onclick=()=>{SFX.whoosh();localNext(true)};return;
   }
-  if(S.lstep==="court"){app.innerHTML=courtHTML(G,COURT_SEC[G.court.reason]);wireMute();runCourt(COURT_SEC[G.court.reason],()=>{S.ans={};S.ai=0;S.order=S.players.map(p=>p.id);S.lstep="handoff";render()});return}
-  if(S.lstep==="handoff"){const p=P(S.order[S.ai]);
-    app.innerHTML=`${hud(G.n)}<div class="panel handoff"><div class="lbl">${G.ph==="b"?"Genstemning · giv telefonen til":"Giv telefonen til"}</div>${av(p,"xl")}<div class="name">${esc(p.name)}</div>${nickOf(p.name)?`<div class="aka" style="font-size:16px">aka ${esc(nickOf(p.name))}</div>`:""}${rd.hot===p.id?`<div class="hotnote">Du sidder i stolen</div>`:`<p class="muted">Ingen kigger med.</p>`}<div class="progress">${S.order.map((_,i)=>`<i class="${i<S.ai?"on":""}"></i>`).join("")}</div></div><button class="btn gold" id="me">Jeg er ${esc(p.name)}</button>`;
+  if(S.lstep==="court"){app.innerHTML=courtHTML(G,COURT_SEC.indsigelse);wireMute();runCourt(COURT_SEC.indsigelse,()=>{S.ans={};S.ai=0;S.order=[G.rd.judge];S.lstep="handoff";render()});return}
+  if(S.lstep==="handoff"){const p=P(S.order[S.ai]),isJ=rd.judge===p.id;
+    app.innerHTML=`${hud(G.n)}<div class="panel handoff"><div class="lbl">${G.ph==="b"?"Dommeren beslutter igen · giv telefonen til":"Giv telefonen til"}</div>${av(p,"xl")}<div class="name">${esc(p.name)}</div>${nickOf(p.name)?`<div class="aka" style="font-size:16px">aka ${esc(nickOf(p.name))}</div>`:""}${isJ?`<div class="hotnote">${rd.type==="hot"?"Du sidder i stolen":"Du er dommer"}</div>`:`<p class="muted">Ingen kigger med.</p>`}<div class="progress">${S.order.map((_,i)=>`<i class="${i<S.ai?"on":""}"></i>`).join("")}</div></div><button class="btn gold" id="me">Jeg er ${esc(p.name)}</button>`;
     wireMute();$("#me").onclick=()=>{SFX.tap();S.lstep="answer";render()};return}
-  if(S.lstep==="answer"){const me=S.order[S.ai];const only=G.ph==="b"&&G.court?.reason==="splid"?G.court.ids:null;
-    const ui=answerUI(rd,me,a=>{S.ans[me]=a;S.ai++;if(S.ai>=S.order.length)localResolve();else setTimeout(()=>{S.lstep="handoff";render()},250)},only);
+  if(S.lstep==="answer"){const me=S.order[S.ai];
+    const ui=answerUI(rd,me,a=>{S.ans[me]=a;S.ai++;if(S.ai>=S.order.length)localResolve();else setTimeout(()=>{S.lstep="handoff";render()},250)});
     app.innerHTML=`${hud(G.n)}${qcard(rd,P(me).name+" svarer")}${ui.html}`;wireMute();ui.wire();$("#num")?.focus();return}
 }
-function localResolve(){
-  const G=S.G;const patch=resolve(G,S.ans,S.players);Object.assign(G,patch);
-  if(G.status==="court"){S.lstep="court";render();return}
-  S.lstep="reveal";showRevealLocal();
-}
+function localResolve(){const G=S.G;Object.assign(G,resolve(G,S.ans,S.players));S.lstep="reveal";showRevealLocal()}
 function showRevealLocal(){
-  const G=S.G;const won=someoneWon(G.scores);const w=G.result.winners;
-  const objBtn=MAJ(G.rd.type)&&w.length===1&&canObject(G,w[0])&&G.rd.type!=="kind"?`<button class="btn red" id="obj">Indsigelse fra ${esc(P(w[0]).name)}!</button>`:"";
+  const G=S.G;const won=someoneWon(G.scores);const t=G.result.truth;
+  const objBtn=canObject(G,t)?`<button class="btn red" id="obj">Indsigelse fra ${esc(P(t).name)}!</button>`:"";
   reveal(G,S.players,`${objBtn}<button class="btn gold" id="nx">${won?"Vi har en vinder":"Næste runde"}</button>`,{done(){
     $("#nx").onclick=()=>{SFX.whoosh();showTray(false);localNext()};
-    const ob=$("#obj");if(ob)ob.onclick=()=>{Object.assign(G,objection(G,w[0]));S.lstep="court";showTray(false);render()}}});
+    const ob=$("#obj");if(ob)ob.onclick=()=>{Object.assign(G,objection(G,t));S.lstep="court";showTray(false);render()}}});
 }
 
 /* =========================================================
@@ -1059,7 +1136,7 @@ const ON={
   async join(code,create){
     const name=this.name.trim();if(!name){this.err="Skriv dit navn først.";return render()}
     store("skyldig.myname",name);this.code=code;this.err="";
-    if(create){if(!await this.write(()=>this.ref().set({host:this.me,status:"lobby",spice:S.spice||"krydret",created:Date.now()})))return}
+    if(create){if(!await this.write(()=>this.ref().set({host:this.me,status:"lobby",cats:S.cats||["kaerligt","sjove","spicy"],created:Date.now()})))return}
     else{const s=await this.ref().get().catch(()=>null);if(!s||!s.exists){this.err="Ingen rum med koden "+code+".";this.code=null;return render()}}
     const ex=await this.ref("/players/"+this.me).get().catch(()=>null);
     if(!await this.write(()=>this.ref("/players/"+this.me).set({name,photo:this.photo||null,joined:ex?.exists?ex.data().joined:Date.now()})))return;
@@ -1067,14 +1144,16 @@ const ON={
   },
   async setPhoto(file){try{this.photo=await resizeImage(file,160);store("skyldig.myphoto",this.photo);if(this.code)await this.write(()=>this.ref("/players/"+this.me).update({photo:this.photo}));render()}catch(e){}},
   colored(){return this.players.map((p,i)=>({id:p.id,name:p.name,photo:p.photo||null,color:COLORS[i%8]}))},
-  async start(){await PACKDB.load();const G=newGame(buildSeq(this.R.spice||"krydret",PACK,40));await this.setRoom({...G,status:"starting"});this.next()},
-  async next(){if(someoneWon(this.R.scores))return this.setRoom({status:"end"});this.busy=null;await this.setRoom(prepRound(this.R,this.colored()))},
+  async start(){await PACKDB.load();const G=newGame(buildSeq(this.R.cats,PACK,90));await this.setRoom({...G,status:"starting"});this.next()},
+  async next(){if(someoneWon(this.R.scores))return this.setRoom({status:"end"});this.busy=null;const p=prepRound(this.R,this.colored());if(!p)return this.setRoom({status:"end"});markSeen(p.rd.key);await this.setRoom(p)},
+  async skipQ(){const p=prepRound(this.R,this.colored(),true);if(!p)return;this.busy=null;markSeen(p.rd.key);SFX.whoosh();await this.setRoom(p)},
   answersFor(){const R=this.R,v={};this.answers.filter(x=>x.n===R?.n&&x.ph===R?.ph).forEach(x=>v[x.uid]=x.a);return v},
   async answer(a){const R=this.R;await this.write(()=>this.ref(`/answers/r${R.n}${R.ph}-${this.me}`).set({n:R.n,ph:R.ph,uid:this.me,a}))},
   hostCheck(force){
     const R=this.R;if(!this.isHost()||!R||(R.status!=="play"&&R.status!=="court"))return;const key=R.n+R.ph;if(this.busy===key)return;
-    const v=this.answersFor(),ps=this.colored();
-    if(force||(ps.length&&ps.every(p=>p.id in v))){if(!Object.keys(v).length)return;this.busy=key;this.setRoom(resolve(R,v,ps.filter(p=>p.id in v).length===ps.length?ps:ps))}
+    const v=this.answersFor(),ps=this.colored(),need=ps.filter(p=>needsAnswer(R,p.id));
+    if(R.rd.judge&&!(R.rd.judge in v))return;
+    if(force||(need.length&&need.every(p=>p.id in v))){if(!Object.keys(v).length)return;this.busy=key;this.setRoom(resolve(R,v,ps))}
   },
   async objectNow(){const R=this.R;await this.write(()=>this.ref("/ctl/objection").set({n:R.n,uid:this.me,at:Date.now()}))},
   onObjection(o){const R=this.R;if(!this.isHost()||!R||R.status!=="reveal"||o.n!==R.n)return;if(!canObject(R,o.uid))return;this.busy=null;this.setRoom(objection(R,o.uid))},
@@ -1089,11 +1168,11 @@ function onlineView(){
   if(S.sub==="join"){
     setTheme("who");
     app.innerHTML=`<div class="hud"><span class="logo sm">Skyldig!</span><button class="link" id="back">Tilbage</button></div>
-    <div class="panel"><div class="row" style="flex-wrap:nowrap;gap:16px">${selfieBtn()}<div style="flex:1;min-width:0" class="col-stack"><div class="lbl">Dit navn</div><input type="text" id="myname" maxlength="16" value="${esc(o.name)}" placeholder="Fx Mor" autocomplete="off"></div></div><p class="muted" style="font-size:13px">Tryk på cirklen for en selfie. Den bliver til din efterlyst-plakat.</p></div>
-    <div class="panel"><div class="lbl">Opret nyt rum</div><div class="seg" id="spice">${["mild","krydret","vild"].map(s=>`<button type="button" data-s="${s}" aria-pressed="${(S.spice||"krydret")===s}">${s[0].toUpperCase()+s.slice(1)}</button>`).join("")}</div><button class="btn" id="create">Opret rum</button></div>
+    <div class="panel"><div class="row" style="flex-wrap:nowrap;gap:16px">${selfieBtn()}<div style="flex:1;min-width:0" class="col-stack"><div class="lbl">Dit navn</div><input type="text" id="myname" maxlength="16" value="${esc(o.name)}" placeholder="Fx Mor" autocomplete="off"></div></div><p class="muted" style="font-size:13px">Tryk på cirklen for en selfie. Den vises i spillet.</p></div>
+    <div class="panel"><div class="lbl">Opret nyt rum</div>${catsHTML()}<button class="btn" id="create">Opret rum</button></div>
     <div class="panel"><div class="lbl">Eller hop ind med en kode</div><form id="jf" class="row" style="flex-wrap:nowrap"><input type="text" id="code" maxlength="4" placeholder="ABCD" style="text-transform:uppercase;font-family:var(--f-display);letter-spacing:.2em" autocomplete="off"><button class="btn gold sm">Hop ind</button></form></div>${o.err?`<p class="err">${esc(o.err)}</p>`:""}`;
     const keep=()=>o.name=$("#myname").value;$("#back").onclick=()=>go("home");wireSelfie();$("#myself").addEventListener("change",keep);
-    app.querySelectorAll("#spice button").forEach(b=>b.onclick=()=>{keep();S.spice=b.dataset.s;SFX.select();render()});
+    wireCats(()=>{keep();render()});
     $("#create").onclick=()=>{keep();const L="ABCDEFGHJKLMNPRSTUVXYZ";o.join(Array.from({length:4},()=>L[Math.random()*L.length|0]).join(""),true)};
     $("#jf").onsubmit=e=>{e.preventDefault();keep();const c=$("#code").value.trim().toUpperCase();if(c.length===4)o.join(c,false)};return;
   }
@@ -1102,7 +1181,7 @@ function onlineView(){
   S.players=o.colored();const err=o.err?`<p class="err">${esc(o.err)}</p>`:"";
   if(R.status==="lobby"||R.status==="starting"){
     o.shown=null;setTheme("who");
-    app.innerHTML=`<div class="hud"><span class="logo sm">Skyldig!</span><div class="row" style="gap:6px"><span class="pill">${esc(R.spice)}</span>${muteBtn()}</div></div>
+    app.innerHTML=`<div class="hud"><span class="logo sm">Skyldig!</span><div class="row" style="gap:6px"><span class="pill">${esc((R.cats||[]).map(c=>CATS[c]).join(" · "))}</span>${muteBtn()}</div></div>
     <div class="panel c"><div class="lbl">Rumkode</div><div class="code">${esc(o.code)}</div><p class="muted">Åbn spillet på hver telefon, tryk "Hver sin telefon" og skriv koden.</p></div>
     <div class="panel"><div class="lbl">I rummet (${S.players.length})</div><div class="chips">${S.players.map(p=>`<span class="chip deal">${p.id===o.me?selfieBtn().replace('class="av l"','class="av m"'):av(p,"m")}${esc(p.name)}${p.id===R.host?' <span class="muted" style="font-size:12px">vært</span>':""}${o.isHost()&&p.id!==o.me?`<button class="x" data-kick="${esc(p.id)}" aria-label="Fjern ${esc(p.name)}">×</button>`:""}</span>`).join("")}</div><p class="muted" style="font-size:13px">Tryk på dit eget billede for at tage en selfie.</p></div>
     ${o.isHost()?`<button class="btn" id="st" ${S.players.length<3||R.status==="starting"?"disabled":""}>${S.players.length<3?"Venter på mindst 3":"Start spillet"}</button>`:`<p class="muted c">Venter på at værten starter…</p>`}${err}<button class="link" id="lv">Forlad rummet</button>`;
@@ -1110,33 +1189,32 @@ function onlineView(){
     app.querySelectorAll("[data-kick]").forEach(b=>b.onclick=()=>o.kick(b.dataset.kick));$("#lv").onclick=()=>{o.leave();go("home")};return;
   }
   if((R.status==="play"||R.status==="court")&&R.rd){
-    const rd=R.rd;setTheme(rd.type);const v=o.answersFor(),mine=o.me in v,done=Object.keys(v).length;
+    const rd=R.rd;setTheme(rd.type);const v=o.answersFor(),need=S.players.filter(p=>needsAnswer(R,p.id)),waitOnly=!needsAnswer(R,o.me),mine=(o.me in v)||waitOnly,done=need.filter(p=>p.id in v).length;
     const courtKey="court"+R.n;
     if(R.status==="court"&&o.shown!==courtKey&&!String(o.shown).startsWith(courtKey)){
-      o.shown=courtKey;const sec=COURT_SEC[R.court.reason];app.innerHTML=courtHTML(R,sec);wireMute();
+      o.shown=courtKey;const sec=COURT_SEC.indsigelse;app.innerHTML=courtHTML(R,sec);wireMute();
       runCourt(sec,()=>{o.shown=courtKey+"-vote";render()});return;
     }
     if(R.status==="court"&&o.shown===courtKey)return;
     const key=R.status+R.n+R.ph+(mine?"-done":"");
-    const prog=`<div class="progress" id="prog">${S.players.map(p=>`<i class="${p.id in v?"on":""}" title="${esc(p.name)}"></i>`).join("")}</div><p class="muted c" id="cnt2" style="font-size:14px">${done} af ${S.players.length} har svaret</p>`;
+    const prog=`<div class="progress" id="prog">${need.map(p=>`<i class="${p.id in v?"on":""}" title="${esc(p.name)}"></i>`).join("")}</div><p class="muted c" id="cnt2" style="font-size:14px">${done} af ${need.length} har svaret</p>`;
     const skip=o.isHost()?`<button class="link" id="skip">Fortsæt uden dem, der mangler</button>`:"";
-    if(o.shown===key){const pr=$("#prog");if(pr)pr.outerHTML=prog.split("</div>")[0]+"</div>";const c=$("#cnt2");if(c)c.textContent=`${done} af ${S.players.length} har svaret`;return}
+    if(o.shown===key){const pr=$("#prog");if(pr)pr.outerHTML=prog.split("</div>")[0]+"</div>";const c=$("#cnt2");if(c)c.textContent=`${done} af ${need.length} har svaret`;return}
     o.shown=key;
-    if(mine){app.innerHTML=`${hud(R.n)}${qcard(rd,"Låst")}<div class="panel handoff"><div class="lbl">Dit svar er låst</div><div class="name" style="font-size:28px">Venter på resten</div>${prog}</div>${skip}${err}`;wireMute();const sk=$("#skip");if(sk)sk.onclick=()=>o.hostCheck(true);return}
-    const only=R.ph==="b"&&R.court?.reason==="splid"?R.court.ids:null;
+    if(mine){app.innerHTML=`${hud(R.n)}${qcard(rd,waitOnly?"Ny dom":"Låst")}<div class="panel handoff"><div class="lbl">${waitOnly?"Dommeren beslutter igen":"Dit svar er låst"}</div><div class="name" style="font-size:28px">${waitOnly?esc(P(rd.judge).name)+" tænker…":"Venter på resten"}</div>${prog}</div>${skip}${err}`;wireMute();const sk=$("#skip");if(sk)sk.onclick=()=>o.hostCheck(true);return}
     const isRevote=R.status==="court";
     if(!isRevote)SFX.intro();
-    app.innerHTML=`${hud(R.n)}${isRevote?"":typeCard(rd)}${!isRevote&&rd.trip?globeHTML("ig",false,tripCap(rd)):""}${qcard(rd,isRevote?"Genstemning":"Runde "+R.n)}<div id="ansArea" class="col-stack" hidden></div>${prog}${skip}${err}`;
-    wireMute();const sk=$("#skip");if(sk)sk.onclick=()=>o.hostCheck(true);
+    app.innerHTML=`${hud(R.n)}${isRevote?"":typeCard(rd)}${!isRevote&&rd.trip?globeHTML("ig",false,tripCap(rd)):""}${qcard(rd,isRevote?"Genstemning":"Runde "+R.n)}<div id="ansArea" class="col-stack" hidden></div>${prog}${!isRevote&&o.isHost()&&!done?`<button class="link" id="skipq">Vi har haft den · nyt spørgsmål</button>`:""}${skip}${err}`;
+    wireMute();const sk=$("#skip");if(sk)sk.onclick=()=>o.hostCheck(true);const sq=$("#skipq");if(sq)sq.onclick=()=>{sq.disabled=true;o.skipQ()};
     if(!isRevote&&rd.trip&&$("#ig")){GLOBE.mount($("#ig"));GLOBE.flyTo(rd.trip.lat,rd.trip.lon,rd.trip.country)}
     const delay=isRevote?0:rd.trip?3600:2400;
-    setTimeout(()=>{if(o.shown!==key)return;const ui=answerUI(rd,o.me,a=>o.answer(a),only);const area=$("#ansArea");if(!area)return;app.querySelector(".typecard")?.remove();app.querySelector(".event")?.remove();area.innerHTML=ui.html;area.hidden=false;ui.wire();if(!isRevote)SFX.whoosh()},delay);
+    setTimeout(()=>{if(o.shown!==key)return;const ui=answerUI(rd,o.me,a=>o.answer(a));const area=$("#ansArea");if(!area)return;app.querySelector(".typecard")?.remove();app.querySelector(".event")?.remove();area.innerHTML=ui.html;area.hidden=false;ui.wire();if(!isRevote)SFX.whoosh()},delay);
     return;
   }
   if(R.status==="reveal"&&R.result){
     const key="rev"+R.n+R.ph;if(o.shown===key)return;o.shown=key;setTheme(R.rd.type);
-    const won=someoneWon(R.scores),w=R.result.winners;
-    const mayObj=R.rd.type!=="kind"&&canObject(R,o.me);
+    const won=someoneWon(R.scores);
+    const mayObj=canObject(R,o.me);
     const after=`${mayObj?`<button class="btn red" id="obj">Indsigelse!</button><p class="muted c" style="font-size:13px">Du kan gøre indsigelse én gang pr. spil.</p>`:""}${o.isHost()?`<button class="btn gold" id="nx">${won?"Vi har en vinder":"Næste runde"}</button>`:`<p class="muted c">Værten starter næste runde.</p>`}`;
     reveal(R,S.players,after,{me:o.me,done(){if(o.isHost()&&$("#nx"))$("#nx").onclick=e=>{e.target.disabled=true;SFX.whoosh();showTray(false);o.next()};const ob=$("#obj");if(ob)ob.onclick=()=>{ob.disabled=true;ob.textContent="Indsigelse sendt";o.objectNow()}}});
     return;
