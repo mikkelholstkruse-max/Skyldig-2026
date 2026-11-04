@@ -324,6 +324,28 @@ body.disco .c{text-align:center}
 .drow{display:grid;grid-template-columns:24px auto 1fr auto;gap:10px;align-items:center;padding:4px 0}
 .drow em{font-style:normal;font-family:"Monoton","Arial Black",sans-serif;font-size:24px;color:#1a1035}
 .drk{font-weight:800}
+.picker{display:flex;flex-direction:column;gap:10px}
+.dinput,.picker input{font:inherit;font-family:"Baloo 2",system-ui,sans-serif;font-weight:700;font-size:18px;width:100%;min-width:0;padding:12px 14px;border-radius:14px;border:3px solid #1a1035;background:#fff;color:#1a1035}
+.letters{display:flex;flex-wrap:wrap;gap:5px}
+.letters button{min-width:34px;height:34px;border-radius:10px;border:2px solid #1a1035;background:#fffaf0;font-weight:800;color:#1a1035;font-family:"Baloo 2",system-ui,sans-serif}
+.letters button.on{background:#1a1035;color:#fffaf0}
+.plist{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;background:#fffaf0;border:3px solid #1a1035;border-radius:16px;padding:8px}
+.pitem{text-align:left;padding:10px 12px;border-radius:10px;background:#fff;border:2px solid rgba(26,16,53,.15);font-weight:700;font-size:16px;color:#1a1035;font-family:"Baloo 2",system-ui,sans-serif}
+.pitem.on{background:#18c26b;color:#fffaf0;border-color:#1a1035}
+.pchosen{background:#1a1035;color:#fffaf0;border-radius:14px;padding:10px 14px;font-weight:700}
+.ypick{background:#fffaf0;border:3px solid #1a1035;box-shadow:5px 5px 0 #1a1035;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.ybig{font-family:"Monoton","Arial Black",sans-serif;font-size:clamp(56px,18vw,84px);line-height:1;color:#1a1035;font-variant-numeric:tabular-nums}
+.ydec{font-weight:800;color:#7a3cff}
+.ypick input[type=range]{width:100%;accent-color:#ff3fa4;height:32px}
+.ybtns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}
+.ybtns button{padding:12px 0;border-radius:12px;border:3px solid #1a1035;background:#ffd400;font-weight:800;font-size:18px;color:#1a1035;font-family:"Baloo 2",system-ui,sans-serif;box-shadow:3px 3px 0 #1a1035}
+button.dopt{cursor:pointer;font-family:"Baloo 2",system-ui,sans-serif}
+.dopt.sel{background:#1a1035;color:#fffaf0;transform:scale(1.04)}
+.dcode{font-family:"Monoton","Arial Black",sans-serif;font-size:56px;letter-spacing:.12em;color:#ff3fa4;line-height:1.1}
+.dtoast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;background:#1a1035;color:#fffaf0;font-weight:800;padding:12px 18px;border-radius:999px;font-family:"Baloo 2",system-ui,sans-serif;max-width:calc(100% - 32px);text-align:center}
+.bsq small{display:block;font-size:9px;font-weight:700;opacity:.9;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.dpl.gold{cursor:pointer;justify-content:center;width:100%;padding:10px}
+.dpl.gold.on{background:#ffd400}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -624,32 +646,95 @@ function resizeImage(file,max=160,square=true,type="image/jpeg"){return new Prom
 /* =========================================================
    LYD
    ========================================================= */
+/* Lydmotor: master-bus med kompressor og rumklang, rigtige instrument-stemmer i stedet for bip */
 let AC=null,MUTED=store("skyldig.muted")||false;
-function ac(){if(MUTED)return null;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume();return AC}catch(e){return null}}
-function tone(f,d=.12,type="square",vol=.05,slide,at=0){const a=ac();if(!a)return;const t=a.currentTime+at,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+d);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.02)}
-function noise(d=.1,vol=.08,freq=1200,at=0,sweep){const a=ac();if(!a)return;const t=a.currentTime+at,b=a.createBuffer(1,Math.max(1,a.sampleRate*d|0),a.sampleRate),ch=b.getChannelData(0);for(let i=0;i<ch.length;i++)ch[i]=Math.random()*2-1;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=b;f.type="bandpass";f.frequency.setValueAtTime(freq,t);if(sweep)f.frequency.exponentialRampToValueAtTime(sweep,t+d);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(f).connect(g).connect(a.destination);s.start(t)}
+const AE={bus:null,rev:null};
+function ac(){
+  if(MUTED)return null;
+  try{
+    if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();
+      const comp=AC.createDynamicsCompressor();comp.threshold.value=-16;comp.knee.value=12;comp.ratio.value=4;comp.attack.value=.004;comp.release.value=.18;
+      const master=AC.createGain();master.gain.value=.85;master.connect(comp).connect(AC.destination);
+      // rumklang: genereret stereo-impuls
+      const len=AC.sampleRate*2.4,ir=AC.createBuffer(2,len,AC.sampleRate);for(let c=0;c<2;c++){const d=ir.getChannelData(c);for(let i=0;i<len;i++){const k=i/len;d[i]=(Math.random()*2-1)*Math.pow(1-k,3.2)*(k<.01?k*100:1)}}
+      const conv=AC.createConvolver();conv.buffer=ir;const lp=AC.createBiquadFilter();lp.type="lowpass";lp.frequency.value=5200;const rg=AC.createGain();rg.gain.value=.32;conv.connect(lp).connect(rg).connect(master);
+      AE.bus=master;AE.rev=conv;AE.noise=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate);const nd=AE.noise.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1}
+    if(AC.state==="suspended")AC.resume();return AC
+  }catch(e){return null}
+}
+/* lav en kanal: gain -> panorering -> bus (+ rumklang-send) */
+function chan(vol,pan=0,wet=.25){const a=AC,g=a.createGain();g.gain.value=vol;let out=g;if(a.createStereoPanner){const p=a.createStereoPanner();p.pan.value=pan;g.connect(p);out=p}out.connect(AE.bus);if(wet>0){const s=a.createGain();s.gain.value=wet;out.connect(s).connect(AE.rev)}return g}
+function envG(g,t,a,d,peak=1,sus=0,rel=.05){g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+a);g.gain.exponentialRampToValueAtTime(Math.max(.0001,peak*sus||.0001),t+a+d);if(sus)g.gain.exponentialRampToValueAtTime(.0001,t+a+d+rel)}
+const V={
+  osc(type,f,t,dur,vol,{pan=0,wet=.2,slide,a=.004,cut,q=.7,detune=0}={}){const a2=ac();if(!a2)return;const g=chan(vol,pan,wet),o=a2.createOscillator(),e=a2.createGain();o.type=type;o.frequency.setValueAtTime(f,t);o.detune.value=detune;if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+    let n=o;if(cut){const fl=a2.createBiquadFilter();fl.type="lowpass";fl.frequency.setValueAtTime(cut,t);fl.Q.value=q;o.connect(fl);n=fl}n.connect(e).connect(g);envG(e,t,a,dur);o.start(t);o.stop(t+dur+.05)},
+  noise(t,dur,vol,{type="bandpass",f=1000,f2,q=1,pan=0,wet=.15,a=.002}={}){const a2=ac();if(!a2)return;const g=chan(vol,pan,wet),s=a2.createBufferSource(),fl=a2.createBiquadFilter(),e=a2.createGain();s.buffer=AE.noise;fl.type=type;fl.frequency.setValueAtTime(f,t);if(f2)fl.frequency.exponentialRampToValueAtTime(f2,t+dur);fl.Q.value=q;s.connect(fl).connect(e).connect(g);envG(e,t,a,dur);s.start(t,Math.random());s.stop(t+dur+.05)},
+  // marimba/pluk: sinus + overtone med hurtigt henfald
+  pluck(f,t,vol=.18,{pan=0,wet=.3,dur=.5}={}){V.osc("sine",f,t,dur,vol,{pan,wet});V.osc("sine",f*4.01,t,dur*.18,vol*.25,{pan,wet});V.osc("triangle",f*2,t,dur*.3,vol*.15,{pan,wet})},
+  // FM-klokke
+  bell(f,t,vol=.12,{pan=0,wet=.45,dur=1.4}={}){const a2=ac();if(!a2)return;const g=chan(vol,pan,wet),c=a2.createOscillator(),m=a2.createOscillator(),mg=a2.createGain(),e=a2.createGain();c.frequency.value=f;m.frequency.value=f*3.5;mg.gain.setValueAtTime(f*2.2,t);mg.gain.exponentialRampToValueAtTime(f*.05,t+dur);m.connect(mg).connect(c.frequency);c.connect(e).connect(g);envG(e,t,.002,dur);c.start(t);m.start(t);c.stop(t+dur+.05);m.stop(t+dur+.05)},
+  // messing-stød: tre stemte savtakker gennem filter
+  brass(f,t,dur=.4,vol=.08,{pan=0,wet=.35}={}){const a2=ac();if(!a2)return;const g=chan(vol,pan,wet),fl=a2.createBiquadFilter(),e=a2.createGain();fl.type="lowpass";fl.Q.value=2;fl.frequency.setValueAtTime(400,t);fl.frequency.linearRampToValueAtTime(3200,t+.06);fl.frequency.exponentialRampToValueAtTime(900,t+dur);fl.connect(e).connect(g);
+    [-9,0,8].forEach(d=>{const o=a2.createOscillator();o.type="sawtooth";o.frequency.value=f;o.detune.value=d;o.connect(fl);o.start(t);o.stop(t+dur+.1)});e.gain.setValueAtTime(.0001,t);e.gain.linearRampToValueAtTime(1,t+.03);e.gain.setValueAtTime(1,t+dur*.6);e.gain.exponentialRampToValueAtTime(.0001,t+dur)},
+  pad(fs,t,dur,vol=.05,{wet=.5}={}){const a2=ac();if(!a2)return;const g=chan(vol,0,wet),fl=a2.createBiquadFilter(),e=a2.createGain();fl.type="lowpass";fl.frequency.value=1800;fl.connect(e).connect(g);fs.forEach((f,i)=>[-7,7].forEach(d=>{const o=a2.createOscillator();o.type="sawtooth";o.frequency.value=f;o.detune.value=d+i;o.connect(fl);o.start(t);o.stop(t+dur+.4)}));e.gain.setValueAtTime(.0001,t);e.gain.linearRampToValueAtTime(1,t+Math.min(.25,dur*.3));e.gain.setValueAtTime(1,t+dur*.7);e.gain.exponentialRampToValueAtTime(.0001,t+dur+.3)},
+  kick(t,vol=.5){V.osc("sine",150,t,.32,vol,{slide:42,wet:.03});V.noise(t,.012,vol*.25,{type:"highpass",f:3000,wet:0})},
+  snare(t,vol=.22,pan=0){V.noise(t,.16,vol,{type:"bandpass",f:1900,q:.8,pan,wet:.2});V.osc("triangle",200,t,.09,vol*.6,{slide:150,pan,wet:.1})},
+  clap(t,vol=.2){[0,.011,.023].forEach(o=>V.noise(t+o,.03,vol,{f:1300,q:1.4,wet:.25}));V.noise(t+.03,.16,vol*.6,{f:1200,q:1,wet:.35})},
+  hat(t,vol=.06,open=false,pan=.2){V.noise(t,open?.22:.035,vol,{type:"highpass",f:8500,pan,wet:.08})},
+  bass(f,t,dur=.2,vol=.14){V.osc("sawtooth",f,t,dur,vol,{cut:700,q:3,wet:0});V.osc("sine",f,t,dur,vol*.8,{wet:0})},
+  conga(f,t,vol=.15,pan=0){V.osc("sine",f,t,.18,vol,{slide:f*.8,pan,wet:.15});V.noise(t,.02,vol*.4,{f:2500,pan,wet:.1})},
+  impact(t,vol=.5){V.kick(t,vol);V.osc("sine",55,t,1.4,vol*.5,{slide:38,wet:.3});V.noise(t,.9,vol*.35,{type:"lowpass",f:2400,f2:200,wet:.5})},
+  riser(t,dur=1.2,vol=.12){V.noise(t,dur,vol,{type:"bandpass",f:300,f2:6000,q:2,wet:.4,a:dur*.9});V.osc("sine",220,t,dur,vol*.4,{slide:880,a:dur*.9,wet:.3})},
+};
+const now=()=>{const a=ac();return a?a.currentTime+.01:0};
+const NOTE=n=>440*Math.pow(2,(n-69)/12);
+/* bagudkompatible hjælpere (bruges få steder) */
+function tone(f,d=.12,type="sine",vol=.05,slide,at=0){const a=ac();if(!a)return;V.osc(type==="square"||type==="sawtooth"?"triangle":type,f,a.currentTime+at,d,Math.min(.25,vol*2.2),{slide,wet:.25})}
+function noise(d=.1,vol=.08,freq=1200,at=0,sweep){const a=ac();if(!a)return;V.noise(a.currentTime+at,d,vol,{f:freq,f2:sweep})}
 const SFX={
- tap:()=>tone(620,.05,"square",.035),
- select:()=>{tone(520,.05,"triangle",.06);tone(780,.06,"triangle",.05,null,.04)},
- lock:()=>{tone(300,.08,"square",.05);tone(200,.18,"square",.05,null,.07);noise(.08,.06,600,.02)},
- whoosh:()=>noise(.45,.12,300,0,4000),
- drop:i=>tone(260+i*55,.09,"square",.045),
- thread:i=>{tone(900+i*40,.18,"sine",.05,300);noise(.05,.04,3000)},
- drumroll:ms=>{for(let t=0;t<ms/1000;t+=.045)noise(.04,.05+t*.03,180,t)},
- cymbal:()=>noise(.9,.16,7000),
- fanfare:()=>[523,659,784,1046,784,1046].forEach((f,i)=>tone(f,i>3?.35:.16,"triangle",.08,null,i*.12)),
- airhorn:()=>{[440,554,659].forEach(f=>{tone(f,.55,"sawtooth",.035);tone(f*1.01,.55,"sawtooth",.025)});[440,554,659].forEach(f=>tone(f,.7,"sawtooth",.035,null,.65))},
- siren:()=>{for(let i=0;i<4;i++){tone(700,.32,"sawtooth",.05,1100,i*.6);tone(1100,.3,"sawtooth",.05,700,i*.6+.3)}},
- ding:()=>{tone(1320,.5,"sine",.09);tone(1760,.6,"sine",.06,null,.08)},
- coin:()=>{tone(988,.07,"square",.05);tone(1319,.25,"square",.05,null,.07)},
- boing:()=>tone(180,.35,"sine",.12,620),
- splat:()=>{noise(.18,.14,500,0,120);tone(120,.15,"sine",.1,60)},
- tick:()=>tone(1500,.02,"square",.03),
- gavel:()=>{noise(.12,.25,220);tone(90,.25,"sine",.18,50)},
- crack:()=>{noise(.5,.2,2500,0,300);noise(.3,.15,800,.08)},
- intro:()=>{tone(196,.12,"sawtooth",.05);tone(262,.12,"sawtooth",.05,null,.13);tone(330,.12,"sawtooth",.05,null,.26);tone(392,.4,"sawtooth",.06,null,.39);noise(.6,.08,5000,.39)},
- plane:()=>noise(2.2,.06,500,0,1400),
- sad:()=>[392,370,349,330].forEach((f,i)=>tone(f,i===3?.6:.25,"triangle",.07,i===3?300:null,i*.28)),
+ tap:()=>{const t=now();if(!t)return;V.noise(t,.012,.12,{type:"highpass",f:4000,wet:.05});V.osc("sine",1650,t,.035,.06,{wet:.05})},
+ select:()=>{const t=now();if(!t)return;V.pluck(NOTE(81),t,.16);V.pluck(NOTE(88),t+.05,.1)},
+ lock:()=>{const t=now();if(!t)return;V.pluck(NOTE(74),t,.18);V.pluck(NOTE(81),t+.07,.18);V.osc("sine",90,t,.12,.18,{slide:60,wet:0})},
+ whoosh:()=>{const t=now();if(!t)return;V.noise(t,.5,.16,{type:"bandpass",f:250,f2:3500,q:1.2,pan:-.4,wet:.3,a:.25})},
+ drop:i=>{const t=now();if(!t)return;const sc=[62,65,67,69,72,74,77,79,81,84];V.pluck(NOTE(sc[i%sc.length]),t,.16,{pan:(i%3-1)*.3})},
+ thread:i=>{const t=now();if(!t)return;V.noise(t,.12,.06,{type:"bandpass",f:1200,f2:4000,q:3,wet:.1});const sc=[69,72,74,76,79,81];V.pluck(NOTE(sc[i%sc.length]),t+.08,.12,{pan:(i%2?.3:-.3)})},
+ drumroll:ms=>{const t=now();if(!t)return;const D=ms/1000;let x=0,k=0;while(x<D){const p=x/D;V.snare(t+x,.04+p*.12,(k%2?.15:-.15));x+=.075-p*.035;k++}},
+ cymbal:()=>{const t=now();if(!t)return;V.noise(t,1.6,.14,{type:"highpass",f:5000,wet:.5});V.bell(NOTE(96),t,.03,{dur:1})},
+ fanfare:()=>{const t=now();if(!t)return;[[65,69,72],[70,74,77],[72,76,79],[77,81,84]].forEach((ch,i)=>{ch.forEach(n=>V.brass(NOTE(n),t+i*.16,i===3?.9:.2,.045,{pan:(n%3-1)*.2}));V.kick(t+i*.16,.25)});V.noise(t+.48,1.4,.08,{type:"highpass",f:6000,wet:.6})},
+ airhorn:()=>{const t=now();if(!t)return;V.impact(t,.45);[50,57,62,65].forEach(n=>V.brass(NOTE(n),t,1.1,.05))},
+ siren:()=>{const t=now();if(!t)return;V.riser(t,.7,.1);V.impact(t+.7,.55);[[50,53,57],[49,52,56]].forEach((ch,i)=>ch.forEach(n=>V.brass(NOTE(n),t+.7+i*.45,.5,.05)));V.bell(NOTE(86),t+.7,.06,{dur:2})},
+ ding:()=>{const t=now();if(!t)return;[76,80,83,88].forEach((n,i)=>V.bell(NOTE(n),t+i*.07,.09,{pan:(i-1.5)*.25}))},
+ coin:()=>{const t=now();if(!t)return;V.bell(NOTE(88),t,.07,{dur:.6});V.bell(NOTE(95),t+.06,.05,{dur:.6})},
+ boing:()=>{const t=now();if(!t)return;V.pluck(NOTE(57),t,.18);V.pluck(NOTE(52),t+.08,.16)},
+ splat:()=>{const t=now();if(!t)return;V.osc("sine",120,t,.18,.3,{slide:50,wet:.1});V.noise(t,.2,.16,{type:"lowpass",f:1600,f2:200,wet:.2})},
+ tick:()=>{const t=now();if(!t)return;V.osc("sine",1250,t,.03,.08,{wet:.1});V.noise(t,.01,.05,{f:3000,q:4,wet:0})},
+ gavel:()=>{const t=now();if(!t)return;V.osc("sine",190,t,.15,.35,{slide:120,wet:.4});V.noise(t,.06,.3,{f:900,q:2,wet:.5})},
+ crack:()=>{const t=now();if(!t)return;V.noise(t,.4,.22,{type:"highpass",f:3500,wet:.5});[93,97,100].forEach((n,i)=>V.bell(NOTE(n)*1.07,t+i*.03,.04,{dur:.8}));V.osc("sine",70,t,.4,.25,{slide:40,wet:.2})},
+ intro:()=>{const t=now();if(!t)return;V.riser(t,.6,.08);V.impact(t+.6,.3);[62,65,69,74].forEach(n=>V.brass(NOTE(n),t+.6,.45,.035))},
+ plane:()=>{const t=now();if(!t)return;V.noise(t,2.4,.07,{type:"bandpass",f:400,f2:1400,q:.7,wet:.4,a:1})},
+ sad:()=>{const t=now();if(!t)return;[69,68,67,66].forEach((n,i)=>V.osc("triangle",NOTE(n-12),t+i*.32,i===3?.9:.3,.12,{cut:900,wet:.4,slide:i===3?NOTE(n-13):undefined}))},
+};
+
+/* Skyldig-temaet: original kendingsmelodi til forsiden (krimi-funk i d-mol, 104 bpm) */
+const THEME={on:false,timer:null,want:store("skyldig.theme")!==false,step:0,next:0,
+  start(){const a=ac();if(!a||this.on||!this.want)return;this.on=true;this.step=0;this.next=a.currentTime+.1;const sx=60/104/4;
+    this.timer=setInterval(()=>{const a=ac();if(!a||!this.on)return;while(this.next<a.currentTime+.15){this.play(this.step,this.next,sx);this.step++;this.next+=sx}},40)},
+  play(st,t,sx){const s=st%16,bar=(st>>4)%8;
+    const roots=[50,50,46,46,43,43,45,45],r=roots[bar];
+    // trommer: kick, rim, brush-hat
+    if(s===0||s===10)V.kick(t,.3);if(s===4||s===12)V.snare(t,.07,.1);if(s%2===0)V.hat(t,.025,false,-.25);if(s===14)V.hat(t,.04,true,.25);
+    // gående bas
+    const walk=[0,0,7,0,10,0,7,5];if(s%2===0)V.pluck(NOTE(r-12+walk[s/2]),t,.2,{dur:.32,wet:.05});
+    // messing-stød på 2-og
+    if((s===6||s===14)&&bar%2===0){[r+12,r+15,r+19].forEach(n=>V.brass(NOTE(n),t,.14,.022))}
+    // vibrafon-melodi
+    const mel=[[74,null,77,null,81,null,79,77,null,null,74,null,72,null,null,null],[74,null,77,null,81,null,84,82,81,null,79,null,77,null,74,null]];
+    const m=mel[(bar>>1)%2][s];if(m&&bar<6)V.bell(NOTE(m),t,.045,{dur:.9,pan:.15});
+    if(bar===7&&s===8)V.riser(t,sx*8,.04);
+    if(bar===0&&s===0)V.pad([NOTE(r+12),NOTE(r+15),NOTE(r+19)],t,sx*64,.018);
+  },
+  stop(){this.on=false;clearInterval(this.timer)},
+  toggle(){this.want=!this.want;store("skyldig.theme",this.want);this.want?this.start():this.stop()}
 };
 
 /* =========================================================
@@ -1038,12 +1123,12 @@ async function finalScreen(G,players,againLabel,again){
 /* =========================================================
    NAVIGATION
    ========================================================= */
-function go(view,patch){if(view!=="disco"&&document.body.classList.contains("disco"))discoLeave();Object.assign(S,patch||{},{view});showTray(false);render()}
+function go(view,patch){if(view!=="home")THEME.stop();if(view!=="disco"&&document.body.classList.contains("disco"))discoLeave();Object.assign(S,patch||{},{view});showTray(false);render()}
 function render(){({home:homeView,studio:studioView,setup:setupView,local:localView,online:onlineView,disco:discoView}[S.view]||homeView)()}
 
 function homeView(){
-  setTheme("who");
-  app.innerHTML=`<div class="row" style="justify-content:flex-end">${muteBtn()}</div>
+  setTheme("who");if(THEME.want&&ac())THEME.start();
+  app.innerHTML=`<div class="row" style="justify-content:flex-end;gap:6px"><button class="iconbtn" id="thm">${THEME.want?"Tema til":"Tema fra"}</button>${muteBtn()}</div>
   <div class="marquee"><h1 class="logo">Skyldig!</h1><div class="tag">Jo mere uenige, jo bedre</div></div>
   <p class="c" style="font-size:17px">Dommeren vælger i hemmelighed. Alle andre gætter. Rigtigt gæt giver 2 point, og dommeren får 1 for hvert. <b style="color:var(--bulb)">Først til ${TARGET}</b> vinder.</p>
   <div class="mode">
@@ -1059,6 +1144,8 @@ function homeView(){
     <div style="--c:#4de0c5"><b>Rejsedommen</b>Jeres ferier på globussen.</div>
   </div>`;
   wireMute();
+  $("#thm").onclick=()=>{THEME.toggle();$("#thm").textContent=THEME.want?"Tema til":"Tema fra"};
+  if(!THEME.on&&THEME.want){const kick=()=>{document.removeEventListener("pointerdown",kick);if(S.view==="home"&&ac())THEME.start()};document.addEventListener("pointerdown",kick)}
   $("#m-local").onclick=()=>{SFX.whoosh();go("setup")};
   $("#m-online").onclick=()=>{SFX.whoosh();ON.enter()};
   $("#m-studio").onclick=()=>{SFX.whoosh();go("studio",{tab:"trips"})};$("#m-disco").onclick=()=>{SFX.whoosh();go("disco",{dv:"home"})};
@@ -1293,63 +1380,77 @@ function onlineView(){
 /* =========================================================
    DISKO: musik-underspillet
    ========================================================= */
-/* [kunstner, titel, år, dansk, form, vokal, mindre kendt, eurovision] */
-const SONGS=[
- ["Glenn Miller","In the Mood",1939,0,"band","i",0,0],["Judy Garland","Over the Rainbow",1939,0,"solo","f",0,0],["Bing Crosby","White Christmas",1942,0,"solo","m",0,0],["Édith Piaf","La Vie en rose",1947,0,"solo","f",0,0],
- ["Elvis Presley","Heartbreak Hotel",1956,0,"solo","m",0,0],["Chuck Berry","Johnny B. Goode",1958,0,"solo","m",0,0],["The Beatles","Love Me Do",1962,0,"band","m",0,0],["Grethe og Jørgen Ingmann","Dansevise",1963,1,"duo","mix",0,1],
- ["The Rolling Stones","(I Can't Get No) Satisfaction",1965,0,"band","m",0,0],["The Beatles","Rain",1966,0,"band","m",1,0],["Louis Armstrong","What a Wonderful World",1967,0,"solo","m",0,0],["Elvis Presley","Suspicious Minds",1969,0,"solo","m",0,0],["Frank Sinatra","My Way",1969,0,"solo","m",0,0],
- ["John Lennon","Imagine",1971,0,"solo","m",0,0],["David Bowie","Starman",1972,0,"solo","m",1,0],["ABBA","Waterloo",1974,0,"band","mix",0,1],["Gasolin'","Rabalderstræde",1975,1,"band","m",0,0],["Gasolin'","Kvinde min",1975,1,"band","m",0,0],
- ["Queen","Bohemian Rhapsody",1975,0,"band","m",0,0],["Queen","'39",1975,0,"band","m",1,0],["ABBA","Dancing Queen",1976,0,"band","f",0,0],["Bee Gees","Stayin' Alive",1977,0,"band","m",0,0],["Fleetwood Mac","Dreams",1977,0,"band","f",0,0],
- ["Pink Floyd","Another Brick in the Wall (Part 2)",1979,0,"band","m",0,0],["TV-2","Hele ugen alene",1981,1,"band","m",1,0],["TV-2","Fantastiske Toyota",1981,1,"band","m",0,0],["ABBA","The Day Before You Came",1982,0,"band","f",1,0],["Toto","Africa",1982,0,"band","m",0,0],
- ["Michael Jackson","Beat It",1983,0,"solo","m",0,0],["Michael Jackson","Human Nature",1983,0,"solo","m",1,0],["Kim Larsen","Midt om natten",1983,1,"solo","m",0,0],["Gnags","Slingrer ned ad Vestergade",1983,1,"band","m",0,0],["Laid Back","Sunshine Reggae",1983,1,"duo","m",0,0],
- ["Prince","Purple Rain",1984,0,"solo","m",0,0],["a-ha","The Sun Always Shines on T.V.",1985,0,"band","m",1,0],["Prince","Kiss",1986,0,"solo","m",0,0],["Whitney Houston","I Wanna Dance with Somebody",1987,0,"solo","f",0,0],["Madonna","Like a Prayer",1989,0,"solo","f",0,0],
- ["Roxette","The Look",1989,0,"duo","mix",0,0],["D-A-D","Sleeping My Day Away",1989,1,"band","m",0,0],["Nirvana","Smells Like Teen Spirit",1991,0,"band","m",0,0],["Whitney Houston","I Will Always Love You",1992,0,"solo","f",0,0],["Dizzy Mizz Lizzy","Silverflame",1994,1,"band","m",0,0],
- ["Spice Girls","Wannabe",1996,0,"band","f",0,0],["Aqua","Roses Are Red",1996,1,"band","mix",1,0],["Aqua","Barbie Girl",1997,1,"band","mix",0,0],["Madonna","Frozen",1998,0,"solo","f",1,0],["Britney Spears","...Baby One More Time",1998,0,"solo","f",0,0],
- ["Olsen Brothers","Fly on the Wings of Love",2000,1,"duo","m",0,1],["Safri Duo","Played-A-Live (The Bongo Song)",2000,1,"duo","i",0,0],["Eminem","Lose Yourself",2002,0,"solo","m",0,0],["Nik & Jay","Elsker hende mere",2003,1,"duo","m",0,0],["Mew","Comforting Sounds",2003,1,"band","m",1,0],
- ["Beyoncé","Crazy in Love",2003,0,"solo","f",0,0],["Infernal","From Paris to Berlin",2004,1,"duo","f",0,0],["Nik & Jay","Boing!",2006,1,"duo","m",1,0],["Amy Winehouse","Rehab",2006,0,"solo","f",0,0],["Alphabeat","Fascination",2007,1,"band","mix",0,0],
- ["Medina","Kun for mig",2008,1,"solo","f",0,0],["Volbeat","Still Counting",2008,1,"band","m",0,0],["Rasmus Seebach","Natteravn",2009,1,"solo","m",0,0],["Robyn","Dancing On My Own",2010,0,"solo","f",0,0],["Adele","Rolling in the Deep",2010,0,"solo","f",0,0],
- ["Emmelie de Forest","Only Teardrops",2013,1,"solo","f",0,1],["Avicii","Wake Me Up",2013,0,"solo","m",0,0],["Taylor Swift","Shake It Off",2014,0,"solo","f",0,0],["Lukas Graham","7 Years",2015,1,"band","m",0,0],["Lukas Graham","Mama Said",2015,1,"band","m",1,0],
- ["Major Lazer, DJ Snake & MØ","Lean On",2015,1,"band","f",0,0],["Ed Sheeran","Shape of You",2017,0,"solo","m",0,0],["Billie Eilish","Bad Guy",2019,0,"solo","f",0,0],["The Weeknd","Blinding Lights",2019,0,"solo","m",0,0],["Harry Styles","As It Was",2022,0,"solo","m",0,0],["Miley Cyrus","Flowers",2023,0,"solo","f",0,0],
-].map(([artist,title,year,dk,form,voc,rare,euro],i)=>({id:i,artist,title,year,dk:!!dk,form,voc,rare:!!rare,euro:!!euro}));
+/* [kunstner, titel, år, flag] flag: d=dansk e=eurovision 1=nr.1 i USA o=one-hit wonder u=usikkert år */
+const SONG_DATA=[["Glenn Miller","In the Mood",1939,""],["Judy Garland","Over the Rainbow",1939,""],["Bing Crosby","White Christmas",1942,""],["Édith Piaf","La Vie en rose",1947,""],["Nat King Cole","Unforgettable",1951,""],["Dean Martin","That's Amore",1953,""],["Bill Haley & His Comets","Rock Around the Clock",1954,""],["Little Richard","Tutti Frutti",1955,""],["Doris Day","Que Sera, Sera",1956,""],["Elvis Presley","Heartbreak Hotel",1956,""],["Elvis Presley","Hound Dog",1956,""],["Harry Belafonte","Banana Boat Song (Day-O)",1956,""],["Buddy Holly","Peggy Sue",1957,""],["Paul Anka","Diana",1957,""],["Ritchie Valens","Donna",1958,""],["The Kingston Trio","Tom Dooley",1958,"1"],["The Platters","Smoke Gets In Your Eyes",1958,"1"],["The Teddy Bears","To Know Him, Is To Love Him",1958,"1o"],["Dinah Washington","What A Diff'rence A Day Makes",1959,""],["Guy Mitchell","Heartaches By The Number",1959,"1o"],["Paul Anka","Put Your Head On My Shoulder",1959,""],["The Drifters","There Goes My Baby",1959,""],["Chubby Checker","The Twist",1960,"1"],["Elvis Presley With The Jordanaires","It's Now Or Never",1960,"1"],["Roy Orbison","Only The Lonely (Know How I Feel)",1960,""],["The Brothers Four","Greenfields",1960,""],["Ben E. King","Stand By Me",1961,""],["Chubby Checker","Let's Twist Again",1961,""],["Chubby Checker","Pony Time",1961,"1"],["Dion","The Wanderer",1961,""],["Jørgen Ingmann","Apache",1961,"d"],["Bent Fabric","Alley Cat",1962,"d"],["Chubby Checker","Limbo Rock",1962,""],["Françoise Hardy","Tous les garçons et les filles",1962,""],["Neil Sedaka","Breaking Up Is Hard To Do",1962,"1"],["Ray Charles","I Can't Stop Loving You",1962,"1"],["The Contours","Do You Love Me",1962,"o"],["Grethe og Jørgen Ingmann","Dansevise",1963,"de"],["The Beach Boys","Surfin' U.S.A.",1963,""],["The Chiffons","He's So Fine",1963,"1"],["The Kingsmen","Louie Louie",1963,""],["The Surfaris","Wipe Out",1963,"o"],["Louis Armstrong And The All Stars","Hello, Dolly!",1964,"1"],["The Beatles","Twist And Shout",1964,""],["The Beatles","I Want To Hold Your Hand",1964,"1"],["The Beatles","She Loves You",1964,"1"],["Four Tops","I Can't Help Myself (Sugar Pie Honey Bunch)",1965,"1"],["Sam The Sham and the Pharaohs","Wooly Bully",1965,""],["The 4 Seasons","Let's Hang On!",1965,""],["The Righteous Brothers","Unchained Melody",1965,""],["Mitch Ryder And The Detroit Wheels","Devil With A Blue Dress On & Good Golly Miss Molly",1966,""],["The Mamas & The Papas","California Dreamin'",1966,""],["The Monkees","I'm A Believer",1966,"1"],["The New Vaudeville Band","Winchester Cathedral",1966,"1o"],["Ulla Pia","Stop – mens legen er go'",1966,"de"],["Lulu","To Sir With Love",1967,"1"],["The Doors","Light My Fire",1967,"1"],["The Youngbloods","Get Together",1967,"o"],["Tom Jones","I'll Never Fall In Love Again",1967,""],["Cream","Sunshine Of Your Love",1968,""],["Diana Ross & The Supremes","Love Child",1968,"1"],["Sly & The Family Stone","Everyday People",1968,"1"],["The Beatles","Hey Jude",1968,"1"],["B.J. Thomas","Raindrops Keep Fallin' On My Head",1969,"1"],["Jackson 5","I Want You Back",1969,"1"],["Serge Gainsbourg & Jane Birkin","Je t'aime... moi non plus",1969,"o"],["The 5th Dimension","Aquarius/Let The Sunshine In (The Flesh Failures)",1969,"1"],["The Archies","Sugar, Sugar",1969,"1"],["Brian Hyland","Gypsy Woman",1970,""],["Carpenters","(They Long To Be) Close To You",1970,"1"],["Carpenters","We've Only Just Begun",1970,""],["Chicago","25 Or 6 To 4",1970,""],["Edwin Starr","War",1970,"1"],["Eric Burdon And War","Spill The Wine",1970,""],["Freda Payne","Band Of Gold",1970,""],["Jackson 5","I'll Be There",1970,"1"],["Rare Earth","Get Ready",1970,""],["Ray Price","For The Good Times",1970,"o"],["Simon & Garfunkel","Bridge Over Troubled Water",1970,"1"],["Smokey Robinson & The Miracles","The Tears Of A Clown",1970,"1"],["The 5th Dimension","One Less Bell To Answer",1970,""],["The Guess Who","American Woman/No Sugar Tonight",1970,"1"],["Vanity Fare","Hitchin' A Ride",1970,""],["Al Green","Tired Of Being Alone",1971,""],["Al Green","Let's Stay Together",1971,"1"],["Bee Gees","How Can You Mend A Broken Heart",1971,"1"],["Carole King","It's Too Late/I Feel The Earth Move",1971,"1"],["Carpenters","Superstar/Bless The Beasts And Children",1971,""],["Cher","Gypsys, Tramps & Thieves",1971,"1"],["Don McLean","American Pie (Parts I & II)",1971,"1"],["Jean Knight","Mr. Big Stuff",1971,"o"],["John Denver","Take Me Home, Country Roads",1971,""],["Melanie","Brand New Key",1971,"1"],["Nilsson","Without You",1971,"1"],["Rod Stewart","Maggie May/Reason To Believe",1971,"1"],["The Raiders","Indian Reservation (The Lament Of The Cherokee Reservation Indian)",1971,"1"],["The Temptations","Just My Imagination (Running Away With Me)",1971,"1"],["Three Dog Night","Joy To The World",1971,"1"],["Bill Withers","Lean On Me",1972,"1"],["Billy Paul","Me And Mrs. Jones",1972,"1"],["Billy Preston","Outa-Space",1972,""],["Carly Simon","You're So Vain",1972,"1"],["Elton John","Crocodile Rock",1972,"1"],["Gilbert O'Sullivan","Alone Again (Naturally)",1972,"1"],["Gilbert O'Sullivan","Clair",1972,""],["Joe Tex","I Gotcha",1972,""],["John Denver","Rocky Mountain High",1972,""],["Roberta Flack","The First Time Ever I Saw Your Face",1972,"1"],["Stevie Wonder","Superstition",1972,"1"],["The Chi-lites","Oh Girl",1972,"1"],["The Moody Blues","Nights In White Satin",1972,""],["The Staple Singers","I'll Take You There",1972,"1"],["The Stylistics feat. Russell Thompkins,Jr.","Betcha By Golly, Wow",1972,""],["Aerosmith","Dream On",1973,""],["Al Wilson","Show And Tell",1973,"1"],["Aretha Franklin","Until You Come Back To Me (That's What I'm Gonna Do)",1973,""],["Barbra Streisand","The Way We Were",1973,"1"],["Billy Preston","Will It Go Round In Circles",1973,"1"],["Carpenters","Top Of The World",1973,"1"],["David Essex","Rock On",1973,"o"],["Diana Ross","Touch Me In The Morning",1973,"1"],["Eddie Kendricks","Keep On Truckin' (Part 1)",1973,"1"],["Gasolin'","Det var en lørdag aften",1973,"du"],["Gladys Knight And The Pips","Midnight Train To Georgia",1973,"1"],["Jim Croce","Bad, Bad Leroy Brown",1973,"1"],["Kool & The Gang","Jungle Boogie",1973,""],["Marvin Gaye","Let's Get It On",1973,"1"],["The Isley Brothers","That Lady (Part 1)",1973,""],["The Steve Miller Band","The Joker",1973,"1"],["ABBA","Waterloo",1974,"e"],["Billy Preston","Nothing From Nothing",1974,"1"],["Daryl Hall John Oates","She's Gone",1974,""],["Eagles","Best Of My Love",1974,"1"],["Elton John","Bennie And The Jets",1974,"1"],["Frankie Valli","My Eyes Adored You",1974,"1"],["Gasolin'","Langebro",1974,"du"],["Grand Funk","The Loco-Motion",1974,"1"],["Jackson 5","Dancing Machine",1974,""],["John Denver","Sunshine On My Shoulders",1974,"1"],["Maria Muldaur","Midnight At The Oasis",1974,""],["Neil Sedaka","Laughter In The Rain",1974,"1"],["Redbone","Come And Get Your Love",1974,""],["Stevie Wonder","You Haven't Done Nothin",1974,"1"],["Stevie Wonder","Boogie On Reggae Woman",1974,""],["Terry Jacks","Seasons In The Sun",1974,"1o"],["The Stylistics","You Make Me Feel Brand New",1974,""],["ABBA","Mamma Mia",1975,""],["ABBA","SOS",1975,""],["Commodores","Sweet Love",1975,""],["David Bowie","Golden Years",1975,""],["David Bowie","Fame",1975,"1"],["Donna Summer","Love To Love You Baby",1975,""],["Eagles","Take It To The Limit",1975,""],["Earth, Wind & Fire","Shining Star",1975,"1"],["Gasolin'","Rabalderstræde",1975,"d"],["Gasolin'","Kvinde min",1975,"d"],["Gasolin'","Masser af succes",1975,"d"],["Hot Chocolate","You Sexy Thing",1975,""],["Janis Ian","At Seventeen",1975,""],["Jigsaw","Sky High",1975,""],["John Denver","I'm Sorry",1975,"1"],["Nazareth","Love Hurts",1975,"o"],["Shu-bi-dua","Den gamle skolevej",1975,"du"],["Sweet","Ballroom Blitz",1975,""],["The 4 Seasons","December, 1963 (Oh, What a Night)",1975,"1"],["The Elton John Band","Philadelphia Freedom",1975,"1o"],["The Miracles","Love Machine (Part 1)",1975,"1"],["ABBA","Dancing Queen",1976,"1"],["Andrea True Connection","More, More, More Pt. 1",1976,""],["Barbra Streisand","Evergreen",1976,"1"],["Bee Gees","Love So Right",1976,""],["Boney M.","Daddy Cool",1976,""],["Daryl Hall John Oates","Sara Smile",1976,""],["KC And The Sunshine Band","(Shake, Shake, Shake) Shake Your Booty",1976,"1"],["Leo Sayer","You Make Me Feel Like Dancing",1976,"1"],["Marilyn McCoo & Billy Davis, Jr.","You Don't Have To Be A Star (To Be In My Show)",1976,"1"],["Queen","Bohemian Rhapsody",1976,""],["Rod Stewart","Tonight's The Night (Gonna Be Alright)",1976,"1"],["The Manhattans","Kiss And Say Goodbye",1976,"1"],["The Spinners","The Rubberband Man",1976,""],["Thelma Houston","Don't Leave Me This Way",1976,"1"],["Walter Murphy & The Big Apple Band","A Fifth Of Beethoven",1976,"1o"],["Wild Cherry","Play That Funky Music",1976,"1o"],["Alan O'Day","Undercover Angel",1977,"1o"],["Andy Gibb","I Just Want To Be Your Everything",1977,"1"],["Andy Gibb","(Love Is) Thicker Than Water",1977,"1"],["Baccara","Yes Sir, I Can Boogie",1977,"o"],["Bee Gees","How Deep Is Your Love",1977,"1"],["Bee Gees","Stayin' Alive",1977,"1"],["Billy Joel","Just The Way You Are",1977,""],["Carly Simon","Nobody Does It Better",1977,""],["Chic","Dance, Dance, Dance (Yowsah, Yowsah, Yowsah)",1977,""],["Heatwave","Boogie Nights",1977,""],["Hot","Angel In Your Arms",1977,"o"],["Player","Baby Come Back",1977,"1"],["Queen","We Are The Champions",1977,""],["Rita Coolidge","(your Love Has Lifted Me) Higher And Higher",1977,""],["Samantha Sang","Emotion",1977,"o"],["Sex Pistols","God Save the Queen",1977,""],["The Emotions","Best Of My Love",1977,"1"],["Umberto Tozzi","Ti amo",1977,""],["A Taste Of Honey","Boogie Oogie Oogie",1978,"1"],["Alicia Bridges","I Love The Nightlife (Disco 'round)",1978,"o"],["Andy Gibb","Shadow Dancing",1978,"1"],["Bee Gees","Night Fever",1978,"1"],["Boney M.","Rivers of Babylon",1978,""],["Boney M.","Rasputin",1978,""],["Chic","Le Freak",1978,"1"],["Chuck Mangione","Feels So Good",1978,""],["Commodores","Three Times A Lady",1978,"1"],["Eric Clapton","Lay Down Sally",1978,""],["Gloria Gaynor","I Will Survive",1978,"1"],["John Travolta & Olivia Newton-John","You're The One That I Want",1978,"1"],["Kate Bush","Wuthering Heights",1978,""],["Kraftwerk","Das Model",1978,""],["Nick Gilder","Hot Child In The City",1978,"1o"],["Olivia Newton-John","A Little More Love",1978,""],["Rod Stewart","Da Ya Think I'm Sexy?",1978,"1"],["Shu-bi-dua","Fed rock",1978,"du"],["The Pointer Sisters","Fire",1978,""],["Village People","Y.M.C.A.",1978,""],["ABBA","Gimme! Gimme! Gimme! (A Man After Midnight)",1979,""],["Billy Preston & Syreeta","With You I'm Born Again",1979,""],["David Naughton","Makin' It",1979,"o"],["Dionne Warwick","I'll Never Love This Way Again",1979,""],["Donna Summer","Hot Stuff",1979,"1"],["Dr. Hook","When You're In Love With A Beautiful Woman",1979,""],["Dschinghis Khan","Dschinghis Khan",1979,"o"],["Herb Alpert","Rise",1979,"1"],["KC And The Sunshine Band","Please Don't Go",1979,"1"],["Kim Larsen","Papirsklip",1979,"du"],["M","Pop Muzik",1979,"1o"],["Michael Jackson","Rock With You",1979,"1"],["Ottawan","D.I.S.C.O.",1979,"o"],["Peaches & Herb","Reunited",1979,"1"],["Queen","Crazy Little Thing Called Love",1979,"1"],["Rupert Holmes","Escape (The Pina Colada Song)",1979,"1"],["Shu-bi-dua","Danmark",1979,"du"],["Smokey Robinson","Cruisin'",1979,""],["The Clash","London Calling",1979,""],["The Knack","My Sharona",1979,"1"],["The Spinners","Working My Way Back To You/Forgive Me, Girl",1979,""],["ABBA","The Winner Takes It All",1980,""],["Air Supply","All Out Of Love",1980,""],["Barbra Streisand","Woman In Love",1980,"1"],["Benny Mardones","Into The Night",1980,"o"],["Bette Midler","The Rose",1980,""],["Billy Joel","It's Still Rock And Roll To Me",1980,"1"],["Blondie","Call Me",1980,"1"],["Diana Ross","Upside Down",1980,"1"],["Dolly Parton","9 To 5",1980,"1"],["John Lennon","(Just Like) Starting Over",1980,"1"],["Joy Division","Love Will Tear Us Apart",1980,""],["Kenny Rogers","Lady",1980,"1"],["Kool & The Gang","Celebration",1980,"1"],["Pink Floyd","Another Brick In The Wall (Part II)",1980,"1"],["Queen","Another One Bites The Dust",1980,"1"],["REO Speedwagon","Keep On Loving You",1980,"1"],["The Pointer Sisters","He's So Shy",1980,""],["Bertie Higgins","Key Largo",1981,"o"],["Christopher Cross","Arthur's Theme (Best That You Can Do)",1981,"1"],["Daryl Hall John Oates","I Can't Go For That (No Can Do)",1981,"1"],["Daryl Hall John Oates","Private Eyes",1981,"1"],["Depeche Mode","Just Can't Get Enough",1981,""],["Diana Ross & Lionel Richie","Endless Love",1981,"1"],["Foreigner","Waiting For A Girl Like You",1981,""],["Grover Washington, Jr. With Bill Withers","Just The Two Of Us",1981,"o"],["Kim Carnes","Bette Davis Eyes",1981,"1"],["Olivia Newton-John","Physical",1981,"1"],["Ray Parker Jr. & Raydio","A Woman Needs Love (Just Like You Do)",1981,""],["Rick Springfield","Jessie's Girl",1981,"1"],["Smokey Robinson","Being With You",1981,""],["TV-2","Fantastiske Toyota",1981,"d"],["TV-2","Hele ugen alene",1981,"d"],["The J. Geils Band","Centerfold",1981,"1"],["The Pointer Sisters","Slow Hand",1981,""],["The Rolling Stones","Start Me Up",1981,""],["ABBA","The Day Before You Came",1982,""],["Brixx","Video Video",1982,"deu"],["Chicago","Hard To Say I'm Sorry",1982,"1"],["Culture Club","Do You Really Want To Hurt Me",1982,""],["Daryl Hall John Oates","Maneater",1982,"1"],["John Cougar","Hurts So Good",1982,""],["Laura Branigan","Gloria",1982,""],["Madness","Our House",1982,""],["Men At Work","Down Under",1982,"1"],["Men At Work","Who Can It Be Now?",1982,"1"],["Nicole","Ein bißchen Frieden",1982,"eo"],["Soft Cell","Tainted Love",1982,"o"],["Survivor","Eye Of The Tiger",1982,"1"],["The Alan Parsons Project","Eye In The Sky",1982,""],["The Human League","Don't You Want Me",1982,"1"],["The Pointer Sisters","I'm So Excited",1982,""],["The Steve Miller Band","Abracadabra",1982,"1"],["Toni Basil","Mickey",1982,"1o"],["Toto","Rosanna",1982,""],["Air Supply","Making Love Out Of Nothing At All",1983,""],["Bonnie Tyler","Total Eclipse Of The Heart",1983,"1"],["Donna Summer","She Works Hard For The Money",1983,""],["Eurythmics","Sweet Dreams (Are Made Of This)",1983,"1"],["Gnags","Slingrer ned ad Vestergade",1983,"d"],["Irene Cara","Flashdance...What A Feeling",1983,"1"],["Kim Larsen","Midt om natten",1983,"d"],["Kim Larsen","Om lidt er kaffen klar",1983,"du"],["Kim Larsen","Joanna",1983,"du"],["Kim Larsen","Jutlandia",1983,"du"],["Laid Back","Sunshine Reggae",1983,"d"],["Laid Back","White Horse",1983,"d"],["Lionel Richie","All Night Long (All Night)",1983,"1"],["Matthew Wilder","Break My Stride",1983,""],["Michael Jackson","Billie Jean",1983,"1"],["Michael Jackson","Beat It",1983,"1"],["Nena","99 Luftballons",1983,""],["Paul McCartney And Michael Jackson","Say Say Say",1983,"1"],["Prince","Little Red Corvette",1983,""],["Sergio Mendes","Never Gonna Let You Go",1983,""],["The Police","Every Breath You Take",1983,"1"],["The Romantics","Talking In Your Sleep",1983,""],["The Smiths","This Charming Man",1983,""],["Toto Cutugno","L'Italiano",1983,""],["Yes","Owner Of A Lonely Heart",1983,"1"],["Chaka Khan","I Feel For You",1984,""],["Chicago","Hard Habit To Break",1984,""],["John Waite","Missing You",1984,"1"],["Lionel Richie","Hello",1984,"1"],["Madonna","Borderline",1984,""],["Michael Jackson","Thriller",1984,""],["Modern Talking","You're My Heart, You're My Soul",1984,""],["Phil Collins","Against All Odds (Take A Look At Me Now)",1984,"1"],["Prince","When Doves Cry",1984,"1"],["Ray Parker Jr.","Ghostbusters",1984,"1"],["Rockwell","Somebody's Watching Me",1984,""],["Stevie Wonder","I Just Called To Say I Love You",1984,"1"],["Tina Turner","What's Love Got To Do With It",1984,"1"],["UB40","Red Red Wine",1984,"1"],["Wham!","Wake Me Up Before You Go-Go",1984,"1"],["Wham! feat. George Michael","Careless Whisper",1984,"1"],["Anne Linnet","Tusind stykker",1985,"du"],["Dire Straits","Money For Nothing",1985,"1"],["Heart","Never",1985,""],["Kool & The Gang","Cherish",1985,""],["Lionel Richie","Say You, Say Me",1985,"1"],["Madonna","Crazy For You",1985,"1"],["Miami Sound Machine","Conga",1985,""],["Modern Talking","Cheri Cheri Lady",1985,""],["Mr. Mister","Broken Wings",1985,"1"],["Paul Young","Everytime You Go Away",1985,"1"],["Phil Collins and Marilyn Martin","Separate Lives",1985,"1o"],["Sanne Salomonsen","Den jeg elsker, elsker jeg",1985,"du"],["Simple Minds","Alive & Kicking",1985,""],["Starship","We Built This City",1985,"1"],["Survivor","Burning Heart",1985,""],["TV-2","Bag duggede ruder",1985,"du"],["TV-2","Popsangerinde",1985,"du"],["Tears For Fears","Everybody Wants To Rule The World",1985,"1"],["Whitney Houston","How Will I Know",1985,"1"],["a-ha","Take On Me",1985,"1"],["Bon Jovi","You Give Love A Bad Name",1986,"1"],["Bon Jovi","Livin' On A Prayer",1986,"1"],["Bruce Hornsby & The Range","The Way It Is",1986,"1"],["Europe","The Final Countdown",1986,""],["Kim Larsen & Bellami","Hvis din far gi'r dig lov",1986,"du"],["Level 42","Something About You",1986,""],["Nu Shooz","I Can't Wait",1986,""],["Patti LaBelle & Michael McDonald","On My Own",1986,"1"],["Peter Cetera With Amy Grant","The Next Time I Fall",1986,"1"],["Prince And The Revolution","Kiss",1986,"1"],["Robbie Nevil","C'est La Vie",1986,""],["Robert Palmer","Addicted To Love",1986,"1"],["Steve Winwood","Higher Love",1986,"1"],["The Bangles","Walk Like An Egyptian",1986,"1"],["The Jets","You Got It All",1986,""],["Wang Chung","Everybody Have Fun Tonight",1986,""],["Whitney Houston","Greatest Love Of All",1986,"1"],["Belinda Carlisle","Heaven Is A Place On Earth",1987,"1"],["Cher","I Found Someone",1987,""],["Chris de Burgh","The Lady In Red",1987,""],["Crowded House","Don't Dream It's Over",1987,""],["Debbie Gibson","Only In My Dreams",1987,""],["Debbie Gibson","Shake Your Love",1987,""],["George Harrison","Got My Mind Set On You",1987,"1"],["George Michael","Faith",1987,"1"],["Gnags","Burhøns",1987,"du"],["INXS","Need You Tonight",1987,"1"],["Lis Sørensen","Brændt",1987,"du"],["Rick Astley","Never Gonna Give You Up",1987,"1"],["Sabrina","Boys (Summertime Love)",1987,"o"],["Starship","Nothing's Gonna Stop Us Now",1987,"1"],["T'Pau","Heart And Soul",1987,"o"],["Tiffany","I Think We're Alone Now",1987,"1"],["Whitesnake","Here I Go Again",1987,"1"],["Whitney Houston","I Wanna Dance With Somebody (Who Loves Me)",1987,"1"],["Aerosmith","Angel",1988,""],["Anita Baker","Giving You The Best That I Got",1988,""],["Bobby Brown","My Prerogative",1988,"1"],["Breathe","Hands To Heaven",1988,""],["Breathe","How Can I Fall?",1988,""],["Cheap Trick","The Flame",1988,"1"],["Chicago","Look Away",1988,"1"],["Def Leppard","Pour Some Sugar On Me",1988,""],["Guns N' Roses","Sweet Child O' Mine",1988,"1"],["New Kids On The Block","You Got It (The Right Stuff)",1988,""],["Paula Abdul","Straight Up",1988,"1"],["Samantha Fox","Naughty Girls (Need Love Too)",1988,""],["Terence Trent D'Arby","Wishing Well",1988,"1"],["The Beach Boys","Kokomo",1988,"1"],["The Escape Club","Wild, Wild West",1988,"1"],["Bette Midler","Wind Beneath My Wings",1989,"1"],["Cher","If I Could Turn Back Time",1989,""],["D-A-D","Sleeping My Day Away",1989,"d"],["Fine Young Cannibals","She Drives Me Crazy",1989,"1"],["Luther Vandross","Here And Now",1989,""],["Michael Bolton","How Am I Supposed To Live Without You",1989,"1"],["Milli Vanilli","Girl You Know It's True",1989,""],["Milli Vanilli","Blame It On The Rain",1989,"1"],["Neneh Cherry","Buffalo Stance",1989,""],["Paula Abdul","Cold Hearted",1989,"1"],["Paula Abdul","Forever Your Girl",1989,"1"],["Simply Red","If You Don't Know Me By Now",1989,"1"],["Soul II Soul","Back To Life",1989,"o"],["TV-2","Det store flotte liv",1989,"du"],["Technotronic feat. Felly","Pump Up The Jam",1989,""],["The B-52s","Love Shack",1989,""],["Young M.C.","Bust A Move",1989,""],["Bette Midler","From A Distance",1990,""],["Billy Idol","Cradle Of Love",1990,""],["C+C Music Factory","Gonna Make You Sweat (Everybody Dance Now)",1990,"1"],["Depeche Mode","Enjoy the Silence",1990,""],["En Vogue","Hold On",1990,""],["James Ingram","I Don't Have The Heart",1990,"1"],["Linear","Sending All My Love",1990,""],["Madonna","Vogue",1990,"1"],["Mariah Carey","Love Takes Time",1990,"1"],["Mariah Carey","Vision Of Love",1990,"1"],["Maxi Priest","Close To You",1990,"1"],["Roxette","It Must Have Been Love",1990,"1"],["Tony Toni Tone","Feels Good",1990,""],["Wilson Phillips","Hold On",1990,"1"],["Army of Lovers","Crucified",1991,""],["Boyz II Men","It's So Hard To Say Goodbye To Yesterday",1991,""],["Boyz II Men","Motownphilly",1991,""],["Bryan Adams","(Everything I Do) I Do It For You",1991,"1"],["Bryan Adams","Can't Stop This Thing We Started",1991,""],["CeCe Peniston","Finally",1991,""],["Dodo and the Dodos","Vågner i natten",1991,"du"],["EMF","Unbelievable",1991,"1"],["Mariah Carey","Can't Let Go",1991,""],["Mariah Carey","Emotions",1991,"1"],["Naughty By Nature","O.P.P.",1991,""],["Nirvana","Smells Like Teen Spirit",1991,""],["P.M. Dawn","Set Adrift On Memory Bliss",1991,"1"],["Prince And The N.P.G.","Diamonds And Pearls",1991,""],["Right Said Fred","I'm Too Sexy",1991,"1o"],["Boyz II Men","End Of The Road",1992,"1"],["Dr. Alban","It's My Life",1992,""],["En Vogue","My Lovin' (You're Never Gonna Get It)",1992,""],["House Of Pain","Jump Around",1992,"o"],["Jade","Don't Walk Away",1992,""],["Jon Secada","Just Another Day",1992,""],["Mary J. Blige","Real Love",1992,""],["P.M. Dawn","I'd Die Without You",1992,""],["Paperboy","Ditty",1992,"o"],["Radiohead","Creep",1992,""],["Sir Mix-A-Lot","Baby Got Back",1992,"1o"],["Snap!","Rhythm Is A Dancer",1992,""],["TLC","Baby-Baby-Baby",1992,""],["The Cure","Friday I'm in Love",1992,""],["Vanessa Williams","Save The Best For Last",1992,"1"],["Whitney Houston","I Will Always Love You",1992,"1"],["10,000 Maniacs","Because The Night",1993,""],["2 Unlimited","No Limit",1993,""],["Ace Of Base","All That She Wants",1993,""],["Billy Joel","The River Of Dreams",1993,""],["Bryan Adams","Please Forgive Me",1993,""],["Celine Dion","The Power Of Love",1993,"1"],["Culture Beat","Mr. Vain",1993,""],["Dr. Dre","Nuthin' But A \"G\" Thang",1993,""],["Duice","Dazzey Duks",1993,"o"],["Haddaway","What Is Love",1993,""],["Janet Jackson","If",1993,""],["Mariah Carey","Hero",1993,"1"],["Mariah Carey","Dreamlover",1993,"1"],["Spin Doctors","Two Princes",1993,""],["Toni Braxton","Breathe Again",1993,""],["UB40","Can't Help Falling In Love",1993,"1"],["Ace Of Base","The Sign",1994,"1"],["Ace Of Base","Don't Turn Around",1994,""],["Babyface","When Can I See You",1994,""],["Blur","Parklife",1994,""],["Bon Jovi","Always",1994,""],["Boyz II Men","I'll Make Love To You",1994,"1"],["Crystal Waters","100% Pure Love",1994,""],["Des'ree","You Gotta Be",1994,"o"],["Dizzy Mizz Lizzy","Silverflame",1994,"d"],["Dizzy Mizz Lizzy","Waterline",1994,"d"],["Dizzy Mizz Lizzy","Glory",1994,"d"],["Hootie & The Blowfish","Hold My Hand",1994,""],["John Mellencamp With Me'Shell Ndegeocello","Wild Night",1994,""],["Madonna","Take A Bow",1994,"1"],["Real McCoy","Another Night",1994,""],["Rednex","Cotton Eye Joe",1994,""],["Sheryl Crow","All I Wanna Do",1994,""],["TLC","Creep",1994,"1"],["Whigfield","Saturday Night",1994,"du"],["All-4-One","I Can Love You Like That",1995,""],["Coolio feat. L.V.","Gangsta's Paradise",1995,"1"],["D-A-D","Bad Craziness",1995,"du"],["Deep Blue Something","Breakfast At Tiffany's",1995,"o"],["Del Amitri","Roll To Me",1995,""],["Everything But The Girl","Missing",1995,"o"],["Goo Goo Dolls","Name",1995,""],["Hootie & The Blowfish","Only Wanna Be With You",1995,""],["La Bouche","Be My Lover",1995,""],["Los Del Rio","Macarena",1995,"1"],["Oasis","Wonderwall",1995,""],["Pulp","Common People",1995,""],["Seal","Kiss From A Rose",1995,"1"],["Sophie B. Hawkins","As I Lay Me Down",1995,""],["TLC","Waterfalls",1995,"1"],["Take That","Back for Good",1995,""],["The Tony Rich Project","Nobody Knows",1995,"o"],["Aqua","Roses Are Red",1996,"d"],["Celine Dion","Because You Loved Me",1996,"1"],["Celine Dion","It's All Coming Back To Me Now",1996,""],["Donna Lewis","I Love You Always Forever",1996,"o"],["En Vogue","Don't Let Go (Love)",1996,""],["Eric Clapton","Change The World",1996,""],["Eros Ramazzotti","Più bella cosa",1996,""],["Gin Blossoms","Follow You Down/Til I Hear It From You",1996,""],["Jewel","Foolish Games/You Were Meant For Me",1996,""],["No Mercy","Where Do You Go",1996,""],["Oasis","Don't Look Back in Anger",1996,""],["Quad City DJ's","C'mon N' Ride It (The Train)",1996,""],["R. Kelly","I Believe I Can Fly",1996,""],["The Prodigy","Firestarter",1996,""],["Toni Braxton","Un-Break My Heart",1996,"1"],["Toni Braxton","You're Makin' Me High/Let It Flow",1996,"1"],["Tracy Chapman","Give Me One Reason",1996,""],["Aqua","Barbie Girl",1997,"d"],["Aqua","Doctor Jones",1997,"d"],["Backstreet Boys","Quit Playing Games (With My Heart)",1997,""],["Blur","Song 2",1997,""],["Destiny's Child","No, No, No",1997,""],["Elton John","Candle In The Wind 1997/Something About The Way You Look Tonight",1997,"1"],["Janet","Together Again",1997,"1"],["LeAnn Rimes","How Do I Live",1997,""],["Mark Morrison","Return Of The Mack",1997,"o"],["Paula Cole","I Don't Want To Wait",1997,""],["Puff Daddy & Faith Evans feat. 112","I'll Be Missing You",1997,"1"],["Rammstein","Du hast",1997,""],["Rammstein","Engel",1997,""],["Robbie Williams","Angels",1997,""],["Savage Garden","Truly Madly Deeply",1997,"1"],["Sister Hazel","All For You",1997,"o"],["Third Eye Blind","How's It Going To Be",1997,""],["Third Eye Blind","Semi-Charmed Life",1997,""],["Usher","You Make Me Wanna...",1997,""],["ATB","9 PM (Till I Come)",1998,"u"],["Aqua","Turn Back Time",1998,"d"],["Britney Spears","...Baby One More Time",1998,"1"],["Cher","Believe",1998,"1"],["Divine","Lately",1998,"1"],["Eagle-Eye Cherry","Save Tonight",1998,"o"],["Goo Goo Dolls","Slide",1998,""],["Jennifer Paige","Crush",1998,"o"],["Marcy Playground","Sex And Candy",1998,"o"],["Sarah McLachlan","Adia",1998,""],["Sarah McLachlan","Angel",1998,""],["Scooter","How Much Is the Fish?",1998,""],["Shania Twain","You're Still The One",1998,""],["Sixpence None The Richer","Kiss Me",1998,""],["Usher","My Way",1998,""],["Vengaboys","Boom, Boom, Boom, Boom!!",1998,""],["Will Smith","Gettin' Jiggy Wit It",1998,"1"],["Backstreet Boys","I Want It That Way",1999,""],["Bomfunk MC's","Freestyler",1999,"ou"],["Christina Aguilera","Genie In A Bottle",1999,"1"],["Creed","Higher",1999,""],["Darude","Sandstorm",1999,"o"],["Destiny's Child","Say My Name",1999,"1"],["Gigi D'Agostino","L'Amour toujours",1999,"u"],["Lou Bega","Mambo No. 5",1999,"o"],["Marc Anthony","I Need To Know",1999,""],["Santana feat. Rob Thomas","Smooth",1999,"1"],["Savage Garden","I Knew I Loved You",1999,"1"],["Smash Mouth","All Star",1999,""],["Sugar Ray","Every Morning",1999,""],["Sugar Ray","Someday",1999,""],["TLC","No Scrubs",1999,"1"],["TLC","Unpretty",1999,"1"],["Vengaboys","We're Going to Ibiza!",1999,""],["Whitney Houston","My Love Is Your Love",1999,""],["3 Doors Down","Kryptonite",2000,""],["Aaliyah","Try Again",2000,"1"],["Aqua","Cartoon Heroes",2000,"d"],["Coldplay","Yellow",2000,""],["Creed","With Arms Wide Open",2000,"1"],["DJ Ötzi","Hey Baby",2000,""],["Destiny's Child","Jumpin', Jumpin'",2000,""],["Destiny's Child","Independent Women Part I",2000,"1"],["Lenny Kravitz","Again",2000,""],["Marc Anthony","You Sang To Me",2000,""],["Olsen Brothers","Fly on the Wings of Love",2000,"de"],["P!nk","There You Go",2000,""],["Robbie Williams","Rock DJ",2000,""],["Safri Duo","Played-A-Live (The Bongo Song)",2000,"d"],["Santana feat. The Product G&B","Maria Maria",2000,"1"],["Shaggy feat. Rayvon","Angel",2000,"1"],["Toni Braxton","He Wasn't Man Enough",2000,""],["matchbox twenty","If You're Gone",2000,""],["matchbox twenty","Bent",2000,"1"],["Alicia Keys","Fallin'",2001,"1"],["Dido","Thank You",2001,""],["Enrique Iglesias","Hero",2001,""],["Eve feat. Gwen Stefani","Let Me Blow Ya Mind",2001,""],["Incubus","Drive",2001,"o"],["Jennifer Lopez feat. Ja Rule","I'm Real",2001,"1"],["Lifehouse","Hanging By A Moment",2001,""],["Linkin Park","In The End",2001,""],["Mary J. Blige","Family Affair",2001,"1"],["Nickelback","How You Remind Me",2001,"1"],["Rollo & King","Never Ever Let You Go",2001,"de"],["The Calling","Wherever You Will Go",2001,"o"],["Train","Drops Of Jupiter (Tell Me)",2001,""],["Usher","U Got It Bad",2001,"1"],["3 Doors Down","When I'm Gone",2002,""],["Aaliyah","Miss You",2002,""],["Avril Lavigne","Complicated",2002,""],["Avril Lavigne","I'm With You",2002,""],["Christina Aguilera","Beautiful",2002,""],["Creed","One Last Breath",2002,""],["Jimmy Eat World","The Middle",2002,"o"],["Junior Senior","Move Your Feet",2002,"d"],["Kid Rock feat. Sheryl Crow Or Allison Moorer","Picture",2002,""],["Las Ketchup","The Ketchup Song (Aserejé)",2002,"o"],["Missy \"Misdemeanor\" Elliott","Work It",2002,""],["Nik & Jay","Hot!",2002,"d"],["No Doubt feat. Lady Saw","Underneath It All",2002,""],["R. Kelly","Ignition",2002,""],["Robbie Williams","Feel",2002,""],["Santana feat. Michelle Branch","The Game Of Love",2002,""],["Vanessa Carlton","A Thousand Miles",2002,""],["3 Doors Down","Here Without You",2003,""],["50 Cent","In Da Club",2003,"1"],["Beyonce feat. Jay Z","Crazy In Love",2003,"1"],["Beyonce feat. Sean Paul","Baby Boy",2003,"1"],["Evanescence feat. Paul McCoy","Bring Me To Life",2003,""],["Kashmir","Rocket Brothers",2003,"du"],["Linkin Park","Numb",2003,""],["Mew","Comforting Sounds",2003,"d"],["Nickelback","Someday",2003,""],["Nik & Jay","Elsker hende mere",2003,"d"],["O-Zone","Dragostea din tei",2003,"ou"],["OutKast","Hey Ya!",2003,"1"],["OutKast feat. Sleepy Brown","The Way You Move",2003,"1"],["Outlandish","Aicha",2003,"d"],["Santana feat. Alex Band Or Chad Kroeger","Why Don't You & I",2003,""],["Sean Paul","Get Busy",2003,"1"],["Uncle Kracker feat. Dobie Gray","Drift Away",2003,""],["matchbox twenty","Unwell",2003,""],["50 Cent","Disco Inferno",2004,""],["Alicia Keys","If I Ain't Got You",2004,""],["Evanescence","My Immortal",2004,""],["Franz Ferdinand","Take Me Out",2004,""],["Green Day","Boulevard Of Broken Dreams",2004,""],["Hoobastank","The Reason",2004,"o"],["Infernal","From Paris to Berlin",2004,"d"],["Keane","Somewhere Only We Know",2004,""],["Kelly Clarkson","Since U Been Gone",2004,""],["Kelly Clarkson","Breakaway",2004,""],["Maroon 5","This Love",2004,""],["Maroon 5","She Will Be Loved",2004,""],["Nik & Jay","En dag tilbage",2004,"d"],["Snoop Dogg feat. Pharrell","Drop It Like It's Hot",2004,"1"],["Usher","Burn",2004,"1"],["Usher And Alicia Keys","My Boo",2004,"1"],["Usher feat. Lil Jon & Ludacris","Yeah!",2004,"1"],["Arctic Monkeys","I Bet You Look Good on the Dancefloor",2005,""],["Chris Brown","Run It!",2005,"1"],["Crazy Frog","Axel F",2005,""],["Fall Out Boy","Sugar, We're Goin' Down",2005,""],["James Blunt","You're Beautiful",2005,"1o"],["Kanye West feat. Jamie Foxx","Gold Digger",2005,"1"],["Kelly Clarkson","Because Of You",2005,""],["Kelly Clarkson","Behind These Hazel Eyes",2005,""],["Lifehouse","You And Me",2005,""],["Mariah Carey","We Belong Together",2005,"1"],["Natasha Bedingfield","Unwritten",2005,""],["The Black Eyed Peas","My Humps",2005,""],["The Killers","Mr. Brightside",2005,""],["The Pussycat Dolls feat. Busta Rhymes","Don't Cha",2005,""],["Weezer","Beverly Hills",2005,"o"],["Akon feat. Eminem","Smack That",2006,""],["Basshunter","Boten Anna",2006,""],["Beyonce","Irreplaceable",2006,"1"],["Daniel Powter","Bad Day",2006,"1o"],["Gwen Stefani feat. Akon","The Sweet Escape",2006,""],["Justin Timberlake","SexyBack",2006,"1"],["Justin Timberlake feat. T.I.","My Love",2006,"1"],["Lordi","Hard Rock Hallelujah",2006,"e"],["Muse","Supermassive Black Hole",2006,""],["Nelly Furtado","Say It Right",2006,"1"],["Nickelback","Rockstar",2006,""],["Nik & Jay","Boing!",2006,"d"],["Panic! At The Disco","I Write Sins Not Tragedies",2006,""],["Sean Paul","Temperature",2006,"1"],["Snow Patrol","Chasing Cars",2006,"o"],["The Fray","How To Save A Life",2006,""],["The Fray","Over My Head (Cable Car)",2006,""],["Alicia Keys","No One",2007,"1"],["Alphabeat","Fascination",2007,"d"],["Chris Brown","With You",2007,""],["Colbie Caillat","Bubbly",2007,""],["Fergie","Big Girls Don't Cry",2007,"1"],["Fergie feat. Ludacris","Glamorous",2007,"1"],["Kanye West","Stronger",2007,"1"],["P!nk","Who Knew",2007,""],["Plain White T's","Hey There Delilah",2007,"1"],["Rihanna","Don't Stop The Music",2007,""],["Rihanna feat. Jay-Z","Umbrella",2007,"1"],["Sara Bareilles","Love Song",2007,""],["Timbaland feat. Keri Hilson","The Way I Are",2007,""],["Timbaland feat. OneRepublic","Apologize",2007,""],["Chris Brown","Forever",2008,""],["Coldplay","Viva La Vida",2008,"1"],["Jason Mraz","I'm Yours",2008,""],["Katy Perry","Hot N Cold",2008,""],["Kings Of Leon","Use Somebody",2008,""],["Lady Gaga feat. Colby O'Donis","Just Dance",2008,"1"],["Leona Lewis","Bleeding Love",2008,"1"],["Medina","Kun for mig",2008,"d"],["Medina","Vi to",2008,"du"],["Ne-Yo","Closer",2008,""],["Rihanna","Disturbia",2008,"1"],["Taylor Swift","Love Story",2008,""],["Taylor Swift","You Belong With Me",2008,""],["The All-American Rejects","Gives You Hell",2008,""],["The Fray","You Found Me",2008,""],["Volbeat","Still Counting",2008,"d"],["Alexander Rybak","Fairytale",2009,"e"],["David Guetta feat. Akon","Sexy Chick",2009,""],["Jason Derulo","Whatcha Say",2009,"1"],["Jason Derulo","In My Head",2009,""],["Jay-Z + Alicia Keys","Empire State Of Mind",2009,"1o"],["Ke$ha","TiK ToK",2009,"1"],["Lady Antebellum","Need You Now",2009,""],["Lady Gaga","Poker Face",2009,"1"],["Lady Gaga","Bad Romance",2009,""],["Pitbull","I Know You Want Me (Calle Ocho)",2009,""],["Rasmus Seebach","Natteravn",2009,"d"],["Rasmus Seebach","Lidt i fem",2009,"du"],["Stromae","Alors on danse",2009,""],["The Black Eyed Peas","I Gotta Feeling",2009,"1"],["The Black Eyed Peas","Boom Boom Pow",2009,"1"],["The Script","Breakeven",2009,""],["Train","Hey, Soul Sister",2009,""],["Adele","Rolling In The Deep",2010,"1"],["Agnes Obel","Riverside",2010,"d"],["B.o.B feat. Hayley Williams","Airplanes",2010,""],["Bruno Mars","Just The Way You Are",2010,"1"],["Bruno Mars","Grenade",2010,"1"],["Burhan G","Tættere på himlen",2010,"du"],["CeeLo Green","F**k You! (Forget You)",2010,"o"],["Eminem feat. Rihanna","Love The Way You Lie",2010,"1"],["Enrique Iglesias feat. Pitbull","I Like It",2010,""],["Katy Perry","Firework",2010,"1"],["Katy Perry","Teenage Dream",2010,"1"],["Katy Perry feat. Kanye West","E.T.",2010,"1"],["Lena","Satellite",2010,"e"],["P!nk","Raise Your Glass",2010,"1"],["Usher feat. Pitbull","DJ Got Us Fallin' In Love",2010,""],["Usher feat. will.i.am","OMG",2010,"1"],["Zaz","Je veux",2010,""],["Adele","Someone Like You",2011,"1"],["Ellie Goulding","Lights",2011,""],["Foster The People","Pumped Up Kicks",2011,"o"],["Kelly Clarkson","Stronger (What Doesn't Kill You)",2011,"1"],["LMFAO","Sexy And I Know It",2011,"1"],["LMFAO feat. Lauren Bennett & GoonRock","Party Rock Anthem",2011,"1"],["Lady Antebellum","Just A Kiss",2011,""],["Maroon 5 feat. Christina Aguilera","Moves Like Jagger",2011,"1"],["Miguel","Sure Thing",2011,""],["Nicki Minaj","Super Bass",2011,""],["Pitbull feat. Ne-Yo, Afrojack & Nayer","Give Me Everything",2011,"1"],["Rihanna feat. Calvin Harris","We Found Love",2011,"1"],["fun. feat. Janelle Monae","We Are Young",2011,"1"],["Alex Clare","Too Close",2012,"o"],["Bruno Mars","Locked Out Of Heaven",2012,"1"],["Carly Rae Jepsen","Call Me Maybe",2012,"1"],["Christopher","Told You So",2012,"du"],["Gotye feat. Kimbra","Somebody That I Used To Know",2012,"1o"],["Imagine Dragons","Radioactive",2012,""],["Loreen","Euphoria",2012,"e"],["Lukas Graham","Drunk in the Morning",2012,"du"],["Macklemore & Ryan Lewis feat. Wanz","Thrift Shop",2012,"1"],["Maroon 5","One More Night",2012,"1"],["One Direction","What Makes You Beautiful",2012,""],["Phillip Phillips","Home",2012,""],["Taylor Swift","I Knew You Were Trouble.",2012,""],["The Lumineers","Ho Hey",2012,"o"],["The Wanted","Glad You Came",2012,"o"],["fun.","Some Nights",2012,""],["Arctic Monkeys","Do I Wanna Know?",2013,""],["Avicii","Wake Me Up!",2013,""],["Bastille","Pompeii",2013,"o"],["Emmelie de Forest","Only Teardrops",2013,"de"],["Imagine Dragons","Demons",2013,""],["Indila","Dernière danse",2013,""],["John Legend","All Of Me",2013,"1"],["Justin Timberlake","Mirrors",2013,""],["Katy Perry","Roar",2013,"1"],["Katy Perry feat. Juicy J","Dark Horse",2013,"1"],["Lorde","Royals",2013,"1"],["Macklemore & Ryan Lewis feat. Ray Dalton","Can't Hold Us",2013,"1"],["OneRepublic","Counting Stars",2013,""],["Passenger","Let Her Go",2013,"o"],["Pitbull feat. Ke$ha","Timber",2013,"1"],["Robin Thicke feat. T.I. + Pharrell","Blurred Lines",2013,"1"],["Stromae","Papaoutai",2013,""],["Basim","Cliché Love Song",2014,"de"],["DJ Snake & Lil Jon","Turn Down For What",2014,""],["Ed Sheeran","Thinking Out Loud",2014,""],["Hozier","Take Me To Church",2014,""],["Iggy Azalea feat. Charli XCX","Fancy",2014,"1"],["Kygo","Firestone",2014,""],["MAGIC!","Rude",2014,"1o"],["Mark Ronson feat. Bruno Mars","Uptown Funk!",2014,"1o"],["Meghan Trainor","All About That Bass",2014,"1"],["Pharrell Williams","Happy",2014,"1"],["Sam Smith","Stay With Me",2014,""],["Sia","Chandelier",2014,""],["Taylor Swift","Shake It Off",2014,"1"],["Taylor Swift","Blank Space",2014,"1"],["WALK THE MOON","Shut Up And Dance",2014,"o"],["Alan Walker","Faded",2015,""],["Fetty Wap","Trap Queen",2015,""],["Fetty Wap feat. Remy Boyz","679",2015,""],["Justin Bieber","Love Yourself",2015,"1"],["Justin Bieber","Sorry",2015,"1"],["Lukas Graham","Mama Said",2015,"d"],["Major Lazer & DJ Snake feat. MO","Lean On",2015,""],["Maroon 5","Sugar",2015,""],["Måns Zelmerlöw","Heroes",2015,"e"],["Shawn Mendes","Stitches",2015,""],["Silento","Watch Me",2015,"o"],["The Weeknd","The Hills",2015,"1"],["The Weeknd","Can't Feel My Face",2015,"1"],["The Weeknd","Earned It (Fifty Shades Of Grey)",2015,""],["Wiz Khalifa feat. Charlie Puth","See You Again",2015,"1"],["Zara Larsson","Lush Life",2015,""],["twenty one pilots","Stressed Out",2015,""],["Bruno Mars","That's What I Like",2016,"1"],["Bruno Mars","24K Magic",2016,""],["Desiigner","Panda",2016,"1"],["Drake feat. WizKid & Kyla","One Dance",2016,"1"],["James Arthur","Say You Won't Let Go",2016,"o"],["Justin Timberlake","Can't Stop The Feeling!",2016,"1"],["MØ","Final Song",2016,"d"],["Post Malone feat. Quavo","Congratulations",2016,""],["Rihanna","Needed Me",2016,""],["Rihanna feat. Drake","Work",2016,"1"],["Sia feat. Sean Paul","Cheap Thrills",2016,"1"],["The Chainsmokers feat. Daya","Don't Let Me Down",2016,""],["The Chainsmokers feat. Halsey","Closer",2016,"1"],["twenty one pilots","Heathens",2016,""],["Andy Williams","It's The Most Wonderful Time Of The Year",2017,""],["Bebe Rexha & Florida Georgia Line","Meant To Be",2017,""],["Camila Cabello feat. Young Thug","Havana",2017,"1"],["Dua Lipa","New Rules",2017,""],["Ed Sheeran","Shape Of You",2017,"1"],["Ed Sheeran","Perfect",2017,"1"],["French Montana feat. Swae Lee","Unforgettable",2017,""],["Imagine Dragons","Believer",2017,""],["Imagine Dragons","Thunder",2017,""],["Luis Fonsi & Daddy Yankee feat. Justin Bieber","Despacito",2017,"1o"],["Portugal. The Man","Feel It Still",2017,"o"],["Post Malone feat. 21 Savage","Rockstar",2017,"1"],["Sigrid","Strangers",2017,""],["The Chainsmokers & Coldplay","Something Just Like This",2017,""],["5 Seconds Of Summer","Youngblood",2018,""],["Cardi B, Bad Bunny & J Balvin","I Like It",2018,"1"],["Halsey","Without Me",2018,"1"],["Juice WRLD","Lucid Dreams",2018,""],["Khalid & Normani","Love Lies",2018,""],["Lady Gaga & Bradley Cooper","Shallow",2018,"1"],["Lukas Graham","Love Someone",2018,"d"],["Maroon 5 feat. Cardi B","Girls Like You",2018,"1"],["Marshmello & Bastille","Happier",2018,""],["Netta","Toy",2018,"e"],["Panic! At The Disco","High Hopes",2018,""],["Post Malone","Better Now",2018,""],["Post Malone & Swae Lee","Sunflower (Spider-Man: Into The Spider-Verse)",2018,"1"],["Travis Scott","Sicko Mode",2018,"1"],["benny blanco, Halsey & Khalid","Eastside",2018,""],["Billie Eilish","Bad Guy",2019,"1"],["Chris Brown feat. Drake","No Guidance",2019,""],["Dua Lipa","Don't Start Now",2019,""],["Harry Styles","Adore You",2019,""],["Jonas Brothers","Sucker",2019,"1"],["Khalid","Talk",2019,""],["Lewis Capaldi","Someone You Loved",2019,"1"],["Lizzo","Truth Hurts",2019,"1"],["Maren Morris","The Bones",2019,"o"],["Post Malone","Circles",2019,"1"],["Post Malone","Wow.",2019,""],["Taylor Swift","Cruel Summer",2019,"1"],["The Weeknd","Blinding Lights",2019,"1"],["24kGoldn feat. iann dior","Mood",2020,"1o"],["Ariana Grande","Positions",2020,"1"],["BTS","Dynamite",2020,"1"],["Chris Brown & Young Thug","Go Crazy",2020,""],["Doja Cat feat. Nicki Minaj","Say So",2020,"1"],["Drake feat. Lil Durk","Laugh Now Cry Later",2020,""],["Dua Lipa feat. DaBaby","Levitating",2020,""],["Jawsh 685 x Jason Derulo","Savage Love (Laxed - Siren Beat)",2020,"1o"],["Justin Bieber feat. Quavo","Intentions",2020,""],["Lewis Capaldi","Before You Go",2020,""],["Megan Thee Stallion","Savage",2020,"1"],["SAINt JHN","Roses",2020,"o"],["Scarlet Pleasure","What a Life",2020,"du"],["The Kid LAROI","Without You",2020,""],["Doja Cat","Need To Know",2021,""],["Doja Cat feat. SZA","Kiss Me More",2021,""],["Dua Lipa","Levitating",2021,""],["Ed Sheeran","Bad Habits",2021,""],["Ed Sheeran","Shivers",2021,""],["Elton John & Dua Lipa","Cold Heart (PNAU Remix)",2021,""],["Glass Animals","Heat Waves",2021,"1o"],["Justin Bieber","Ghost",2021,""],["Lil Nas X","Thats What I Want",2021,""],["Måneskin","Zitti e buoni",2021,"e"],["Olivia Rodrigo","Good 4 U",2021,"1"],["Silk Sonic (Bruno Mars & Anderson .Paak)","Leave The Door Open",2021,"1"],["The Kid LAROI & Justin Bieber","Stay",2021,"1"],["The Weeknd & Ariana Grande","Save Your Tears",2021,"1"],["Bad Bunny","Titi Me Pregunto",2022,""],["Chris Brown","Under The Influence",2022,""],["David Guetta & Bebe Rexha","I'm Good (Blue)",2022,""],["Harry Styles","As It Was",2022,"1"],["Lizzo","About Damn Time",2022,"1"],["Metro Boomin, The Weeknd & 21 Savage","Creepin'",2022,""],["Post Malone feat. Doja Cat","I Like You (A Happier Song)",2022,""],["Rema & Selena Gomez","Calm Down",2022,"o"],["SZA","Snooze",2022,""],["SZA","Kill Bill",2022,"1"],["Sam Smith & Kim Petras","Unholy",2022,"1"],["Steve Lacy","Bad Habit",2022,"1"],["Taylor Swift","Anti-Hero",2022,"1"],["Tobias Rahim & Andreas Odbjerg","Stor mand",2022,"d"],["Doja Cat","Paint The Town Red",2023,"1"],["Doja Cat","Agora Hills",2023,""],["Dua Lipa","Dance The Night",2023,""],["Loreen","Tattoo",2023,"e"],["Miley Cyrus","Flowers",2023,"1"],["Noah Kahan","Stick Season",2023,""],["Olivia Rodrigo","Vampire",2023,"1"],["PinkPantheress & Ice Spice","Boy's A Liar, Pt. 2",2023,""],["Tate McRae","Greedy",2023,""],["Taylor Swift","Is It Over Now? (Taylor's Version) [From The Vault]",2023,"1"],["Teddy Swims","Lose Control",2023,"1"],["The Weeknd & Ariana Grande","Die For You",2023,"1"],["Tyla","Water",2023,"o"],["Yng Lvcas x Peso Pluma","La Bebe",2023,"o"],["Benson Boone","Beautiful Things",2024,""],["Billie Eilish","Birds Of A Feather",2024,""],["Chappell Roan","Pink Pony Club",2024,""],["Chappell Roan","Good Luck, Babe!",2024,""],["Hozier","Too Sweet",2024,"1"],["Kendrick Lamar","Not Like Us",2024,"1"],["Kendrick Lamar & SZA","Luther",2024,"1"],["Lady Gaga & Bruno Mars","Die With A Smile",2024,"1"],["Post Malone feat. Morgan Wallen","I Had Some Help",2024,"1"],["ROSE & Bruno Mars","APT.",2024,"o"],["Sabrina Carpenter","Espresso",2024,""],["Shaboozey","A Bar Song (Tipsy)",2024,"1"],["The Weeknd & Playboi Carti","Timeless",2024,""],["Alex Warren","Ordinary",2025,"1"],["Drake","Nokia",2025,""],["HUNTR/X: EJAE, Audrey Nuna & REI AMI","Golden",2025,"1"],["Justin Bieber","Daisies",2025,""],["Justin Bieber","Yukon",2025,""],["Olivia Dean","Man I Need",2025,""],["Olivia Dean","So Easy (To Fall In Love)",2025,""],["Ravyn Lenae","Love Me Not",2025,"o"],["SZA With Kendrick Lamar","30 For 30",2025,""],["Sabrina Carpenter","Manchild",2025,"1"],["Taylor Swift","The Fate Of Ophelia",2025,"1"],["Taylor Swift","Opalite",2025,"1"],["sombr","Back To Friends",2025,""],["Ariana Grande","Hate That I Made You Love Me",2026,"1"],["Bruno Mars","I Just Might",2026,"1"],["Bruno Mars","Risk It All",2026,""],["Dominic Fike","Babydoll",2026,""],["Drake","Janice STFU",2026,"1"],["Drake","Shabang",2026,""],["Olivia Rodrigo","Drop Dead",2026,"1"],["Olivia Rodrigo","The Cure",2026,""],["Olivia Rodrigo","Stupid Song",2026,""],["PinkPantheress With Zara Larsson","Stateside",2026,""],["Tame Impala & JENNIE","Dracula",2026,""],["Taylor Swift","I Knew It, I Knew You",2026,"1"],["Zara Larsson","Midnight Sun",2026,""]];
+const SONGS=SONG_DATA.map(([artist,title,year,f],id)=>{const main=artist.split(/ feat\. | Featuring | With /i)[0].trim();
+  return {id,artist,title,year,main,names:[...new Set([main,...main.split(/ & | x | X |, | and (?=[A-Z])/).map(s=>s.trim())])].filter(Boolean),dk:f.includes("d"),euro:f.includes("e"),no1:f.includes("1"),one:f.includes("o"),unsure:f.includes("u"),feat:/ feat\. | & | With | x |, /i.test(artist)}});
 const decadeOf=y=>Math.floor(y/10)*10;
 const decName=d=>d<1960?"Før 1960":`${String(d).slice(2)}'erne`;
-const appleLink=s=>"https://music.apple.com/dk/search?term="+encodeURIComponent(s.artist+" "+s.title);
+const appleLink=s=>"https://music.apple.com/dk/search?term="+encodeURIComponent(s.main+" "+s.title.replace(/\(.*?\)/g,""));
 const DRT={
- aar:{name:"Årstals-dart",color:"#ff3fa4",sub:"Gæt udgivelsesåret. Jo tættere, jo flere point.",pts:"Præcist 3 · inden for 2 år 2 · rigtigt årti 1"},
- kunstner:{name:"Hvem synger?",color:"#00b8ff",sub:"Gæt kunstneren.",pts:"Rigtigt 2"},
- titel:{name:"Hvad hedder den?",color:"#ff8a00",sub:"Gæt titlen.",pts:"Rigtigt 2"},
- aarti:{name:"Tidsmaskinen",color:"#7a3cff",sub:"Hvilket årti er den fra?",pts:"Rigtigt 1"},
- foreller:{name:"Før eller efter?",color:"#18c26b",sub:"Er den ældre eller nyere end forrige plade?",pts:"Rigtigt 1"},
+ aar:{name:"Årstals-dart",color:"#ff3fa4",sub:"Gæt udgivelsesåret.",pts:"Præcist 3 · inden for 2 år 2 · rigtigt årti 1",dated:true},
+ kunstner:{name:"Hvem synger?",color:"#00b8ff",sub:"Find kunstneren i kataloget.",pts:"Rigtigt 2"},
+ titel:{name:"Hvad hedder den?",color:"#ff8a00",sub:"Find titlen i kataloget.",pts:"Rigtigt 3"},
+ aarti:{name:"Tidsmaskinen",color:"#7a3cff",sub:"Hvilket årti er den fra?",pts:"Rigtigt 1",dated:true},
+ foreller:{name:"Før eller efter?",color:"#18c26b",sub:"Er den ældre eller nyere end forrige plade?",pts:"Rigtigt 1",dated:true},
 };
-const DISCO_TARGET=15;
-/* bingo-felter: tekst og test */
+const ROT=["aar","kunstner","titel","aar","foreller","kunstner","aarti","titel"];
+const DISCO_TARGET=20;
+/* bingo-felter: tekst og test (usikre årstal tæller ikke i årstalsfelter) */
+const yr=f=>s=>!s.unsure&&f(s.year);
 const BINGO_SQ=[
- ["Før 1960",s=>s.year<1960],["60'erne",s=>decadeOf(s.year)===1960],["70'erne",s=>decadeOf(s.year)===1970],["80'erne",s=>decadeOf(s.year)===1980],["90'erne",s=>decadeOf(s.year)===1990],["00'erne",s=>decadeOf(s.year)===2000],["10'erne",s=>decadeOf(s.year)===2010],["20'erne",s=>s.year>=2020],
- ["Dansk kunstner",s=>s.dk],["Udenlandsk kunstner",s=>!s.dk],["Et band",s=>s.form==="band"],["En solist",s=>s.form==="solo"],["En duo",s=>s.form==="duo"],["Kvindelig vokal",s=>s.voc==="f"],["Mandlig vokal",s=>s.voc==="m"],["Mand og kvinde synger",s=>s.voc==="mix"],
- ["Eurovision",s=>s.euro],["Titel på ét ord",s=>!/\s/.test(s.title.replace(/[()'.!]/g,"").trim())],["Fra før 1980",s=>s.year<1980],["Fra efter 2000",s=>s.year>2000],["Lige årstal",s=>s.year%2===0],["Ulige årstal",s=>s.year%2===1],["Mindre kendt sang",s=>s.rare],["En kunstner med to sange her",s=>SONGS.filter(x=>x.artist===s.artist).length>1],
+ ["Før 1970",yr(y=>y<1970)],["70'erne",yr(y=>decadeOf(y)===1970)],["80'erne",yr(y=>decadeOf(y)===1980)],["90'erne",yr(y=>decadeOf(y)===1990)],["00'erne",yr(y=>decadeOf(y)===2000)],["10'erne",yr(y=>decadeOf(y)===2010)],["20'erne",yr(y=>y>=2020)],
+ ["Dansk kunstner",s=>s.dk],["Udenlandsk kunstner",s=>!s.dk],["Nr. 1-hit i USA",s=>s.no1],["One-hit wonder",s=>s.one],["Et samarbejde",s=>s.feat],["Eurovision",s=>s.euro],
+ ["Titel på ét ord",s=>!/\s/.test(s.title.replace(/\(.*?\)/g,"").trim())],["Tal i titlen",s=>/\d|\b(one|two|three|four|five|seven|nine|ten|hundred|million|en|to|tre|fem|tusind)\b/i.test(s.title)],
+ ["Love eller kærlighed",s=>/love|kærlig|elsk/i.test(s.title)],["Kunstner med 'The'",s=>/^the /i.test(s.main)],["Lige årstal",yr(y=>y%2===0)],["Ulige årstal",yr(y=>y%2===1)],["Fra før 1980",yr(y=>y<1980)],["Fra efter 2000",yr(y=>y>2000)],["Fra 1985 til 1995",yr(y=>y>=1985&&y<=1995)],
 ];
+/* katalog til søgning: tilgivende over for stavning */
+const fold=s=>String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/æ/g,"ae").replace(/ø/g,"o").replace(/å/g,"aa").replace(/^the /,"").replace(/ph/g,"f").replace(/ck/g,"k").replace(/c(?=[aou])/g,"k").replace(/w/g,"v").replace(/y/g,"i").replace(/z/g,"s").replace(/[^a-z0-9 ]/g,"").replace(/(.)\1+/g,"$1").trim();
+function lev(a,b){if(Math.abs(a.length-b.length)>2)return 9;const m=[...Array(b.length+1).keys()];for(let i=1;i<=a.length;i++){let p=m[0];m[0]=i;for(let j=1;j<=b.length;j++){const t=m[j];m[j]=Math.min(m[j]+1,m[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=t}}return m[b.length]}
+let CAT=null;function catalogs(){if(CAT)return CAT;const art=new Set(),tit=new Set();SONGS.forEach(s=>{s.names.forEach(n=>art.add(n));art.add(s.main);tit.add(s.title)});
+  const mk=set=>[...set].sort((a,b)=>fold(a).localeCompare(fold(b))).map(v=>({v,f:fold(v)}));CAT={kunstner:mk(art),titel:mk(tit)};return CAT}
+function search(list,q){const f=fold(q);if(!f)return [];const words=f.split(" ");const out=[];
+  for(const it of list){let sc=99;if(it.f.startsWith(f))sc=0;else if(it.f.split(" ").some(w=>w.startsWith(f)))sc=1;else if(it.f.includes(f))sc=2;else if(words.every(w=>it.f.includes(w)))sc=3;else if(f.length>=3){const d=Math.min(...it.f.split(" ").map(w=>lev(f,w.slice(0,f.length+1))));if(d<=(f.length>5?2:1))sc=4+d}
+    if(sc<99)out.push([sc,it.v])}
+  return out.sort((a,b)=>a[0]-b[0]||a[1].length-b[1].length).slice(0,30).map(x=>x[1])}
+function isRight(type,s,a,prev){
+  if(a==null)return 0;
+  if(type==="kunstner")return s.names.concat([s.main]).some(n=>fold(n)===fold(a))?2:0;
+  if(type==="titel")return fold(a)===fold(s.title)?3:0;
+  if(type==="aar"){const d=Math.abs(Number(a)-s.year);return d===0?3:d<=2?2:decadeOf(Number(a))===decadeOf(s.year)?1:0}
+  if(type==="aarti")return Number(a)===decadeOf(s.year)?1:0;
+  if(type==="foreller")return a===(s.year<prev.year?"Ældre":"Nyere")?1:0;return 0}
+function answerText(type,s,prev){if(type==="kunstner")return s.main;if(type==="titel")return s.title;if(type==="aar")return String(s.year);if(type==="aarti")return decName(decadeOf(s.year));if(type==="foreller")return s.year<prev.year?"Ældre":"Nyere"}
 
-/* ---------- beat ---------- */
-const BEAT={on:false,timer:null,step:0,next:0,want:store("disco.beat")!==false,
-  start(){const a=ac();if(!a||this.on)return;this.on=true;this.step=0;this.next=a.currentTime+.05;const spb=60/118/4;
-    const bass=[55,55,65.4,55,73.4,55,65.4,49];
-    this.timer=setInterval(()=>{const a=ac();if(!a)return;while(this.next<a.currentTime+.12){const s=this.step%16,t=this.next-a.currentTime;
-      if(s%4===0){tone(150,.16,"sine",.16,45,t)}
-      if(s%4===2)noise(.04,.035,8000,t);
-      if(s===4||s===12)noise(.12,.07,1800,t);
-      if(s%2===0)tone(bass[(s/2)|0],.13,"sawtooth",.035,null,t);
-      if(s%8===6)tone(659*(this.step%32<16?1:1.12),.08,"triangle",.025,null,t);
-      this.step++;this.next+=spb}},30)},
+/* ---------- musik: grooves der skifter stil ---------- */
+const PROG=[[57,53,48,55],[50,46,53,48],[52,48,55,50],[45,53,50,52],[55,52,48,50]];
+const STYLES=["disco","house","funk","synth","latin"];
+const BEAT={on:false,timer:null,want:store("disco.beat")!==false,step:0,next:0,style:0,prog:PROG[0],
+  start(){const a=ac();if(!a||this.on)return;this.on=true;this.step=0;this.next=a.currentTime+.08;this.style=Math.random()*STYLES.length|0;this.prog=PROG[Math.random()*PROG.length|0];
+    const bpm=120,sx=60/bpm/4;
+    this.timer=setInterval(()=>{const a=ac();if(!a||!this.on)return;while(this.next<a.currentTime+.15){this.play(this.step,this.next,sx);this.step++;this.next+=sx}},40)},
+  play(st,t,sx){const s=st%16,bar=(st>>4),root=this.prog[bar%4],sty=STYLES[this.style];
+    if(st>0&&st%128===0){this.style=(this.style+1+(Math.random()*3|0))%STYLES.length;this.prog=PROG[Math.random()*PROG.length|0];V.riser(t-sx*8,sx*8,.05)}
+    const chord=[root+12,root+15+((root%2)?1:0),root+19].map(NOTE);
+    if(sty==="disco"){if(s%4===0)V.kick(t,.42);if(s%4===2)V.hat(t,.05,true);if(s===4||s===12)V.clap(t,.12);if(s%2===0)V.bass(NOTE(root-12+(s%4===2?12:0)),t,sx*1.6,.1);if(s===0&&bar%2===0)V.pad(chord,t,sx*30,.025);if(s%8===6)V.pluck(chord[2]*2,t,.05,{pan:.4})}
+    if(sty==="house"){if(s%4===0)V.kick(t,.45);if(s%4===2){V.hat(t,.05,true);V.bass(NOTE(root-12),t,sx*1.5,.11)}if(s===4||s===12)V.clap(t,.13);if([3,6,10,14].includes(s))chord.forEach(f=>V.pluck(f,t,.04,{dur:.25,pan:-.2}));if(s%2)V.hat(t,.02,false,-.3)}
+    if(sty==="funk"){if([0,7,10].includes(s))V.kick(t,.4);if(s===4||s===12)V.snare(t,.16);if(s%2===0)V.hat(t,.035);if([0,3,6,8,11,14].includes(s))V.bass(NOTE(root-12+([3,11].includes(s)?12:0)),t,sx*.9,.12);if(s===6||s===14)chord.forEach(f=>V.brass(f,t,.12,.022))}
+    if(sty==="synth"){if(s%8===0)V.kick(t,.4);if(s===8)V.snare(t,.2);if(s%4===2)V.hat(t,.03);const arp=[0,7,12,15,19,15,12,7];V.pluck(NOTE(root+12+arp[s%8]),t,.045,{dur:.18,pan:(s%2?.35:-.35),wet:.45});if(s===0)V.pad(chord,t,sx*16,.02);if(s%4===0)V.bass(NOTE(root-12),t,sx*3,.09)}
+    if(sty==="latin"){if(s%4===0)V.kick(t,.32);[0,3,6,10,12].includes(s)&&V.conga(s%3?320:220,t,.13,(s%2?.3:-.3));if(s%2===0)V.hat(t,.03,false,.4);if([2,6,10,14].includes(s))V.osc("triangle",NOTE(root+24),t,.06,.05,{wet:.2});if([0,3,8,11].includes(s))V.bass(NOTE(root-12),t,sx*1.2,.1);if(s===0&&bar%2===0)V.pad(chord,t,sx*28,.02)}
+  },
   stop(){this.on=false;clearInterval(this.timer)},
   toggle(){this.want=!this.want;store("disco.beat",this.want);this.want?this.start():this.stop()}
 };
+function shout(text){try{const u=new SpeechSynthesisUtterance(text);u.lang="da-DK";u.pitch=1.35;u.rate=.82;u.volume=1;const v=speechSynthesis.getVoices().find(v=>/^da/i.test(v.lang));if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
 const DSFX={
- scratch:()=>{noise(.25,.2,900,0,3000);noise(.2,.18,3000,.22,600)},
- chord:()=>[523,659,784,1046].forEach((f,i)=>tone(f,.5,"triangle",.07,null,i*.05)),
- yay:()=>[784,988,1175,1568].forEach((f,i)=>tone(f,.18,"square",.05,null,i*.09)),
- pop:()=>tone(880,.06,"sine",.12,1600),
- bingo:()=>{[523,659,784,1046,1319,1568].forEach((f,i)=>tone(f,.22,"square",.06,null,i*.1));SFX.airhorn()},
- whoop:()=>tone(300,.4,"sine",.1,1200),
+ open:()=>{const t=now();if(!t)return;V.riser(t,.9,.12);V.impact(t+.9,.5);[[57,61,64,69],[59,62,66,71]].forEach((ch,i)=>ch.forEach(n=>V.brass(NOTE(n),t+.9+i*.25,i?.7:.22,.04)));setTimeout(()=>shout("Musiiiik tiiid!"),650)},
+ scratch:()=>{const t=now();if(!t)return;V.noise(t,.14,.2,{f:700,f2:3200,q:3,wet:.1});V.noise(t+.15,.18,.18,{f:3000,f2:500,q:3,wet:.1})},
+ chord:()=>{const t=now();if(!t)return;V.impact(t,.35);[69,73,76,81].forEach((n,i)=>V.bell(NOTE(n),t+i*.04,.07));[57,61,64].forEach(n=>V.brass(NOTE(n),t,.6,.04))},
+ yay:()=>{const t=now();if(!t)return;[72,76,79,84,88].forEach((n,i)=>V.bell(NOTE(n),t+i*.06,.06,{pan:(i-2)*.2}))},
+ pop:()=>{const t=now();if(!t)return;V.pluck(NOTE(84),t,.14);V.noise(t,.02,.08,{type:"highpass",f:3000,wet:0})},
+ bingo:()=>{const t=now();if(!t)return;V.impact(t,.5);[[60,64,67,72],[65,69,72,77],[67,71,74,79],[72,76,79,84]].forEach((ch,i)=>{ch.forEach(n=>V.brass(NOTE(n),t+i*.18,i===3?1:.2,.035));V.kick(t+i*.18,.3)});setTimeout(()=>shout("Bingo!"),300)},
+ whoop:()=>{const t=now();if(!t)return;V.noise(t,.35,.12,{f:300,f2:2800,q:1.5,wet:.3})},
+ nope:()=>{const t=now();if(!t)return;V.pluck(NOTE(52),t,.16);V.pluck(NOTE(51),t+.09,.16)},
 };
 
 /* ---------- diskokugle og lyspletter ---------- */
@@ -1372,109 +1473,202 @@ function spinBalls(){app.querySelectorAll("canvas.ball").forEach(c=>{if(c._on)re
         if(sp>.985){x.fillStyle="#fff";x.beginPath();x.arc(px,y,th*.5,0,7);x.fill()}}}
     x.restore();if(!RM)requestAnimationFrame(loop)};requestAnimationFrame(loop)})}
 
-/* ---------- visning ---------- */
+/* ---------- fælles skærmdele ---------- */
 const D={};
-function discoEnter(){document.body.classList.add("disco");discoFx(true);if(BEAT.want)BEAT.start()}
-function discoLeave(){document.body.classList.remove("disco");discoFx(false);BEAT.stop()}
-const beatBtn=()=>`<button class="dchip" id="beat">${BEAT.want?"Beat til":"Beat fra"}</button>`;
-function wireBeat(){const b=$("#beat");if(b)b.onclick=()=>{BEAT.toggle();b.textContent=BEAT.want?"Beat til":"Beat fra"}}
+function discoEnter(){if(!document.body.classList.contains("disco")){document.body.classList.add("disco");discoFx(true);if(BEAT.want)setTimeout(()=>BEAT.start(),1600);DSFX.open()}}
+function discoLeave(){document.body.classList.remove("disco");discoFx(false);BEAT.stop();DO.leave()}
+const beatBtn=()=>`<button class="dchip" id="beat">${BEAT.want?"Musik til":"Musik fra"}</button>`;
+function wireBeat(){const b=$("#beat");if(b)b.onclick=()=>{BEAT.toggle();b.textContent=BEAT.want?"Musik til":"Musik fra"}}
+const dTop=(left,mid)=>`<div class="dtop">${left||"<span></span>"}${mid?`<span class="dchip solid">${mid}</span>`:""}${beatBtn()}</div>`;
+function vinylHTML(s,revealed,color){return `<div class="vinyl-wrap"><div class="vinyl${revealed?" revealed":""}"><div class="label" style="--c:${color}">${revealed?`<div class="lab-in"><b>${esc(s.main)}</b><span>${esc(s.title)}</span><em>${s.year}</em></div>`:`<div class="lab-in"><b>?</b></div>`}</div></div></div>`}
+function playBtn(s){return `<a class="dbtn play" href="${appleLink(s)}" target="_blank" rel="noopener" id="dplay" style="--c:#fc3c44">Afspil i Apple Music</a>`}
+function wirePlay(){const p=$("#dplay");if(p)p.addEventListener("click",()=>{if(BEAT.on)BEAT.stop();DSFX.pop()})}
+function scoreRow(players,scores,gold){return `<div class="dscores">${players.map(p=>`<span class="dsc" style="--c:${p.color}">${av(p)}<b>${scores[p.id]||0}</b>${gold&&!gold[p.id]?`<i class="gold-dot" title="Har guldplade"></i>`:""}</span>`).join("")}</div>`}
+
+/* katalog-vælger: søg eller bladr efter bogstav. Ingen stavning krævet */
+function pickerUI(kind,onPick){
+  const list=catalogs()[kind];const letters=[..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].concat(["0-9"]);let chosen=null,letter=null;
+  const html=`<div class="picker"><input type="search" id="pq" placeholder="Skriv et par bogstaver" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
+    <div class="letters">${letters.map(l=>`<button type="button" data-l="${l}">${l}</button>`).join("")}</div><div class="plist" id="pl"><p class="dsmall">Skriv et par bogstaver, eller vælg et bogstav og bladr. Stavning behøver ikke være rigtig.</p></div>
+    <div class="pchosen" id="pc" hidden></div></div>`;
+  const draw=items=>{const pl=$("#pl");if(!pl)return;pl.innerHTML=items.length?items.map(v=>`<button type="button" class="pitem${v===chosen?" on":""}" data-v="${esc(v)}">${esc(v)}</button>`).join(""):`<p class="dsmall">Ingen fund. Prøv færre bogstaver.</p>`;
+    pl.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{chosen=b.dataset.v;DSFX.pop();const pc=$("#pc");pc.hidden=false;pc.innerHTML=`Dit svar: <b>${esc(chosen)}</b>`;pl.querySelectorAll(".pitem").forEach(x=>x.classList.toggle("on",x===b));onPick(chosen)})};
+  return {html,wire(){const q=$("#pq");q.oninput=()=>{letter=null;app.querySelectorAll("[data-l]").forEach(b=>b.classList.remove("on"));draw(search(list,q.value))};
+    app.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{letter=b.dataset.l;q.value="";app.querySelectorAll("[data-l]").forEach(x=>x.classList.toggle("on",x===b));SFX.tap();
+      draw(list.filter(it=>letter==="0-9"?/^[0-9]/.test(it.f):it.f.startsWith(letter.toLowerCase())).map(it=>it.v))})}};
+}
+function yearUI(onPick){let y=1990;const html=`<div class="ypick"><div class="ybig" id="yv">1990</div><div class="ydec" id="yd">90'erne</div>
+  <input type="range" id="yr" min="1930" max="2026" value="1990" aria-label="Vælg år"><div class="ybtns"><button type="button" data-y="-10">−10</button><button type="button" data-y="-1">−1</button><button type="button" data-y="1">+1</button><button type="button" data-y="10">+10</button></div></div>`;
+  const set=v=>{y=Math.max(1930,Math.min(2026,v));$("#yv").textContent=y;$("#yd").textContent=decName(decadeOf(y));$("#yr").value=y;onPick(y)};
+  return {html,wire(){$("#yr").oninput=e=>{set(+e.target.value);if(y%5===0)SFX.tick()};app.querySelectorAll("[data-y]").forEach(b=>b.onclick=()=>{set(y+Number(b.dataset.y));SFX.tick()});onPick(y)}}}
+function decadeUI(onPick){const ds=[];for(let d=1950;d<=2020;d+=10)ds.push(d);return {html:`<div class="dopts">${[1940].concat(ds).map((d,i)=>`<button type="button" class="dopt" data-d="${d}" style="--c:${["#ff3fa4","#00b8ff","#ffd400","#18c26b"][i%4]}">${d===1940?"Før 1950":decName(d)}</button>`).join("")}</div>`,
+  wire(){app.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{app.querySelectorAll("[data-d]").forEach(x=>x.classList.toggle("sel",x===b));DSFX.pop();onPick(Number(b.dataset.d))})}}}
+function ofUI(onPick){return {html:`<div class="dopts"><button type="button" class="dopt" data-o="Ældre" style="--c:#00b8ff">Ældre</button><button type="button" class="dopt" data-o="Nyere" style="--c:#ff3fa4">Nyere</button></div>`,
+  wire(){app.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{app.querySelectorAll("[data-o]").forEach(x=>x.classList.toggle("sel",x===b));DSFX.pop();onPick(b.dataset.o)})}}}
+function answerWidget(type,onPick){if(type==="kunstner"||type==="titel")return pickerUI(type,onPick);if(type==="aar")return yearUI(onPick);if(type==="aarti")return decadeUI(onPick);return ofUI(onPick)}
+
+/* ---------- valg af næste sang og runde ---------- */
+function nextSongFor(G,mode){
+  const used=new Set(G.played||[]);const n=(G.n||0)+1;let type=mode==="bingo"?null:ROT[(n-1)%ROT.length];
+  const prev=G.sid!=null?SONGS[G.sid]:null;if(type==="foreller"&&(!prev||prev.unsure))type="aar";
+  const ok=s=>!used.has(s.id)&&(!type||!DRT[type].dated||!s.unsure)&&!(type==="foreller"&&prev&&s.year===prev.year);
+  let pool=SONGS.filter(ok);if(!pool.length)pool=SONGS.filter(s=>!(type&&DRT[type].dated&&s.unsure));
+  // vægt danske sange lidt op
+  const s=Math.random()<.18?(shuffle(pool.filter(x=>x.dk))[0]||shuffle(pool)[0]):shuffle(pool)[0];
+  return {n,sid:s.id,type,prev:prev?prev.id:null,played:[...(G.played||[]),s.id]};
+}
+
+/* ---------- online-rum til Disko (bruger samme database som Skyldig) ---------- */
+const DO={code:null,R:null,players:[],answers:[],bingos:[],unsub:[],shown:null,
+  ref(p=""){return ON.db.doc("disco/"+this.code+p)},
+  isHost(){return !!this.R&&this.R.host===ON.me},
+  colored(){return this.players.map((p,i)=>({id:p.id,name:p.name,photo:p.photo||null,color:COLORS[i%8]}))},
+  async write(fn){try{await fn();return true}catch(e){D.err="Kunne ikke gemme ("+(e.code||"fejl")+")."+(e.code==="invalid_argument"?" Ejeren skal dele spillet med dig som redaktør.":"");render();return false}},
+  async setRoom(patch){const next={...this.R,...patch};this.R=next;return this.write(()=>this.ref().set(clone(next)))},
+  subscribe(){
+    this.unsub.forEach(u=>u());this.unsub=[];const base="disco/"+this.code;
+    const fail=e=>{D.err="Forbindelsen stoppede ("+e.code+").";render()};
+    this.unsub.push(ON.db.doc(base).onSnapshot(s=>{this.R=s.exists?s.data():null;if(S.view==="disco")render()},fail));
+    this.unsub.push(ON.db.collection(base+"/players").onSnapshot(s=>{this.players=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.joined-b.joined);if(S.view==="disco"&&this.R?.status==="lobby")render()},fail));
+    this.unsub.push(ON.db.collection(base+"/answers").onSnapshot(s=>{this.answers=s.docs.map(d=>d.data());if(S.view==="disco"&&this.R?.status==="play")render()},fail));
+    this.unsub.push(ON.db.collection(base+"/bingos").onSnapshot(s=>{const before=this.bingos.length;this.bingos=s.docs.map(d=>d.data()).sort((a,b)=>a.at-b.at);if(this.bingos.length>before&&before>=0&&this._ready){const b=this.bingos[this.bingos.length-1];if(b.uid!==ON.me){DSFX.bingo();siren("BINGO!",b.name+" har bingo");confetti(160,.3)}}this._ready=true;if(S.view==="disco")render()},()=>{}));
+  },
+  leave(){this.unsub.forEach(u=>u());this.unsub=[];this.code=null;this.R=null;this.players=[];this.answers=[];this.bingos=[];this.shown=null;this._ready=false},
+  async create(mode){await ON.init();if(!ON.db){D.err="Hver sin telefon kræver en forbindelse til spillets database.";return render()}
+    const L="ABCDEFGHJKLMNPRSTUVXYZ";this.code=Array.from({length:4},()=>L[Math.random()*L.length|0]).join("");
+    if(!await this.write(()=>this.ref().set({host:ON.me,mode,status:"lobby",n:0,sid:null,played:[],scores:{},gold:{},created:Date.now()})))return;
+    this.subscribe();go("disco",{dv:"room"})},
+  async join(code){await ON.init();if(!ON.db){D.err="Hver sin telefon kræver en forbindelse til spillets database.";return render()}
+    const name=(ON.name||"").trim();if(!name){D.err="Skriv dit navn først.";return render()}store("skyldig.myname",name);
+    this.code=code;const s=await this.ref().get().catch(()=>null);if(!s||!s.exists){D.err="Ingen Disko med koden "+code+".";this.code=null;return render()}
+    if(!await this.write(()=>this.ref("/players/"+ON.me).set({name,photo:ON.photo||null,joined:Date.now()})))return;
+    this.subscribe();DSFX.whoop();go("disco",{dv:"room"})},
+  roundAns(){const R=this.R,v={};this.answers.filter(x=>x.n===R?.n).forEach(x=>v[x.uid]={a:x.a,g:!!x.g});return v},
+  async answer(a,g){const R=this.R;await this.write(()=>this.ref(`/answers/r${R.n}-${ON.me}`).set({n:R.n,uid:ON.me,a,g:!!g}))},
+  async next(){const R=this.R;if(R.mode==="quiz"&&Object.values(R.scores||{}).some(v=>v>=DISCO_TARGET))return this.setRoom({status:"end"});await this.setRoom({...nextSongFor(R,R.mode),status:"play",result:null})},
+  async reveal(){const R=this.R,s=SONGS[R.sid],prev=R.prev!=null?SONGS[R.prev]:null;if(R.mode==="bingo")return this.setRoom({status:"reveal",result:{}});
+    const v=this.roundAns(),gain={},gold={...(R.gold||{})};Object.entries(v).forEach(([uid,x])=>{const p=isRight(R.type,s,x.a,prev)*(x.g&&!gold[uid]?2:1);if(x.g)gold[uid]=true;if(p)gain[uid]=p});
+    const scores={...(R.scores||{})};Object.entries(gain).forEach(([u,p])=>scores[u]=(scores[u]||0)+p);
+    await this.setRoom({status:"reveal",result:{ans:v,gain},scores,gold,prevScores:R.scores||{}})},
+  async callBingo(){await this.write(()=>ON.db.collection("disco/"+this.code+"/bingos").add({uid:ON.me,name:ON.name,at:Date.now()}))}
+};
+
+/* ---------- skærme ---------- */
 function discoView(){
   discoEnter();const v=S.dv||"home";
   if(v==="home"){
-    app.innerHTML=`<div class="dtop"><button class="dchip" id="dback">Til Skyldig!</button>${beatBtn()}</div>
-    ${ballHTML(150)}<h1 class="dlogo">DISKO</h1><p class="dtag">Musikspillet · 1939 til i dag · med dansk krydderi</p>
+    app.innerHTML=`${dTop(`<button class="dchip" id="dback">Til Skyldig!</button>`)}
+    ${ballHTML(150)}<h1 class="dlogo">DISKO</h1><p class="dtag">${SONGS.length} sange fra 1939 til i dag · med dansk krydderi</p>
     <div class="dmodes">
-      <button class="dcard" id="d-dj" style="--c:#ff3fa4"><b>DJ-runder</b><span>Én telefon er DJ. Fem slags runder og guldplader. Først til ${DISCO_TARGET}.</span></button>
-      <button class="dcard" id="d-bingo" style="--c:#00b8ff"><b>Disko-bingo</b><span>Din egen bingoplade på din egen telefon. Sæt kryds, når en sang passer.</span></button>
-      <button class="dcard" id="d-bdj" style="--c:#ff8a00"><b>Bingo-DJ</b><span>Afspil sange til bingoen. Ingen point, bare musik.</span></button>
+      <button class="dcard" id="d-quiz" style="--c:#ff3fa4"><b>Musikquiz</b><span>DJ-telefonen spiller, alle svarer fra egen telefon. Point tælles automatisk. Først til ${DISCO_TARGET}.</span></button>
+      <button class="dcard" id="d-bingo" style="--c:#00b8ff"><b>Disko-bingo</b><span>Alle får en plade. Man kan kun krydse af, hvis en sang, der faktisk er spillet, passer.</span></button>
+      <button class="dcard" id="d-join" style="--c:#ff8a00"><b>Hop ind</b><span>Har nogen startet en Disko? Skriv koden her.</span></button>
     </div>
     <div class="drounds">${Object.values(DRT).map(r=>`<span style="--c:${r.color}">${r.name}</span>`).join("")}</div>
-    <p class="dnote">Sangene åbner i Apple Music. Spil dem over en højttaler, og hold skærmen væk fra de andre.</p>`;
-    spinBalls();wireBeat();$("#dback").onclick=()=>{discoLeave();go("home")};
-    $("#d-dj").onclick=()=>{DSFX.whoop();discoSetup()};$("#d-bingo").onclick=()=>{DSFX.whoop();go("disco",{dv:"bingo"})};$("#d-bdj").onclick=()=>{DSFX.whoop();D.mode="bingo";D.deck=shuffle(SONGS);D.i=-1;D.prev=null;discoNextSong()};
+    ${D.err?`<p class="dnote" style="background:#fff">${esc(D.err)}</p>`:""}
+    <p class="dnote">DJ'en spiller sangen i Apple Music over en højttaler og holder skærmen væk fra de andre.</p>`;
+    spinBalls();wireBeat();$("#dback").onclick=()=>{go("home")};D.err="";
+    $("#d-quiz").onclick=()=>{DSFX.whoop();DO.create("quiz")};$("#d-bingo").onclick=()=>{DSFX.whoop();DO.create("bingo")};$("#d-join").onclick=()=>{DSFX.whoop();go("disco",{dv:"join"})};
     return;
   }
-  if(v==="setup"){
-    const ps=S.lp||store("skyldig.localplayers")||["Mor","Far","Søster","Mig"].map((n,i)=>({id:"p"+i,name:n,color:COLORS[i]}));S.lp=ps;
-    app.innerHTML=`<div class="dtop"><button class="dchip" id="dback">Tilbage</button>${beatBtn()}</div><h2 class="dh">Hvem danser med?</h2>
-    <div class="dpanel"><div class="dplayers">${ps.map(p=>`<span class="dpl" style="--c:${p.color}">${av(p,"m")}${esc(p.name)}</span>`).join("")}</div><p class="dsmall">Spillerne hentes fra Skyldig. Ret dem under "Én telefon" i Skyldig.</p></div>
-    <div class="dpanel"><b>Guldpladen</b><p class="dsmall">Alle har én guldplade pr. spil. Brug den før afsløringen for at få dobbelt point i den runde.</p></div>
-    <button class="dbtn" id="dgo" style="--c:#ff3fa4">Start festen</button>`;
-    wireBeat();$("#dback").onclick=()=>go("disco",{dv:"home"});
-    $("#dgo").onclick=()=>{D.mode="dj";D.players=ps.map((p,i)=>({...p,color:COLORS[i%8]}));D.scores={};D.gold={};D.deck=shuffle(SONGS);D.i=-1;D.prev=null;D.n=0;discoNextSong()};
+  if(v==="join"){
+    app.innerHTML=`${dTop(`<button class="dchip" id="dback">Tilbage</button>`)}<h2 class="dh">Hop ind</h2>
+    <div class="dpanel"><b>Dit navn</b><input class="dinput" type="text" id="dname" maxlength="16" value="${esc(ON.name||"")}" placeholder="Fx Mor" autocomplete="off"></div>
+    <div class="dpanel"><b>Koden fra DJ'en</b><form id="djf" class="row" style="flex-wrap:nowrap"><input class="dinput" type="text" id="dcode" maxlength="4" placeholder="ABCD" style="text-transform:uppercase;letter-spacing:.2em;font-weight:800" autocomplete="off"><button class="dbtn" style="--c:#18c26b;width:auto;padding-inline:18px">Hop ind</button></form></div>
+    ${D.err?`<p class="dnote" style="background:#fff">${esc(D.err)}</p>`:""}`;
+    wireBeat();D.err="";$("#dback").onclick=()=>go("disco",{dv:"home"});
+    $("#djf").onsubmit=e=>{e.preventDefault();ON.name=$("#dname").value;const c=$("#dcode").value.trim().toUpperCase();if(c.length===4)DO.join(c)};return;
+  }
+  if(v==="room")return discoRoom();
+}
+function discoRoom(){
+  const R=DO.R;if(!R){app.innerHTML=`${dTop()}<p class="dnote">Henter Disko…</p>`;return}
+  const players=DO.colored();S.players=players;const host=DO.isHost(),me=ON.me,s=R.sid!=null?SONGS[R.sid]:null,prev=R.prev!=null?SONGS[R.prev]:null,T=R.type?DRT[R.type]:null;
+  const err=D.err?`<p class="dnote" style="background:#fff">${esc(D.err)}</p>`:"";D.err="";
+  if(R.status==="lobby"){
+    DO.shown=null;
+    app.innerHTML=`${dTop(`<button class="dchip" id="dlv">Forlad</button>`,R.mode==="quiz"?"Musikquiz":"Disko-bingo")}
+    ${ballHTML(110)}<div class="dpanel c"><b>Koden</b><div class="dcode">${esc(DO.code)}</div><p class="dsmall">Alle andre åbner Disko, trykker "Hop ind" og skriver koden.${host?" Din telefon er DJ.":""}</p></div>
+    <div class="dpanel"><b>På dansegulvet (${players.length})</b><div class="dplayers">${players.map(p=>`<span class="dpl" style="--c:${p.color}">${av(p,"m")}${esc(p.name)}</span>`).join("")||'<span class="dsmall">Venter på de første…</span>'}</div></div>
+    ${host?`<button class="dbtn" id="dstart" style="--c:#ff3fa4" ${players.length<1?"disabled":""}>Start ${R.mode==="quiz"?"quizzen":"bingoen"}</button>`:`<p class="dnote">Venter på at DJ'en starter…</p>`}${err}`;
+    spinBalls();wireBeat();$("#dlv").onclick=()=>{DO.leave();go("disco",{dv:"home"})};const st=$("#dstart");if(st)st.onclick=()=>{DSFX.chord();DO.next()};return;
+  }
+  if(R.status==="end"){
+    if(DO.shown==="end")return;DO.shown="end";const sc=R.scores||{};const list=players.slice().sort((a,b)=>(sc[b.id]||0)-(sc[a.id]||0)),top=sc[list[0]?.id]||0;
+    app.innerHTML=`${dTop()}${ballHTML(170)}<h1 class="dlogo sm">${list.filter(p=>(sc[p.id]||0)===top).map(p=>esc(p.name)).join(" & ")}</h1><p class="dtag">Aftenens dansegulvskonge · ${top} point</p>
+    <div class="dpanel">${list.map((p,i)=>`<div class="drow"><span class="drk">${i+1}</span>${av(p,"m")}<b>${esc(p.name)}</b><em>${sc[p.id]||0}</em></div>`).join("")}</div>
+    ${host?`<button class="dbtn" id="dagain" style="--c:#ff3fa4">Ny quiz med samme folk</button>`:""}<button class="dbtn" id="dhome" style="--c:#7a3cff">Til Disko-menuen</button>`;
+    spinBalls();wireBeat();DSFX.bingo();[0,500,1000].forEach(t=>setTimeout(()=>confetti(140,.25),t));
+    const ag=$("#dagain");if(ag)ag.onclick=()=>DO.setRoom({status:"lobby",n:0,sid:null,prev:null,played:[],scores:{},gold:{}});$("#dhome").onclick=()=>{DO.leave();go("disco",{dv:"home"})};return;
+  }
+  const key=R.status+R.n;
+  /* ---- DJ ---- */
+  if(host){
+    const v=DO.roundAns(),done=Object.keys(v).length;
+    if(DO.shown===key){if(R.status==="play"){const c=$("#dcount");if(c)c.textContent=`${done} af ${players.length} har svaret`}return}
+    DO.shown=key;const rev=R.status==="reveal";
+    app.innerHTML=`${dTop(`<button class="dchip" id="dend">Afslut</button>`,`${R.mode==="quiz"?"Runde":"Sang"} ${R.n} · ${esc(DO.code)}`)}
+    ${R.mode==="quiz"?scoreRow(players,R.scores||{},R.gold):`<p class="dsmall c">${(R.played||[]).length} sange spillet · ${DO.bingos.length} bingo${DO.bingos.length===1?"":"er"}</p>`}
+    ${T?`<div class="dbanner" style="--c:${T.color}"><b>${esc(T.name)}</b><span>${esc(T.sub)}</span><small>${esc(T.pts)}</small></div>`:`<div class="dbanner" style="--c:#00b8ff"><b>Bingo-DJ</b><span>Afspil sangen, og afslør den, når den har spillet lidt.</span></div>`}
+    ${R.type==="foreller"&&prev?`<div class="dprev">Forrige plade: <b>${esc(prev.main)} · ${esc(prev.title)}</b> (${prev.year})</div>`:""}
+    ${vinylHTML(s,rev,T?T.color:"#00b8ff")}
+    <div class="dpanel c"><span class="dsmall">Kun for DJ'en</span><b style="font-size:18px">${esc(s.main)} · ${esc(s.title)}</b><span class="dsmall">${s.unsure?"Årstal ikke bekræftet":s.year}</span></div>
+    ${playBtn(s)}
+    ${rev?revealList(R,players,s,prev):`${R.mode==="quiz"?`<p class="dsmall c" id="dcount">${done} af ${players.length} har svaret</p>`:""}`}
+    ${rev?`<button class="dbtn" id="dnext" style="--c:#7a3cff">Næste plade</button>`:`<button class="dbtn" id="drev" style="--c:#18c26b">Afslør</button>`}${err}`;
+    wireBeat();wirePlay();
+    $("#dend").onclick=()=>{if(R.mode==="quiz")DO.setRoom({status:"end"});else{DO.leave();go("disco",{dv:"home"})}};
+    const rv=$("#drev");if(rv)rv.onclick=()=>{rv.disabled=true;DSFX.scratch();DO.reveal()};
+    const nx=$("#dnext");if(nx)nx.onclick=()=>{nx.disabled=true;DSFX.whoop();DO.next()};
+    if(rev){setTimeout(()=>{DSFX.chord();confetti(150,.3)},300);if(BEAT.want&&!BEAT.on)setTimeout(()=>BEAT.start(),1500)}
     return;
   }
-  if(v==="song")return discoSongView();
-  if(v==="bingo")return bingoView();
-  if(v==="end")return discoEndView();
+  /* ---- spiller ---- */
+  if(R.mode==="bingo")return bingoCard(R,players);
+  if(R.status==="play"){
+    const mine=DO.roundAns()[me];const pk=key+(mine?"m":"");if(DO.shown===pk)return;DO.shown=pk;let pick=null,gold=false;const hasGold=!(R.gold||{})[me];
+    if(mine){app.innerHTML=`${dTop("",`Runde ${R.n}`)}${scoreRow(players,R.scores||{},R.gold)}${vinylHTML(s,false,T.color)}<div class="dpanel c"><b>Svar låst</b><span class="dsmall">Venter på DJ'en…</span></div>`;wireBeat();return}
+    const w=answerWidget(R.type,v=>{pick=v;const l=$("#dlock");if(l)l.disabled=false});
+    app.innerHTML=`${dTop("",`Runde ${R.n}`)}${scoreRow(players,R.scores||{},R.gold)}
+    <div class="dbanner" style="--c:${T.color}"><b>${esc(T.name)}</b><span>${esc(T.sub)}</span><small>${esc(T.pts)}</small></div>
+    ${R.type==="foreller"&&prev?`<div class="dprev">Forrige plade: <b>${esc(prev.main)} · ${esc(prev.title)}</b> (${prev.year})</div>`:""}
+    ${w.html}
+    ${hasGold?`<button type="button" class="dpl gold" id="dgold" style="--c:#ffd400"><i class="gold-dot"></i> Brug min guldplade (dobbelt point)</button>`:""}
+    <button class="dbtn" id="dlock" style="--c:#18c26b" disabled>Lås svaret</button>`;
+    wireBeat();w.wire();const g=$("#dgold");if(g)g.onclick=()=>{gold=!gold;g.classList.toggle("on",gold);DSFX.pop()};
+    $("#dlock").onclick=e=>{if(pick==null)return;e.target.disabled=true;DSFX.chord();DO.answer(pick,gold)};return;
+  }
+  if(R.status==="reveal"){
+    if(DO.shown===key)return;DO.shown=key;const x=(R.result?.ans||{})[me],got=(R.result?.gain||{})[me]||0;
+    app.innerHTML=`${dTop("",`Runde ${R.n}`)}${vinylHTML(s,true,T.color)}
+    <div class="dpanel c"><b style="font-size:22px">${got?`+${got} point!`:x?"Ikke denne gang":"Du nåede ikke at svare"}</b><span class="dsmall">Rigtigt svar: <b>${esc(answerText(R.type,s,prev))}</b>${x?` · Dit svar: ${esc(R.type==="aarti"?decName(x.a):x.a)}`:""}${x?.g?" · guldplade brugt":""}</span></div>
+    ${revealList(R,players,s,prev)}${scoreRow(players,R.scores||{},R.gold)}<p class="dsmall c">DJ'en starter næste plade.</p>`;
+    wireBeat();if(got){DSFX.yay();confetti(120,.35)}else DSFX.nope();return;
+  }
 }
-function discoSetup(){go("disco",{dv:"setup"})}
-function discoNextSong(){
-  D.i++;if(D.i>=D.deck.length){D.deck=shuffle(SONGS);D.i=0}
-  D.prev=D.song||null;D.song=D.deck[D.i];D.n=(D.n||0)+1;D.revealed=false;D.award={};D.useGold={};
-  const types=D.prev?["aar","kunstner","titel","aarti","foreller"]:["aar","kunstner","titel","aarti"];
-  D.type=D.mode==="bingo"?null:types[(D.n-1)%types.length];
-  if(D.type==="foreller"&&D.prev&&D.prev.year===D.song.year)D.type="aar";
-  D.opts=discoOpts(D.type,D.song);go("disco",{dv:"song"});
-}
-function discoOpts(type,s){
-  if(type==="kunstner"){const o=shuffle([...new Set(SONGS.map(x=>x.artist))].filter(a=>a!==s.artist)).slice(0,3);return shuffle([s.artist,...o])}
-  if(type==="titel"){const o=shuffle(SONGS.filter(x=>x.id!==s.id)).slice(0,3).map(x=>x.title);return shuffle([s.title,...o])}
-  if(type==="aarti"){const d=decadeOf(s.year),all=[];for(let x=1930;x<=2020;x+=10)all.push(x);const near=all.filter(x=>x!==d).sort((a,b)=>Math.abs(a-d)-Math.abs(b-d)).slice(0,5);return shuffle([d,...shuffle(near).slice(0,3)]).map(decName)}
-  if(type==="foreller")return ["Ældre","Nyere"];
-  return [];
-}
-function discoAnswer(){const s=D.song;if(D.type==="kunstner")return s.artist;if(D.type==="titel")return s.title;if(D.type==="aarti")return decName(decadeOf(s.year));if(D.type==="foreller")return s.year<D.prev.year?"Ældre":"Nyere";return String(s.year)}
-function scoreBar(){if(D.mode!=="dj")return "";return `<div class="dscores">${D.players.map(p=>`<span class="dsc" style="--c:${p.color}">${av(p)}<b>${D.scores[p.id]||0}</b>${D.gold[p.id]?"":`<i class="gold-dot" title="Har guldplade"></i>`}</span>`).join("")}</div>`}
-function discoSongView(){
-  const s=D.song,T=D.type?DRT[D.type]:null;
-  const label=D.revealed?`<div class="lab-in"><b>${esc(s.artist)}</b><span>${esc(s.title)}</span><em>${s.year}</em></div>`:`<div class="lab-in"><b>?</b><span>Plade ${D.n}</span></div>`;
-  app.innerHTML=`<div class="dtop"><button class="dchip" id="dback">Stop</button><span class="dchip solid">${D.mode==="dj"?`Runde ${D.n}`:`Sang ${D.n}`}</span>${beatBtn()}</div>
-  ${scoreBar()}
-  ${T?`<div class="dbanner" style="--c:${T.color}"><b>${esc(T.name)}</b><span>${esc(T.sub)}</span><small>${esc(T.pts)}</small></div>`:`<div class="dbanner" style="--c:#ff8a00"><b>Bingo-DJ</b><span>Afspil, afslør, og lad alle sætte kryds.</span></div>`}
-  ${D.type==="foreller"?`<div class="dprev">Forrige plade: <b>${esc(D.prev.artist)} · ${esc(D.prev.title)}</b> (${D.prev.year})</div>`:""}
-  <div class="vinyl-wrap"><div class="vinyl${D.revealed?" revealed":""}"><div class="label" style="--c:${T?T.color:"#ff8a00"}">${label}</div></div></div>
-  <a class="dbtn play" href="${appleLink(s)}" target="_blank" rel="noopener" id="dplay" style="--c:#fc3c44">Afspil i Apple Music</a>
-  ${D.opts.length?`<div class="dopts">${D.opts.map((o,i)=>`<div class="dopt${D.revealed&&o===discoAnswer()?" right":D.revealed?" wrong":""}" style="--c:${["#ff3fa4","#00b8ff","#ffd400","#18c26b"][i%4]}">${esc(o)}</div>`).join("")}</div>`:""}
-  ${D.mode==="dj"&&!D.revealed?`<div class="dpanel"><b>Guldplader</b><p class="dsmall">Tryk på dem, der satser deres guldplade på denne runde.</p><div class="dplayers">${D.players.filter(p=>!D.gold[p.id]).map(p=>`<button class="dpl gold${D.useGold[p.id]?" on":""}" data-gold="${esc(p.id)}" style="--c:${p.color}">${av(p,"m")}${esc(p.name)}</button>`).join("")||'<span class="dsmall">Alle guldplader er brugt.</span>'}</div></div>`:""}
-  ${D.revealed&&D.mode==="dj"?`<div class="dpanel"><b>Hvem ramte?</b><p class="dsmall">${D.type==="aar"?"Tryk flere gange: 1 = rigtigt årti, 2 = inden for 2 år, 3 = præcist.":"Tryk på alle, der svarede rigtigt."}</p><div class="dplayers">${D.players.map(p=>`<button class="dpl award${D.award[p.id]?" on":""}" data-aw="${esc(p.id)}" style="--c:${p.color}">${av(p,"m")}${esc(p.name)}<b class="awv">${D.award[p.id]?"+"+(D.award[p.id]*(D.useGold[p.id]?2:1)):""}</b>${D.useGold[p.id]?'<i class="gold-dot"></i>':""}</button>`).join("")}</div></div>`:""}
-  ${D.revealed?`<button class="dbtn" id="dnext" style="--c:#7a3cff">${D.mode==="dj"?"Giv point og næste plade":"Næste sang"}</button>`:`<button class="dbtn" id="drev" style="--c:#18c26b">Afslør</button>`}`;
-  spinVinyl();wireBeat();
-  $("#dback").onclick=()=>go("disco",{dv:D.mode==="dj"&&Object.keys(D.scores).length?"end":"home"});
-  $("#dplay").addEventListener("click",()=>{if(BEAT.on){BEAT.stop()}DSFX.pop()});
-  app.querySelectorAll("[data-gold]").forEach(b=>b.onclick=()=>{const id=b.dataset.gold;D.useGold[id]=!D.useGold[id];b.classList.toggle("on",!!D.useGold[id]);DSFX.pop()});
-  app.querySelectorAll("[data-aw]").forEach(b=>b.onclick=()=>{const id=b.dataset.aw,max=DPTS(D.type,3);let v=(D.award[id]||0);v=D.type==="aar"?(v+1)%4:(v?0:max);D.award[id]=v;b.classList.toggle("on",!!v);b.querySelector(".awv").textContent=v?"+"+v*(D.useGold[id]?2:1):"";v?DSFX.pop():SFX.boing()});
-  const rv=$("#drev");if(rv)rv.onclick=()=>{D.revealed=true;DSFX.scratch();setTimeout(()=>{DSFX.chord();confetti(160,.3)},350);discoSongView();if(BEAT.want&&!BEAT.on)setTimeout(()=>BEAT.start(),1200)};
-  const nx=$("#dnext");if(nx)nx.onclick=()=>{
-    if(D.mode==="dj"){Object.entries(D.award).forEach(([id,v])=>{if(v)D.scores[id]=(D.scores[id]||0)+v*(D.useGold[id]?2:1)});Object.keys(D.useGold).forEach(id=>{if(D.useGold[id])D.gold[id]=true});
-      if(Object.values(D.award).some(Boolean))DSFX.yay();if(Object.values(D.scores).some(v=>v>=DISCO_TARGET))return go("disco",{dv:"end"})}
-    discoNextSong()};
-}
-const DPTS=(type,lvl)=>type==="aar"?lvl:type==="kunstner"||type==="titel"?2:1;
-function spinVinyl(){}
-function discoEndView(){
-  const ps=D.players||[],sc=D.scores||{};const list=ps.slice().sort((a,b)=>(sc[b.id]||0)-(sc[a.id]||0)),top=sc[list[0]?.id]||0;
-  app.innerHTML=`<div class="dtop"><span></span>${beatBtn()}</div>${ballHTML(170)}<h1 class="dlogo sm">${list.filter(p=>(sc[p.id]||0)===top).map(p=>esc(p.name)).join(" & ")}</h1><p class="dtag">Aftenens dansegulvskonge · ${top} point</p>
-  <div class="dpanel">${list.map((p,i)=>`<div class="drow" style="--c:${p.color}"><span class="drk">${i+1}</span>${av(p,"m")}<b>${esc(p.name)}</b><em>${sc[p.id]||0}</em></div>`).join("")}</div>
-  <button class="dbtn" id="dagain" style="--c:#ff3fa4">Ny runde på dansegulvet</button><button class="dbtn" id="dhome" style="--c:#7a3cff">Til Disko-menuen</button>`;
-  spinBalls();wireBeat();DSFX.bingo();[0,500,1000].forEach(t=>setTimeout(()=>confetti(140,.25),t));
-  $("#dagain").onclick=discoSetup;$("#dhome").onclick=()=>go("disco",{dv:"home"});
-}
-/* ---------- bingo ---------- */
-function newBingoCard(){const sq=shuffle(BINGO_SQ.map((x,i)=>i)).slice(0,15);sq.splice(7,0,-1);return {sq,mark:{7:true}}}
-function bingoLines(m){const L=[];for(let r=0;r<4;r++)L.push([0,1,2,3].map(c=>r*4+c));for(let c=0;c<4;c++)L.push([0,1,2,3].map(r=>r*4+c));L.push([0,5,10,15],[3,6,9,12]);return L.filter(l=>l.every(i=>m[i])).length}
-function bingoView(){
-  let card=D.card||store("disco.card");if(!card||!card.sq||card.sq.length!==16){card=newBingoCard();store("disco.card",card)}D.card=card;
-  const lines=bingoLines(card.mark);
-  app.innerHTML=`<div class="dtop"><button class="dchip" id="dback">Tilbage</button><span class="dchip solid">${lines?`${lines} × BINGO`:"Disko-bingo"}</span>${beatBtn()}</div>
-  <h2 class="dh">Din bingoplade</h2><p class="dsmall c">Når DJ'en afslører en sang, må du sætte ét kryds i et felt, der passer. Fire på stribe er BINGO.</p>
-  <div class="bgrid">${card.sq.map((k,i)=>k<0?`<div class="bsq free on">${ballHTML(44)}</div>`:`<button class="bsq${card.mark[i]?" on":""}" data-sq="${i}" style="--c:${["#ff3fa4","#00b8ff","#ffd400","#18c26b","#7a3cff","#ff8a00"][(i*7)%6]}">${esc(BINGO_SQ[k][0])}</button>`).join("")}</div>
-  <button class="dbtn" id="dnew" style="--c:#7a3cff">Ny plade</button>`;
-  spinBalls();wireBeat();$("#dback").onclick=()=>go("disco",{dv:"home"});
-  $("#dnew").onclick=()=>{D.card=newBingoCard();store("disco.card",D.card);DSFX.scratch();bingoView()};
-  app.querySelectorAll("[data-sq]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sq;const before=bingoLines(card.mark);card.mark[i]=!card.mark[i];store("disco.card",card);
-    if(card.mark[i]){DSFX.pop();confetti(30,.6)}else SFX.boing();const after=bingoLines(card.mark);
-    if(after>before){DSFX.bingo();siren("BINGO!","Rejs dig og dans");[0,400,800].forEach(t=>setTimeout(()=>confetti(160,.3),t))}bingoView()});
+function revealList(R,players,s,prev){if(R.mode!=="quiz")return "";const A=R.result?.ans||{},G=R.result?.gain||{};
+  return `<div class="dpanel"><b>Svarene</b>${players.map(p=>{const x=A[p.id];return `<div class="drow"><span></span>${av(p)}<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}: ${x?esc(R.type==="aarti"?decName(x.a):x.a):"–"}${x?.g?' <i class="gold-dot"></i>':""}</span><em>${G[p.id]?"+"+G[p.id]:""}</em></div>`}).join("")}</div>`}
+
+/* ---------- bingo med kontrol ---------- */
+function newBingoCard(){const sq=shuffle(BINGO_SQ.map((x,i)=>i)).slice(0,15);sq.splice(7,0,-1);return {sq,mark:{7:-1}}}
+function bingoLines(m){const L=[];for(let r=0;r<4;r++)L.push([0,1,2,3].map(c=>r*4+c));for(let c=0;c<4;c++)L.push([0,1,2,3].map(r=>r*4+c));L.push([0,5,10,15],[3,6,9,12]);return L.filter(l=>l.every(i=>m[i]!=null)).length}
+function bingoCard(R,players){
+  const ck="disco.card."+DO.code;let card=D.card&&D.card.code===DO.code?D.card:store(ck);if(!card||!card.sq){card={...newBingoCard(),code:DO.code};store(ck,card)}D.card=card;
+  const played=(R.status==="reveal"?R.played:(R.played||[]).slice(0,-1))||[];const usedSongs=new Set(Object.values(card.mark));const lines=bingoLines(card.mark);
+  const key="b"+R.status+R.n+JSON.stringify(card.mark)+DO.bingos.length;if(DO.shown===key)return;DO.shown=key;
+  const last=played.length?SONGS[played[played.length-1]]:null;
+  app.innerHTML=`${dTop("",lines?`${lines} × BINGO`:"Disko-bingo")}
+  ${last?`<div class="dprev">Senest afsløret: <b>${esc(last.main)} · ${esc(last.title)}</b>${last.unsure?"":` (${last.year})`}</div>`:`<p class="dnote">Venter på at DJ'en afslører den første sang…</p>`}
+  <div class="bgrid">${card.sq.map((k,i)=>k<0?`<div class="bsq free on">${ballHTML(44)}</div>`:`<button class="bsq${card.mark[i]!=null?" on":""}" data-sq="${i}" style="--c:${["#ff3fa4","#00b8ff","#ffd400","#18c26b","#7a3cff","#ff8a00"][(i*7)%6]}">${esc(BINGO_SQ[k][0])}${card.mark[i]!=null&&card.mark[i]>=0?`<small>${esc(SONGS[card.mark[i]].main)}</small>`:""}</button>`).join("")}</div>
+  <p class="dsmall c">Tryk på et felt. Spillet finder selv en spillet sang, der passer. Hver sang kan kun bruges én gang.</p>
+  ${DO.bingos.length?`<div class="dpanel"><b>Bingo!</b>${DO.bingos.map(b=>`<span>${esc(b.name)}</span>`).join("")}</div>`:""}
+  <p class="dsmall c">${played.length} sange spillet indtil nu.</p>`;
+  spinBalls();wireBeat();
+  app.querySelectorAll("[data-sq]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sq;if(card.mark[i]!=null){DSFX.nope();return}
+    const test=BINGO_SQ[card.sq[i]][1];const hit=played.slice().reverse().map(id=>SONGS[id]).find(s=>!usedSongs.has(s.id)&&test(s));
+    if(!hit){DSFX.nope();b.animate([{transform:"translateX(0)"},{transform:"translateX(-8px)"},{transform:"translateX(8px)"},{transform:"translateX(0)"}],{duration:300});const n=document.createElement("div");n.className="dtoast";n.textContent="Ingen af de spillede sange passer endnu";document.body.appendChild(n);setTimeout(()=>n.remove(),1800);return}
+    const before=bingoLines(card.mark);card.mark[i]=hit.id;store(ck,card);DSFX.pop();confetti(30,.6);
+    if(bingoLines(card.mark)>before){DSFX.bingo();siren("BINGO!","Rejs dig og dans");[0,400,800].forEach(t=>setTimeout(()=>confetti(160,.3),t));DO.callBingo()}DO.shown=null;bingoCard(DO.R,players)});
 }
 
 PACKDB.load().then(()=>{if(S.view==="studio")render()});
