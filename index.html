@@ -342,6 +342,7 @@ body.disco .c{text-align:center}
 button.dopt{cursor:pointer;font-family:"Baloo 2",system-ui,sans-serif}
 .dopt.sel{background:#1a1035;color:#fffaf0;transform:scale(1.04)}
 .dcode{font-family:"Monoton","Arial Black",sans-serif;font-size:56px;letter-spacing:.12em;color:#ff3fa4;line-height:1.1}
+.bcall{margin-top:12px;font-size:26px;letter-spacing:.08em}.bcall.ready{animation:bpulse .7s ease-in-out infinite alternate;box-shadow:0 0 0 4px #fff,0 0 30px #ff3fa4}@keyframes bpulse{to{transform:scale(1.06)}}
 .dtoast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;background:#1a1035;color:#fffaf0;font-weight:800;padding:12px 18px;border-radius:999px;font-family:"Baloo 2",system-ui,sans-serif;max-width:calc(100% - 32px);text-align:center}
 .bsq small{display:block;font-size:9px;font-weight:700;opacity:.9;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .dpl.gold{cursor:pointer;justify-content:center;width:100%;padding:10px}
@@ -699,12 +700,12 @@ const TRIPQ=[
 ];
 const FAKE_DEFS=["Når man nyser tre gange i træk","Et hemmeligt kodeord til køleskabet","Den sidste kartoffel i fadet","At falde i søvn foran tv'et","Et kram, der varer for længe","Når wifi'en driller","At synge med på en sang, man ikke kan","Den sure mine efter et tabt spil"];
 const DEFAULT_PACK={
- trips:[{place:"Toscana",year:2013,lat:43.4,lon:11.1,country:"Italy",ex:true}],
- nicks:[{name:"Mor",nick:"Chefen",ex:true}],
- words:[{w:"Snøvsen",def:"Når man er træt og sur på samme tid",ex:true}],
+ trips:[],
+ nicks:[],
+ words:[],
  who:[],
- quiz:[{q:"Hvem af os brækkede noget først?",a:"Far",w:["Mor","Søster","Ingen af os"],ex:true}],
- quotes:[{q:"Det er ikke mig, der har spist den sidste is!",who:"Far",ex:true}],
+ quiz:[],
+ quotes:[],
  victory:"Familien har talt"
 };
 const TYPES={
@@ -742,7 +743,8 @@ const fmt=n=>Number(n).toLocaleString("da-DK");
 const clone=o=>JSON.parse(JSON.stringify(o??null));
 function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
 const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
-let PACK=Object.assign(clone(DEFAULT_PACK),store("skyldig.pack")||{});
+const noEx=pk=>{["trips","nicks","words","quiz","quotes","who"].forEach(k=>pk[k]=(pk[k]||[]).filter(x=>!x.ex));return pk};
+let PACK=noEx(Object.assign(clone(DEFAULT_PACK),store("skyldig.pack")||{}));
 let THROWS=store("skyldig.throws")||[];
 const nickOf=name=>{const m=(PACK.nicks||[]).filter(x=>norm(x.name)===norm(name));return m.length?m[Math.random()*m.length|0].nick:""};
 let S={view:"hub"};
@@ -1267,7 +1269,7 @@ function homeView(){
    FAMILIESTUDIET
    ========================================================= */
 const PACKDB={
-  async load(){await ON.init();if(!ON.db)return;try{const sn=await ON.db.doc("pack/seen").get();if(sn.exists)(sn.data().k||[]).forEach(k=>SEEN.add(k))}catch(e){}try{const s=await ON.db.doc("pack/family").get();if(s.exists){PACK=Object.assign(clone(DEFAULT_PACK),s.data());store("skyldig.pack",PACK)}}catch(e){}
+  async load(){await ON.init();if(!ON.db)return;try{const sn=await ON.db.doc("pack/seen").get();if(sn.exists)(sn.data().k||[]).forEach(k=>SEEN.add(k))}catch(e){}try{const s=await ON.db.doc("pack/family").get();if(s.exists){PACK=noEx(Object.assign(clone(DEFAULT_PACK),s.data()));store("skyldig.pack",PACK)}}catch(e){}
     try{const q=await ON.db.collection("throws").get();THROWS=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.at||0)-(b.at||0));store("skyldig.throws",THROWS)}catch(e){}},
   async save(){store("skyldig.pack",PACK);if(!ON.db)return "local";try{await ON.db.doc("pack/family").set(clone(PACK));return "db"}catch(e){return "local"}},
   async addThrow(img){const t={img,at:Date.now()};if(ON.db){try{const ref=await ON.db.collection("throws").add(t);THROWS.push({id:ref.id,...t});store("skyldig.throws",THROWS);return}catch(e){}}THROWS.push({id:"l"+Date.now(),...t});store("skyldig.throws",THROWS)},
@@ -1381,6 +1383,67 @@ function showRevealLocal(){
     const ob=$("#obj");if(ob)ob.onclick=()=>{Object.assign(G,objection(G,t));S.lstep="court";showTray(false);render()}}});
 }
 
+/* ---------- Rum uden opsætning: værtens telefon er selv serveren (direkte forbindelse mellem telefonerne) ---------- */
+const P2P_ERR={"no-network":"Kunne ikke få forbindelse. Tjek at telefonen er på internettet, og prøv igen.","no-room":"Fandt ikke rummet. Tjek koden, og at værtens telefon har spillet åbent.","offline":"Forbindelsen til værtens telefon røg. Vent et øjeblik, den prøver igen.","code-taken":"Koden var optaget. Prøv at oprette rummet igen."};
+const PDB={docs:{},wl:null,
+  wake(){try{if(navigator.wakeLock&&!this.wl)navigator.wakeLock.request("screen").then(l=>{this.wl=l;l.addEventListener("release",()=>{this.wl=null})}).catch(()=>{})}catch(e){}},ls:[],peer:null,conns:[],conn:null,key:null,host:false,evs:{},lib:null,retry:null,
+  P:"hjemmebane-v1-",
+  loadLib(){if(window.Peer)return Promise.resolve();if(this.lib)return this.lib;this.lib=new Promise((ok,no)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js";s.onload=ok;s.onerror=()=>{this.lib=null;no({code:"no-network"})};document.head.appendChild(s)});return this.lib},
+  roomOf(path){const p=path.split("/");return(p[0]==="rooms"||p[0]==="disco")&&p[1]?p[0]+"/"+p[1]:null},
+  pid(key){return this.P+key.replace("/","-")},
+  mkPeer(id){const o=Object.assign({debug:0},window.SKYLDIG_PEER||{});return id?new Peer(id,o):new Peer(o)},
+  // lokale ting (familiepakke, kast) gemmes bare på telefonen
+  lget(path){return store("pdb:"+path)},lset(path,v){store("pdb:"+path,v);const ix=store("pdb:index")||[];if(v!=null&&!ix.includes(path)){ix.push(path);store("pdb:index",ix)}if(v==null)store("pdb:index",ix.filter(x=>x!==path))},
+  close(){clearInterval(this.retry);this.retry=null;try{this.conn&&this.conn.close()}catch(e){}this.conns.forEach(c=>{try{c.close()}catch(e){}});try{this.peer&&this.peer.destroy()}catch(e){}this.peer=null;this.conn=null;this.conns=[];this.key=null;this.host=false;this.docs={}},
+  async hostRoom(key){await this.loadLib();this.close();this.key=key;this.host=true;this.wake();
+    await new Promise((ok,no)=>{const p=this.mkPeer(this.pid(key));this.peer=p;let done=false;
+      p.on("open",()=>{done=true;ok()});
+      p.on("error",e=>{if(!done){done=true;no({code:e.type==="unavailable-id"?"code-taken":"no-network"})}else if(e.type==="network"||e.type==="server-error")setTimeout(()=>{try{p.reconnect()}catch(x){}},2000)});
+      p.on("disconnected",()=>setTimeout(()=>{try{if(!p.destroyed)p.reconnect()}catch(x){}},1500));
+      p.on("connection",c=>{c.on("open",()=>{this.conns.push(c);c.send({t:"sync",docs:this.docs})});c.on("data",m=>this.onMsg(m,c));c.on("close",()=>{this.conns=this.conns.filter(x=>x!==c)});c.on("error",()=>{})});
+      setTimeout(()=>{if(!done){done=true;no({code:"no-network"})}},12000)})},
+  async joinRoom(key){if(this.key===key&&(this.host||this.conn&&this.conn.open))return true;await this.loadLib();this.close();this.key=key;this.host=false;
+    if(!this.peer){await new Promise((ok,no)=>{const p=this.mkPeer();this.peer=p;p.on("open",ok);p.on("error",e=>no({code:"no-network"}));setTimeout(()=>no({code:"no-network"}),12000)})}
+    const ok=await this.connect();
+    if(ok&&!this.retry)this.retry=setInterval(()=>{if(this.key&&!this.host&&!(this.conn&&this.conn.open))this.connect()},4000);
+    return ok},
+  connect(){return new Promise(res=>{if(!this.peer||this.peer.destroyed)return res(false);if(this.peer.disconnected)try{this.peer.reconnect()}catch(e){}
+    const c=this.peer.connect(this.pid(this.key),{reliable:true,serialization:"json"});let done=false;const fin=v=>{if(!done){done=true;res(v)}};
+    c.on("data",m=>{if(m&&m.t==="sync"){this.conn=c;this.docs=m.docs||{};this.fireAll();fin(true)}else this.onMsg(m,c)});
+    c.on("close",()=>{if(this.conn===c){this.conn=null;dToast&&S.view==="disco"?dToast("Forbindelsen til værten røg. Prøver igen…"):0}});c.on("error",()=>fin(false));
+    this.peer.on("error",e=>{if(e.type==="peer-unavailable")fin(false)});setTimeout(()=>fin(false),9000)})},
+  apply(op,path,data){if(op==="delete")delete this.docs[path];else if(op==="update")this.docs[path]=Object.assign({},this.docs[path]||{},data);else this.docs[path]=data;this.fire(path)},
+  onMsg(m,c){if(!m)return;
+    if(m.t==="w"){this.apply(m.op,m.path,m.data);if(this.host){const out={t:"w",op:"set",path:m.path,data:this.docs[m.path]??null};if(m.op==="delete")out.op="delete";this.conns.forEach(x=>{if(x.open)x.send(out)})}}
+    if(m.t==="ev"){if(this.host)this.conns.forEach(x=>{if(x!==c&&x.open)x.send(m)});(this.evs[m.ev]||[]).forEach(f=>f({data:m.data,isMe:false}))}},
+  async write(op,path,data){data=data==null?data:JSON.parse(JSON.stringify(data));const rk=this.roomOf(path);
+    if(!rk){if(op==="delete")this.lset(path,null);else this.lset(path,op==="update"?Object.assign({},this.lget(path)||{},data):data);return}
+    if(this.key!==rk){if(op==="set"&&path===rk&&data&&data.host===ON.me)await this.hostRoom(rk);else if(!await this.joinRoom(rk))throw{code:"no-room"}}
+    if(this.host){this.onMsg({t:"w",op,path,data})}
+    else{if(!this.conn||!this.conn.open)throw{code:"offline"};this.apply(op,path,data);this.conn.send({t:"w",op,path,data})}},
+  async read(path){const rk=this.roomOf(path);if(!rk)return this.lget(path);if(this.key!==rk){if(!await this.joinRoom(rk))return null}return this.docs[path]??null},
+  kids(coll){const pre=coll+"/",rk=this.roomOf(coll);if(!rk){return(store("pdb:index")||[]).filter(p=>p.startsWith(pre)&&!p.slice(pre.length).includes("/")).map(p=>[p,this.lget(p)]).filter(x=>x[1]!=null)}
+    return Object.keys(this.docs).filter(p=>p.startsWith(pre)&&!p.slice(pre.length).includes("/")).map(p=>[p,this.docs[p]])},
+  dsnap(path,v){return{id:path.split("/").pop(),exists:v!=null,data:()=>v}},
+  csnap(coll){const docs=this.kids(coll).map(([p,v])=>this.dsnap(p,v));return{docs,size:docs.length,empty:!docs.length,docChanges:()=>[]}},
+  fire(path){const par=path.slice(0,path.lastIndexOf("/"));this.ls.forEach(l=>{if(l.kind==="d"&&l.path===path)l.cb(this.dsnap(path,this.docs[path]??null));if(l.kind==="c"&&l.path===par)l.cb(this.csnap(par))})},
+  fireAll(){this.ls.forEach(l=>l.kind==="d"?l.cb(this.dsnap(l.path,this.docs[l.path]??null)):l.cb(this.csnap(l.path)))},
+  listen(kind,path,cb){const l={kind,path,cb};this.ls.push(l);const rk=this.roomOf(path);
+    if(rk&&this.key===rk)setTimeout(()=>{if(this.ls.includes(l))kind==="d"?cb(this.dsnap(path,this.docs[path]??null)):cb(this.csnap(path))},0);
+    return()=>{this.ls=this.ls.filter(x=>x!==l)}},
+  doc(path){const me=this;return{id:path.split("/").pop(),
+    set:d=>me.write("set",path,d),update:d=>me.write("update",path,d),delete:()=>me.write("delete",path),
+    get:async()=>me.dsnap(path,await me.read(path)),
+    onSnapshot:(cb,fail)=>me.listen("d",path,cb)}},
+  collection(path){const me=this;return{
+    add:async d=>{const id="x"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);await me.write("set",path+"/"+id,d);return{id}},
+    get:async()=>{const rk=me.roomOf(path);if(rk&&me.key!==rk)await me.joinRoom(rk);return me.csnap(path)},
+    onSnapshot:(cb,fail)=>me.listen("c",path,cb),
+    where:()=>({onSnapshot:()=>()=>{}})}},
+  room:{join(){return{on:(ev,cb)=>{(PDB.evs[ev]=PDB.evs[ev]||[]).push(cb);return()=>{PDB.evs[ev]=(PDB.evs[ev]||[]).filter(f=>f!==cb)}},
+    emit:(ev,data)=>{const m={t:"ev",ev,data};if(PDB.host)PDB.conns.forEach(x=>{if(x.open)x.send(m)});else if(PDB.conn&&PDB.conn.open)PDB.conn.send(m)},leave(){PDB.evs={}}}}}
+};
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&PDB.host)PDB.wake();if(document.visibilityState==="visible"&&PDB.peer&&PDB.peer.disconnected&&!PDB.peer.destroyed){try{PDB.peer.reconnect()}catch(e){}}});
 /* =========================================================
    ONLINE: hver sin telefon
    ========================================================= */
@@ -1390,6 +1453,7 @@ const ON={
     if(!this.db&&window.SKYLDIG_FIREBASE){try{const ld=src=>new Promise((r,j)=>{const s=document.createElement("script");s.src=src;s.onload=r;s.onerror=j;document.head.appendChild(s)});
       await ld("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");await ld("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js");
       firebase.initializeApp(window.SKYLDIG_FIREBASE);this.db=firebase.firestore();this.fb=true}catch(e){console.warn("Firebase kunne ikke starte",e)}}
+    if(!this.db&&!window.claude){this.db=PDB;this.room=PDB.room;this.p2p=true}
     if(!this.me){this.me=store("skyldig.localid");if(!this.me){this.me="g"+Math.random().toString(36).slice(2,10);store("skyldig.localid",this.me)}}})();return this._p},
   async enter(){go("online",{sub:"wait"});await this.init();await PACKDB.load();S.sub=this.db?"join":"nodb";render()},
   ref(p=""){return this.db.doc("rooms/"+this.code+p)},
@@ -1407,13 +1471,13 @@ const ON={
   emitThrow(id){try{if(this.rm)this.rm.emit("throw",{id,s:Math.random()});else if(this.fb&&this.code)this.db.collection("rooms/"+this.code+"/throws").add({id,s:Math.random(),at:Date.now(),by:this.me})}catch(e){}},
   leave(){this.unsub.forEach(u=>u());this.unsub=[];try{this.rm?.leave?.()}catch(e){}this.rm=null;this.code=null;this.R=null;this.players=[];this.answers=[];this.shown=null},
   isHost(){return !!this.R&&this.R.host===this.me},
-  async write(fn){try{await fn();return true}catch(e){this.err=e.code==="invalid_argument"?"Din konto må ikke skrive i spillet. Ejeren skal dele det med dig som redaktør.":"Kunne ikke gemme ("+(e.code||"fejl")+"). Prøv igen.";render();return false}},
+  async write(fn){try{await fn();return true}catch(e){this.err=P2P_ERR[e.code]||(e.code==="invalid_argument"?"Din konto må ikke skrive i spillet. Ejeren skal dele det med dig som redaktør.":"Kunne ikke gemme ("+(e.code||"fejl")+"). Prøv igen.");render();return false}},
   async setRoom(patch){const next={...this.R,...patch};this.R=next;return this.write(()=>this.ref().set(clone(next)))},
   async join(code,create){
     const name=this.name.trim();if(!name){this.err="Skriv dit navn først.";return render()}
     store("skyldig.myname",name);this.code=code;this.err="";
     if(create){if(!await this.write(()=>this.ref().set({host:this.me,status:"lobby",cats:S.cats||["kaerligt","sjove","spicy"],created:Date.now()})))return}
-    else{const s=await this.ref().get().catch(()=>null);if(!s||!s.exists){this.err="Ingen rum med koden "+code+".";this.code=null;return render()}}
+    else{const s=await this.ref().get().catch(()=>null);if(!s||!s.exists){this.err="Ingen rum med koden "+code+". Tjek koden, og at værtens telefon har spillet åbent.";this.code=null;return render()}}
     const ex=await this.ref("/players/"+this.me).get().catch(()=>null);
     if(!await this.write(()=>this.ref("/players/"+this.me).set({name,photo:this.photo||null,joined:ex?.exists?ex.data().joined:Date.now()})))return;
     SFX.coin();this.subscribe();S.sub="room";render();
@@ -1649,6 +1713,7 @@ function nextSongFor(G,mode){
 }
 
 /* ---------- rigtige sange: Apples 30-sekunders klip (virker på jeres egen hjemmeside) ---------- */
+const SILENT="data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==";
 const PREV={ok:null,cache:store("disco.prev")||{},el:null,
   lookup(s){if(this.cache[s.id]!==undefined)return Promise.resolve(this.cache[s.id]);
     return new Promise(res=>{const cb="itcb"+Math.random().toString(36).slice(2);const sc=document.createElement("script");let fin=false;
@@ -1659,9 +1724,9 @@ const PREV={ok:null,cache:store("disco.prev")||{},el:null,
       sc.onerror=()=>done(null,false);
       sc.src="https://itunes.apple.com/search?country=dk&entity=song&limit=8&callback="+cb+"&term="+encodeURIComponent(s.main+" "+s.title.replace(/\(.*?\)/g,""));document.head.appendChild(sc)})},
   async test(){if(this.ok!==null)return this.ok;if(window.claude){this.ok=false;return false}const u=await this.lookup(SONGS.find(x=>x.title==="Dancing Queen")||SONGS[0]);this.ok=!!u;return this.ok},
-  unlock(){try{if(!this.el){this.el=new Audio();this.el.preload="auto"}this.el.muted=true;const p=this.el.play();if(p)p.catch(()=>{});this.el.pause();this.el.muted=false}catch(e){}},
-  async play(url){if(!url)return false;this.unlock();const a=this.el;BEAT.stop();try{a.src=url;a.loop=true;a.volume=0;await a.play();let v=0;const f=setInterval(()=>{v=Math.min(1,v+.08);a.volume=v;if(v>=1)clearInterval(f)},60);return true}catch(e){return false}},
-  stop(){const a=this.el;if(!a||a.paused)return;let v=a.volume;const f=setInterval(()=>{v=Math.max(0,v-.1);a.volume=v;if(v<=0){clearInterval(f);a.pause()}},50)}
+  unlock(){try{if(!this.el){this.el=new Audio();this.el.preload="auto"}const a=this.el;if(!a.paused&&a.src&&a.src!==SILENT)return;clearInterval(this._f);a.loop=false;a.muted=false;a.src=SILENT;const p=a.play();if(p)p.catch(()=>{})}catch(e){}},
+  async play(url){if(!url)return false;this.unlock();clearInterval(this._f);const a=this.el;BEAT.stop();try{a.src=url;a.loop=true;a.volume=0;await a.play();let v=0;const f=setInterval(()=>{v=Math.min(1,v+.08);a.volume=v;if(v>=1)clearInterval(f)},60);return true}catch(e){return false}},
+  stop(){const a=this.el;if(!a||a.paused)return;clearInterval(this._f);const src=a.src;let v=a.volume;this._f=setInterval(()=>{v=Math.max(0,v-.1);a.volume=v;if(v<=0){clearInterval(this._f);if(a.src===src)a.pause()}},50)}
 };
 /* QR-kode til at hoppe ind (kun på jeres egen hjemmeside, hvor linket kan åbnes direkte) */
 function canQR(){return /^https?:$/.test(location.protocol)&&!window.claude&&!/claude\.ai|claudeusercontent/.test(location.hostname)}
@@ -1684,7 +1749,7 @@ const DO={code:null,R:null,players:[],answers:[],bingos:[],cheats:[],unsub:[],sh
   ref(p=""){return ON.db.doc("disco/"+this.code+p)},
   isHost(){return !!this.R&&this.R.host===ON.me},
   colored(){return this.players.map((p,i)=>({id:p.id,name:p.name,photo:p.photo||null,color:COLORS[i%8]}))},
-  async write(fn){try{await fn();return true}catch(e){D.err="Kunne ikke gemme ("+(e.code||"fejl")+")."+(e.code==="invalid_argument"?" Ejeren skal dele spillet med dig som redaktør.":"");render();return false}},
+  async write(fn){try{await fn();return true}catch(e){D.err=P2P_ERR[e.code]||"Kunne ikke gemme ("+(e.code||"fejl")+")."+(e.code==="invalid_argument"?" Ejeren skal dele spillet med dig som redaktør.":"");render();return false}},
   async setRoom(patch){const next={...this.R,...patch};this.R=next;return this.write(()=>this.ref().set(clone(next)))},
   subscribe(){
     this.unsub.forEach(u=>u());this.unsub=[];const base="disco/"+this.code;
@@ -1693,7 +1758,7 @@ const DO={code:null,R:null,players:[],answers:[],bingos:[],cheats:[],unsub:[],sh
     this.unsub.push(ON.db.collection(base+"/players").onSnapshot(s=>{this.players=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.joined-b.joined);if(S.view==="disco"&&this.R?.status==="lobby")render()},fail));
     this.unsub.push(ON.db.collection(base+"/answers").onSnapshot(s=>{this.answers=s.docs.map(d=>d.data());AUTO.check();if(S.view==="disco"&&this.R?.status==="play")render()},fail));
     this.unsub.push(ON.db.collection(base+"/bingos").onSnapshot(s=>{const before=this.bingos.length;this.bingos=s.docs.map(d=>d.data()).sort((a,b)=>a.at-b.at);if(this.bingos.length>before&&this._ready){const b=this.bingos[this.bingos.length-1];if(b.uid!==ON.me){if(this.isHost()){DSFX.bingo();siren("BINGO!",b.name+" har bingo");confetti(160,.3)}else dToast(b.name+" har BINGO!")}}this._ready=true;if(S.view==="disco")render()},()=>{}));
-    this.unsub.push(ON.db.collection(base+"/cheats").onSnapshot(s=>{const before=this.cheats.length;this.cheats=s.docs.map(d=>d.data()).sort((a,b)=>a.at-b.at);if(this._cready&&this.cheats.length>before){const c=this.cheats[this.cheats.length-1];if(c.uid!==ON.me){dToast(c.name+" prøvede at snyde!");if(this.isHost())DSFX.nope()}}this._cready=true;if(S.view==="disco")render()},()=>{}));
+    this.unsub.push(ON.db.collection(base+"/cheats").onSnapshot(s=>{const before=this.cheats.length;this.cheats=s.docs.map(d=>d.data()).sort((a,b)=>a.at-b.at);this._cdone=this._cdone||new Set();if(this._cready&&this.cheats.length>before){const c=this.cheats[this.cheats.length-1];if(c.uid!==ON.me){dToast(c.name+(c.kind==="app"?" forlod spillet under sangen. SNYDER!":c.kind==="bingo"?" råbte BINGO uden bingo. SNYDER!":" prøvede at snyde!"));if(this.isHost()){SND.allow=true;DSFX.nope();SND.allow=false}}}if(this.isHost()&&this.R&&this.R.mode==="quiz"){const sc={...(this.R.scores||{})};let ch=false;this.cheats.forEach(c=>{if(!c.cid||this._cdone.has(c.cid))return;this._cdone.add(c.cid);if(this._cready&&c.kind==="app"){sc[c.uid]=(sc[c.uid]||0)-1;ch=true}});if(ch)this.setRoom({scores:sc})}else this.cheats.forEach(c=>c.cid&&this._cdone.add(c.cid));this._cready=true;if(S.view==="disco")render()},()=>{}));
   },
   leave(){AUTO.clear();try{PREV.stop();MK.stop()}catch(e){}this.unsub.forEach(u=>u());this.unsub=[];this.code=null;this.R=null;this.players=[];this.answers=[];this.bingos=[];this.shown=null;this._ready=false;this.cheats=[];this._cready=false},
   async create(mode){PREV.unlock();await ON.init();if(!ON.db){D.err="Hver sin telefon kræver en forbindelse til spillets database.";return render()}
@@ -1705,7 +1770,7 @@ const DO={code:null,R:null,players:[],answers:[],bingos:[],cheats:[],unsub:[],sh
     this.subscribe();go("disco",{dv:"room"})},
   async join(code){await ON.init();if(!ON.db){D.err="Hver sin telefon kræver en forbindelse til spillets database.";return render()}
     const name=(ON.name||"").trim();if(!name){D.err="Skriv dit navn først.";return render()}store("skyldig.myname",name);
-    this.code=code;const s=await this.ref().get().catch(()=>null);if(!s||!s.exists){D.err="Ingen Disko med koden "+code+".";this.code=null;return render()}
+    this.code=code;const s=await this.ref().get().catch(()=>null);if(!s||!s.exists){D.err="Ingen Disko med koden "+code+". Tjek koden, og at DJ'ens telefon har spillet åbent.";this.code=null;return render()}
     if(!await this.write(()=>this.ref("/players/"+ON.me).set({name,photo:ON.photo||null,joined:Date.now()})))return;
     this.subscribe();DSFX.whoop();go("disco",{dv:"room"})},
   roundAns(){const R=this.R,v={};this.answers.filter(x=>x.n===R?.n).forEach(x=>v[x.uid]={a:x.a,g:!!x.g});return v},
@@ -1719,7 +1784,7 @@ const DO={code:null,R:null,players:[],answers:[],bingos:[],cheats:[],unsub:[],sh
     const v=this.roundAns(),gain={},gold={...(R.gold||{})};Object.entries(v).forEach(([uid,x])=>{const p=isRight(R.type,s,x.a,prev)*(x.g&&!gold[uid]?2:1);if(x.g)gold[uid]=true;if(p)gain[uid]=p});
     const scores={...(R.scores||{})};Object.entries(gain).forEach(([u,p])=>scores[u]=(scores[u]||0)+p);
     await this.setRoom({status:"reveal",result:{ans:v,gain},scores,gold,prevScores:R.scores||{}});AUTO.onReveal()},
-  async cheat(){await this.write(()=>ON.db.collection("disco/"+this.code+"/cheats").add({uid:ON.me,name:ON.name,at:Date.now()}))},
+  async cheat(kind="felt",n=0){await this.write(()=>ON.db.collection("disco/"+this.code+"/cheats").add({cid:ON.me+"-"+Date.now(),uid:ON.me,name:ON.name,kind,n,at:Date.now()}))},
   async callBingo(){await this.write(()=>ON.db.collection("disco/"+this.code+"/bingos").add({uid:ON.me,name:ON.name,at:Date.now()}))}
 };
 
@@ -1832,32 +1897,42 @@ function bingoCard(R,players){
   const cur=R.status==="reveal"&&R.sid!=null?SONGS[R.sid]:null;const canMark=!!cur&&!card.done[cur.id];
   const valid=cur?card.sq.map((k,i)=>k>=0&&card.mark[i]==null&&BINGO_SQ[k][1](cur)?i:-1).filter(i=>i>=0):[];
   const showHint=cur&&D.hint===cur.id;const lines=bingoLines(card.mark);
-  const key="b"+R.status+R.n+JSON.stringify(card.mark)+(showHint?"h":"")+DO.bingos.length+DO.cheats.length;if(DO.shown===key)return;DO.shown=key;
+  const key="b"+R.status+R.n+JSON.stringify(card.mark)+(card.called||0)+(showHint?"h":"")+DO.bingos.length+DO.cheats.length;if(DO.shown===key)return;DO.shown=key;
   const cheat={};DO.cheats.forEach(c=>cheat[c.name]=(cheat[c.name]||0)+1);
   app.innerHTML=`${dTop("",lines?`${lines} × BINGO`:`Sang ${R.n||0}`)}
   ${cur?`<div class="dprev big"><span class="dsmall">Afsløret</span><b>${esc(cur.main)} · ${esc(cur.title)}</b>${cur.unsure?"":` <em>${cur.year}</em>`}</div>
     <p class="bstate ${canMark?"go":"done"}">${canMark?(showHint?(valid.length?"Det grønne felt passer. Kryds det nu.":"Ingen felter på din plade passer til denne sang."):"Kryds ét felt, der passer. Forkert felt = SNYDER!"):"Du har krydset for denne sang."}</p>`
    :`<div class="dprev big"><span class="dsmall">Lyt med</span><b>Der spilles en sang…</b></div><p class="bstate wait">Du kan krydse, når DJ'en afslører sangen.</p>`}
   <div class="bgrid">${card.sq.map((k,i)=>k<0?`<div class="bsq free on">${ballHTML(44)}</div>`:`<button class="bsq${card.mark[i]!=null?" on":""}${showHint&&valid.includes(i)?" hint":""}${!canMark&&card.mark[i]==null?" dis":""}" data-sq="${i}" style="--c:${["#ff3fa4","#00b8ff","#ffd400","#18c26b","#7a3cff","#ff8a00"][(i*7)%6]}">${esc(BINGO_SQ[k][0])}${card.mark[i]!=null&&card.mark[i]>=0?`<small>${esc(SONGS[card.mark[i]].main)}</small>`:""}</button>`).join("")}</div>
-  <p class="dsmall c">Glemmer du at krydse, før næste sang starter, er chancen væk.</p>
+  <button class="dbtn bcall${lines>(card.called||0)?" ready":""}" id="dbingo" style="--c:${lines>(card.called||0)?"#ff3fa4":"#7a3cff"}">BINGO!</button>
+  <p class="dsmall c">Glemmer du at krydse, før næste sang starter, er chancen væk. Tryk kun BINGO, når du har en hel række.</p>
   ${DO.bingos.length||Object.keys(cheat).length?`<div class="dpanel">${DO.bingos.length?`<b>Bingo</b><span>${DO.bingos.map(b=>esc(b.name)).join(", ")}</span>`:""}${Object.keys(cheat).length?`<b>Snyderlisten</b><span>${Object.entries(cheat).map(([n,c])=>`${esc(n)} ×${c}`).join(" · ")}</span>`:""}</div>`:""}`;
   spinBalls();wireBeat();
+  $("#dbingo").onclick=()=>{const L=bingoLines(card.mark);
+    if(L>(card.called||0)){card.called=L;store(ck,card);SND.allow=true;DSFX.bingo();SND.allow=false;siren("BINGO!","Rejs dig og dans",true);[0,400,800].forEach(t=>setTimeout(()=>confetti(170,.3),t));DO.callBingo();DO.shown=null;bingoCard(DO.R,players)}
+    else{snyder(L?"Den række har du allerede råbt for":"Du har ikke en hel række endnu");DO.cheat("bingo",R.n)}};
   app.querySelectorAll("[data-sq]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sq;
     if(card.mark[i]!=null)return;
     if(!cur){dToast("Vent til DJ'en afslører sangen");SFX.tap();return}
     if(!canMark){dToast("Du har allerede krydset for denne sang");SFX.tap();return}
     if(valid.includes(i)){card.mark[i]=cur.id;card.done[cur.id]=true;D.hint=null;store(ck,card);DSFX.stamp();
       const r=b.getBoundingClientRect();confetti(60,(r.top+r.height/2)/innerHeight);
-      if(bingoLines(card.mark)>lines){setTimeout(()=>{SND.allow=true;DSFX.bingo();SND.allow=false;siren("BINGO!","Rejs dig og dans",true);[0,400,800].forEach(t=>setTimeout(()=>confetti(170,.3),t))},350);DO.callBingo()}
+      if(bingoLines(card.mark)>(card.called||0))setTimeout(()=>dToast("Du har en række! Tryk BINGO!"),300);
       DO.shown=null;bingoCard(DO.R,players);return}
     snyder();DO.cheat();setTimeout(()=>{D.hint=cur.id;DO.shown=null;if(DO.R)bingoCard(DO.R,players)},1700)});
 }
 function dToast(t){const n=document.createElement("div");n.className="dtoast";n.textContent=t;document.body.appendChild(n);setTimeout(()=>n.remove(),2000)}
-function snyder(){
-  $("#snyder")?.remove();document.body.insertAdjacentHTML("beforeend",`<div id="snyder"><div><div class="s1">SNYDER!</div><div class="s2">Det felt passer ikke</div></div></div>`);
-  SND.allow=true;DSFX.snyder();SND.allow=false;shout("Snyder! Snyder!",true);shake();
-  setTimeout(()=>{const s=$("#snyder");if(s){s.style.transition="opacity .5s";s.style.opacity=0;setTimeout(()=>s.remove(),550)}},1500);
+function snyder(sub="Det felt passer ikke",hold){
+  $("#snyder")?.remove();document.body.insertAdjacentHTML("beforeend",`<div id="snyder"><div><div class="s1">SNYDER!</div><div class="s2">${esc(sub)}</div>${hold?`<button class="dbtn" id="snyok" style="--c:#ff3fa4;margin-top:22px">Ja, jeg snød</button>`:""}</div></div>`);
+  const yell=()=>{SND.allow=true;DSFX.snyder();SND.allow=false;shout("Snyder! Snyder!",true);shake()};yell();
+  const off=()=>{const s=$("#snyder");if(s){s.style.transition="opacity .5s";s.style.opacity=0;setTimeout(()=>s.remove(),550)}};
+  if(hold){$("#snyok").onclick=()=>{try{if(!speechSynthesis.speaking)yell()}catch(e){}setTimeout(off,900)};setTimeout(off,12000)}else setTimeout(off,1500);
 }
+/* snyd med Shazam: forlader man spillet, mens sangen kører, opdager telefonen det */
+document.addEventListener("visibilitychange",()=>{const R=DO.R;if(!R||!DO.code)return;if(document.visibilityState==="hidden"){if(R.status==="play"&&S.view==="disco")D.away={t:Date.now(),n:R.n,code:DO.code,mode:R.mode}}else{const a=D.away;D.away=null;if(a&&a.code===DO.code&&Date.now()-a.t>2500)appCheat(a)}});
+function appCheat(a){const R=DO.R;let sub="Du forlod spillet, mens sangen kørte. Shazam tæller ikke!";
+  if(a.mode==="quiz")sub+=" Det koster 1 point.";else{const card=D.card;if(card&&R){const pl=(R.played||[]).slice().reverse();for(const sid of pl){const i=card.mark.findIndex((m,k)=>m===sid&&card.sq[k]>=0);if(i>=0){card.mark[i]=null;store("disco.card."+DO.code,card);sub+=" Du mister et kryds.";break}}}}
+  snyder(sub,true);DO.cheat("app",a.n);DO.shown=null;setTimeout(()=>{if(S.view==="disco")render()},300)}
 
 /* =========================================================
    INTROER: Disko (rejse gennem musikhistorien) og Skyldig (krimi-trailer)
@@ -1949,8 +2024,8 @@ const BGM={ctx:null,i:0,el:null,want:store("hub.bgm")!==false,cur:null,
     THEME.stop();BEAT.stop();if(!this.el){this.el=new Audio();this.el.onended=()=>{const c=this.ctx;this.ctx=null;if(c)this.play(c)}}
     const a=this.el;try{a.src=url;a.volume=0;await a.play();let v=0;const f=setInterval(()=>{v=Math.min(.45,v+.03);a.volume=v;if(v>=.45)clearInterval(f)},60)}catch(e){return false}
     this.cur=so;this.chip();return true},
-  stop(){this.ctx=null;const a=this.el;$("#bgmchip")?.remove();if(!a||a.paused)return;let v=a.volume;const f=setInterval(()=>{v=Math.max(0,v-.05);a.volume=v;if(v<=0){clearInterval(f);a.pause()}},40)},
-  unlock(){try{if(!this.el){this.el=new Audio();this.el.onended=()=>{const c=this.ctx;this.ctx=null;if(c)this.play(c)}}this.el.muted=true;const p=this.el.play();if(p)p.catch(()=>{});this.el.pause();this.el.muted=false}catch(e){}},
+  stop(){this.ctx=null;const a=this.el;$("#bgmchip")?.remove();if(!a||a.paused)return;clearInterval(this._f);const src=a.src;let v=a.volume;this._f=setInterval(()=>{v=Math.max(0,v-.05);a.volume=v;if(v<=0){clearInterval(this._f);if(a.src===src)a.pause()}},40)},
+  unlock(){try{if(!this.el){this.el=new Audio();this.el.onended=()=>{const c=this.ctx;this.ctx=null;if(c)this.play(c)}}const a=this.el;if(!a.paused&&a.src&&a.src!==SILENT)return;clearInterval(this._f);a.loop=false;a.muted=false;a.src=SILENT;const p=a.play();if(p)p.catch(()=>{})}catch(e){}},
   chip(){$("#bgmchip")?.remove();if(!this.cur)return;document.body.insertAdjacentHTML("beforeend",`<a id="bgmchip" href="${appleLink(this.cur)}" target="_blank" rel="noopener"><i></i><span>${esc(this.cur.main)} · ${esc(this.cur.title)}</span><em>Apple Music</em></a>`)},
   toggle(){this.want=!this.want;store("hub.bgm",this.want);if(!this.want)this.stop()}
 };
@@ -1958,13 +2033,13 @@ const BGM={ctx:null,i:0,el:null,want:store("hub.bgm")!==false,cur:null,
 /* ---------- 3D-showet: familien gennem musikkens historie ---------- */
 /* ---------- 3D-showet: familien gennem musikkens historie ---------- */
 const SHOW_ERAS=[
- {dec:"50'erne",song:["Chuck Berry","Johnny B. Goode"],bpm:168,era:"rock50",dance:"twist",gimmick:"Jukeboxen og vinylpladen",sky:["#ffd6e0","#7fd6c8"],floor:"#f4e3c4",props:["jukebox","records","notes"],cos:["#e8384f","#7fd6c8","#ffd166","#1d3557"],hair:"quiff"},
- {dec:"60'erne",song:["The Beatles","Twist and Shout"],bpm:126,era:"beat60",dance:"float",gimmick:"Månelandingen 1969",sky:["#0b1033","#3a1d6e"],floor:"#20184a",props:["moon","rocket","flowers"],cos:["#ff8a00","#18c26b","#ff3fa4","#ffd400"],hair:"mop"},
+ {dec:"50'erne",song:["Elvis Presley","Jailhouse Rock"],bpm:168,era:"rock50",dance:"twist",gimmick:"Jukeboxen og vinylpladen",sky:["#ffd6e0","#7fd6c8"],floor:"#f4e3c4",props:["jukebox","records","notes"],cos:["#e8384f","#7fd6c8","#ffd166","#1d3557"],hair:"quiff"},
+ {dec:"60'erne",song:["The Beatles","Hey Jude"],bpm:74,era:"beat60",dance:"float",gimmick:"Månelandingen 1969",sky:["#0b1033","#3a1d6e"],floor:"#20184a",props:["moon","rocket","flowers"],cos:["#ff8a00","#18c26b","#ff3fa4","#ffd400"],hair:"mop"},
  {dec:"70'erne",song:["ABBA","Dancing Queen"],bpm:100,era:"disco70",dance:"skate",gimmick:"Diskokuglen og rulleskøjterne",sky:["#2a0845","#ff6a00"],floor:"#111",props:["discofloor","bigball"],cos:["#ffd400","#ff3fa4","#ffffff","#ff7a00"],hair:"afro"},
  {dec:"80'erne",song:["Kim Larsen","Midt om natten"],bpm:128,era:"synth80",dance:"robot",gimmick:"Kassettebåndet og farvekuben",sky:["#14002e","#ff3fd8"],floor:"#0b0018",props:["neongrid","cassette","cube","boombox"],cos:["#00e5ff","#ff3fd8","#7a3cff","#ffe600"],hair:"band"},
  {dec:"90'erne",song:["Aqua","Barbie Girl"],bpm:130,era:"euro90",dance:"bounce",gimmick:"CD'en og internettet",sky:["#7fdcff","#ff9de2"],floor:"#c4f0ff",props:["cds","floppy","computer"],cos:["#ff5fb0","#7fdcff","#ffd400","#18c26b"],hair:"cap"},
- {dec:"00'erne",song:["Beyoncé","Crazy in Love"],bpm:100,era:"rnb00",dance:"shuffle",gimmick:"Klaptelefonen og MP3-afspilleren",sky:["#1b2a49","#c0c6d6"],floor:"#d8dee9",props:["flipphones","mp3"],cos:["#c0c6d6","#ff3fa4","#00b8ff","#222"],hair:"spiky"},
- {dec:"10'erne",song:["Avicii","Wake Me Up"],bpm:124,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
+ {dec:"00'erne",song:["Infernal","From Paris to Berlin"],bpm:128,era:"rnb00",dance:"shuffle",gimmick:"Klaptelefonen og MP3-afspilleren",sky:["#1b2a49","#c0c6d6"],floor:"#d8dee9",props:["flipphones","mp3"],cos:["#c0c6d6","#ff3fa4","#00b8ff","#222"],hair:"spiky"},
+ {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
 const BUILDS={normal:"Almindelig",staerk:"Høj og stærk",mave:"Lille mave",top:"Kvinde, fyldig top",hofte:"Kvinde, fyldige hofter"};
@@ -2102,8 +2177,7 @@ function stageShow(onEnd){
   // lyd: to afspillere på skift. Den ene er spillets egen sang-afspiller, som telefonen allerede har låst op.
   const HK=store("disco.hook")||{};
   const tr=SHOW_ERAS.map(e=>({e,url:null,at:null,id:"show:"+e.song.join("-")}));
-  const mkA=()=>{const a=new Audio();try{a.muted=true;const p=a.play();if(p)p.catch(()=>{});a.pause();a.muted=false}catch(x){}return a};
-  PREV.unlock();const AP=[PREV.el||mkA(),mkA()];let ai=0,playing=null,prepped=null;
+    PREV.unlock();BGM.unlock();const AP=[PREV.el,BGM.el];let ai=0,playing=null,prepped=null;
   tr.forEach(x=>{if(HK[x.id]!=null)x.at=HK[x.id]});
   const analyse=async x=>{if(x.at!=null)return;try{const ctx=ac();if(!ctx)return;const r=await fetch(x.url);if(!r.ok)return;const buf=await r.arrayBuffer();const au=await new Promise((ok,no)=>ctx.decodeAudioData(buf,ok,no));
       const d=au.getChannelData(0),w=Math.floor(au.sampleRate/4),n=Math.floor(d.length/w),en=[];for(let i=0;i<n;i++){let q=0;for(let k=i*w;k<(i+1)*w;k+=16)q+=d[k]*d[k];en.push(q)}
@@ -2130,7 +2204,7 @@ function stageShow(onEnd){
     else{cap.classList.remove("on");stopSong(700);Object.values(P).forEach(g=>g.visible=false);["notes","records","flowers","smileys","floppy","phones","earbuds"].forEach(n=>P[n].visible=true);paintSky("#22074a","#ff3fa4");
       title.innerHTML=`${ballHTML(110)}<h1 class="i-logo">DISKO</h1><p class="i-kicker">${SONGS.length} sange. Kan I dem alle?</p>`;title.className="st-title on";setTimeout(spinBalls,30);
       eraMusic("dfinale",now(),FIN_D/1000);setTimeout(()=>shout("Music time!",false,"en-US"),500);confetti(200,.3)}
-    clearTimeout(startSeg.p);clearTimeout(startSeg.q);const nx=segs[si+1];if(nx&&nx.k==="era")startSeg.q=setTimeout(()=>{if(!ended)prep(nx.j)},sg.d-1400);if(nx&&nx.k!=="fly")startSeg.p=setTimeout(()=>{if(ended)return;flash.classList.add("on");V.noise(now(),.38,.09,{f:500,f2:7000,q:1,wet:.3});if(nx.k==="era")playEra(nx.j)},sg.d-320);
+    clearTimeout(startSeg.p);clearTimeout(startSeg.q);const nx=segs[si+1];if(nx&&nx.k==="era")startSeg.q=setTimeout(()=>{if(!ended)prep(nx.j)},sg.d-900);if(nx&&nx.k!=="fly")startSeg.p=setTimeout(()=>{if(ended)return;flash.classList.add("on");V.noise(now(),.38,.09,{f:500,f2:7000,q:1,wet:.3});if(nx.k==="era")playEra(nx.j)},sg.d-320);
     clearTimeout(startSeg.t);startSeg.t=setTimeout(startSeg,sg.d)};
   const camTo=(x,y,z,lx,ly,lz)=>{cam.position.set(x,y,z);cam.lookAt(lx,ly,lz)};
   const tmp=new T.Vector3(),tmp2=new T.Vector3();
