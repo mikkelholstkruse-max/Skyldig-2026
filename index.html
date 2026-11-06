@@ -2089,7 +2089,7 @@ const BDAY={name:"Marie",nick:"Bibs",age:20,y:2026,m:10,d:13,from:"Bøh",
   msg:"Kæmpe stort tillykke med fødselsdagen, Bibs!\n\nJeg håber, du får en helt vidunderlig dag.\n\nDu kæmper, og du gør det så flot midt i al den tumult, du står i. Du holder humøret oppe, du fortsætter kampen, og du giver ikke op. Det er virkelig flot.\n\nJeg elsker dig overalt på hele jorden."};
 const BDAY_ERAS=[
  {dec:"",song:["Schnappi","Schnappi, das kleine Krokodil"],bpm:110,era:"croc",dance:"prank",nocap:true,gimmick:"",sky:["#000000","#030303"],floor:"#060606",props:["croc"],cos:["#ff5fb0","#ffd400","#7fdcff","#18c26b"],hair:"short",d:11000},
- {dec:"Tillykke, Marie!",song:["Stevie Wonder","Happy Birthday"],from0:true,cap:"Stevie Wonder · Happy Birthday",bpm:122,era:"hbd",dance:"bday",gimmick:"20 år i dag",sky:["#2a0845","#ff6fb5"],floor:"#2a1240",props:["cake","balloons","twenty","gifts","croc"],cos:["#ff5fb0","#ffd400","#7fdcff","#18c26b","#c38bff"],hair:"short",d:17000}];
+ {dec:"Tillykke, Marie!",song:["Altered Images","Happy Birthday"],loop:true,cap:"Altered Images · Happy Birthday",bpm:122,era:"hbd",dance:"bday",gimmick:"20 år i dag",sky:["#2a0845","#ff6fb5"],floor:"#2a1240",props:["cake","balloons","twenty","gifts","croc"],cos:["#ff5fb0","#ffd400","#7fdcff","#18c26b","#c38bff"],hair:"short",d:17000}];
 const BDAY_TEST=[6];// testdag(e) i november 2026
 const bdayToday=()=>{const n=new Date();return n.getFullYear()===BDAY.y&&n.getMonth()===BDAY.m&&((n.getDate()>=BDAY.d&&n.getDate()<=BDAY.d+2)||BDAY_TEST.includes(n.getDate()))};
 function audioPlayback(){try{if(navigator.audioSession&&navigator.audioSession.type!=="playback")navigator.audioSession.type="playback"}catch(e){}}
@@ -2109,7 +2109,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=21;
+const APP_V=22;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
@@ -2315,14 +2315,14 @@ function stageShow(onEnd,mode){
       x.at=Math.max(0,Math.min(22,bi/4-.3));HK[x.id]=x.at;store("disco.hook",HK)}catch(e){}};
   if(PREV.ok!==false)tr.filter(x=>!x.e.synth).forEach(x=>PREV.lookup({id:x.id,main:x.e.song[0],title:x.e.song[1],full:!!x.e.full}).then(u=>{x.url=u||null;if(u&&!ended)analyse(x)}));
   const ramp=(a,to,ms,stop)=>{clearInterval(a._f);const from=a.volume,t1=performance.now();a._f=setInterval(()=>{const q=Math.min(1,(performance.now()-t1)/ms);try{a.volume=Math.max(0,Math.min(1,from+(to-from)*q))}catch(e){}if(q>=1){clearInterval(a._f);if(stop){try{a.pause()}catch(e){}}}},30)};
-  const stopSong=ms=>{if(playing){ramp(playing,0,ms,true);playing=null}};
+  const stopSong=ms=>{if(playing){playing.loop=false;ramp(playing,0,ms,true);playing=null}};
   const seekTo=(a,t)=>{const go=()=>{try{a.currentTime=t}catch(e){}};if(a.readyState>=1)go();else a.addEventListener("loadedmetadata",go,{once:true})};
   // klargør næste sang lydløst lidt før klippet, så den starter med det samme
   const prep=j=>{const x=tr[j];if(!x||!x.url)return;ai=1-ai;const a=AP[ai];clearInterval(a._f);try{a.pause()}catch(e){}a.src=x.url;a.muted=true;a.volume=1;seekTo(a,x.at||0);const p=a.play();if(p)p.catch(()=>{});prepped={j,a}};
   const playEra=j=>{const x=tr[j];if(x.on)return;x.on=true;stopSong(260);
     if(!x.url){eraMusic(x.e.era,now()+.32,(x.e.d||ERA_D)/1000+(BD&&j===1?(OPEN_D+FLY_D)/1000:0));return}
     let a;if(prepped&&prepped.j===j)a=prepped.a;else{ai=1-ai;a=AP[ai];a.src=x.url;seekTo(a,x.at||0)}prepped=null;
-    if(a.readyState>=1){try{a.currentTime=x.at||0}catch(e){}}a.volume=1;a.muted=false;{const p=a.play();if(p)p.catch(()=>{if(a.paused)eraMusic(x.e.era,now(),(x.e.d||ERA_D)/1000)})}playing=a};
+    if(a.readyState>=1){try{a.currentTime=x.at||0}catch(e){}}a.loop=!!x.e.loop;a.volume=1;a.muted=false;{const p=a.play();if(p)p.catch(()=>{if(a.paused)eraMusic(x.e.era,now(),(x.e.d||ERA_D)/1000)})}playing=a};
   const startSeg=()=>{si++;if(si>=segs.length)return end(false);const sg=segs[si];segStart=performance.now();flash.classList.remove("on");
     if(sg.k==="dark"){cur=ERAS[0];dressEra({...cur,props:[]});chars.forEach(c=>c.root.visible=false);tonearm.visible=false;vinyl.visible=false;cap.classList.remove("on");title.className="st-title"}
     else if(sg.k==="gate"){stopSong(60);try{DSFX.scratch()}catch(x){}flash.classList.remove("on","blk");cap.classList.remove("on");title.innerHTML=`<h1 class="i-big">Hov… forkert sang?</h1>`;title.className="st-title on top";
