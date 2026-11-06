@@ -2133,7 +2133,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=29;
+const APP_V=30;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
@@ -2165,7 +2165,7 @@ function stageShow(onEnd,mode){
   const T=THREE;document.querySelector("#intro")?.remove();
   const ERA_D=BD?6000:8000,OPEN_D=BD?6200:4400,FLY_D=3400,FIN_D=BD?5600:4800,CARD_D=40000,TOTAL=OPEN_D+FLY_D+ERAS.reduce((s,e)=>s+(e.d||ERA_D),0)+(BD?15300:0)+FIN_D;
   const el=document.createElement("div");el.id="intro";el.className="stage-intro";
-  el.innerHTML=`<canvas id="stg"></canvas><div class="st-cap"><span class="st-dec"></span><span class="st-gim"></span><b class="st-song"></b><span class="st-note"></span></div><div class="bd-card" hidden><div class="bd-to">Til Marie</div><p class="bd-msg"></p><div class="bd-from"></div><button class="dbtn bd-next" type="button" style="--c:#ff3fa4">Videre</button></div><div class="st-flash"></div><div class="st-title"></div><div class="bd-gate" hidden><button class="bd-go" type="button">Er I klar til den rigtige fest?</button></div><button class="i-skip" type="button">Spring over</button><div class="i-bar"><i style="animation-duration:${TOTAL}ms"></i></div>`;
+  el.innerHTML=`<canvas id="stg"></canvas><div class="st-cap"><span class="st-dec"></span><span class="st-gim"></span><b class="st-song"></b><span class="st-note"></span></div><div class="bd-card" hidden><div class="bd-to">Til Marie</div><p class="bd-msg"></p><div class="bd-from"></div><button class="dbtn bd-next" type="button" style="--c:#ff3fa4">Videre</button></div><div class="st-flash"></div><div class="st-title"></div><div class="bd-gate" hidden><button class="bd-go" type="button">Er du klar til den rigtige fest?</button></div><button class="i-skip" type="button">Spring over</button><div class="i-bar"><i style="animation-duration:${TOTAL}ms"></i></div>`;
   document.body.appendChild(el);const cv=el.querySelector("#stg");
   const R=new T.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));
   const sc=new T.Scene();const cam=new T.PerspectiveCamera(50,1,.1,200);
@@ -2393,7 +2393,7 @@ function stageShow(onEnd,mode){
     else if(sg.k==="card"){cur={...ERAS[ERAS.length-1],bpm:70};dressEra(cur);cap.classList.remove("on");duckHbd(hv&&isFinite(hv.duration)?hv.duration:40);
       card.hidden=false;card.querySelector(".bd-from").textContent="Kærlig hilsen "+BDAY.from;const msg=card.querySelector(".bd-msg");msg.textContent="";const txt=hv?"":BDAY.msg;let n=0;
       if(hv){card.classList.add("vid","done");msg.replaceWith(hv);hv.currentTime=0;hv.muted=false;const go2=()=>{clearTimeout(startSeg.t);const d=isFinite(hv.duration)?hv.duration*1000:CARD_D;startSeg.t=setTimeout(startSeg,d+6000)};
-        hv.onended=()=>card.querySelector(".bd-next").classList.add("pulse");const p=hv.play();if(p)p.then(go2).catch(()=>{hv.controls=true});else go2()}
+        hv.onended=()=>{if(ended||segs[si]!==sg)return;const nb=card.querySelector(".bd-next");if(nb)nb.onclick=null;clearTimeout(startSeg.t);flash.classList.add("on");setTimeout(startSeg,300)};const p=hv.play();if(p)p.then(go2).catch(()=>{hv.controls=true});else go2()}
       const typer=hv?0:setInterval(()=>{if(ended||segs[si]!==sg){clearInterval(typer);return}n=Math.min(txt.length,n+2);msg.textContent=txt.slice(0,n);if(n>=txt.length){clearInterval(typer);card.classList.add("done")}},38);
       card.querySelector(".bd-next").onclick=e=>{e.stopPropagation();card.querySelector(".bd-next").onclick=null;try{hv&&hv.pause()}catch(x){}clearTimeout(startSeg.t);flash.classList.add("on");setTimeout(startSeg,300)}}
     else if(sg.k==="era"){cur=sg.e;title.className="st-title";dressEra(cur);clouds.visible=false;vinyl.visible=false;tonearm.visible=false;chars.forEach(c=>c.root.visible=true);
