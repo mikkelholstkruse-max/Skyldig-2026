@@ -1757,6 +1757,10 @@ function nextSongFor(G,mode){
 const SILENT="data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==";
 const PREV={ok:null,cache:store("disco.prev")||{},el:null,
   lookup(s){if(this.cache[s.id]!==undefined)return Promise.resolve(this.cache[s.id]);
+    if(s.tid&&!s._tried){return new Promise(res=>{const cb="itcb"+Math.random().toString(36).slice(2);const sc=document.createElement("script");let fin=false;
+      const done=v=>{if(fin)return;fin=true;clearTimeout(t);try{delete window[cb]}catch(e){}sc.remove();if(v){this.cache[s.id]=v;store("disco.prev",this.cache);res(v)}else this.lookup({...s,_tried:true}).then(res)};
+      const t=setTimeout(()=>done(null),5000);window[cb]=d=>{const r=((d&&d.results)||[]).find(x=>x.previewUrl);done(r&&r.previewUrl||null)};sc.onerror=()=>done(null);
+      sc.src="https://itunes.apple.com/lookup?country=dk&id="+s.tid+"&callback="+cb;document.head.appendChild(sc)})}
     return new Promise(res=>{const cb="itcb"+Math.random().toString(36).slice(2);const sc=document.createElement("script");let fin=false;
       const done=(v,keep)=>{if(fin)return;fin=true;clearTimeout(t);try{delete window[cb]}catch(e){}sc.remove();if(keep){this.cache[s.id]=v;store("disco.prev",this.cache)}res(v)};
       const t=setTimeout(()=>done(null,false),5000);
@@ -2089,7 +2093,7 @@ const BDAY={name:"Marie",nick:"Bibs",age:20,y:2026,m:10,d:13,from:"Bøh",
   msg:"Kæmpe stort tillykke med fødselsdagen, Bibs!\n\nJeg håber, du får en helt vidunderlig dag.\n\nDu kæmper, og du gør det så flot midt i al den tumult, du står i. Du holder humøret oppe, du fortsætter kampen, og du giver ikke op. Det er virkelig flot.\n\nJeg elsker dig overalt på hele jorden."};
 const BDAY_ERAS=[
  {dec:"",song:["Schnappi","Schnappi, das kleine Krokodil"],bpm:110,era:"croc",dance:"prank",nocap:true,gimmick:"",sky:["#000000","#030303"],floor:"#060606",props:["croc"],cos:["#ff5fb0","#ffd400","#7fdcff","#18c26b"],hair:"short",d:11000},
- {dec:"Tillykke, Marie!",song:["Altered Images","Happy Birthday"],loop:true,cap:"Altered Images · Happy Birthday",bpm:122,era:"hbd",dance:"bday",gimmick:"20 år i dag",sky:["#2a0845","#ff6fb5"],floor:"#2a1240",props:["cake","balloons","twenty","gifts","croc"],cos:["#ff5fb0","#ffd400","#7fdcff","#18c26b","#c38bff"],hair:"short",d:17000}];
+ {dec:"Tillykke, Marie!",song:["","Happy Birthday to You"],tid:1551863153,full:true,from0:true,loop:true,cap:"Happy Birthday to You",bpm:122,era:"hbd",dance:"bday",gimmick:"20 år i dag",sky:["#2a0845","#ff6fb5"],floor:"#2a1240",props:["cake","balloons","twenty","gifts","croc"],cos:["#ff5fb0","#ffd400","#7fdcff","#18c26b","#c38bff"],hair:"short",d:17000}];
 const BDAY_TEST=[6];// testdag(e) i november 2026
 const bdayToday=()=>{const n=new Date();return n.getFullYear()===BDAY.y&&n.getMonth()===BDAY.m&&((n.getDate()>=BDAY.d&&n.getDate()<=BDAY.d+2)||BDAY_TEST.includes(n.getDate()))};
 function audioPlayback(){try{if(navigator.audioSession&&navigator.audioSession.type!=="playback")navigator.audioSession.type="playback"}catch(e){}}
@@ -2109,7 +2113,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=23;
+const APP_V=24;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
@@ -2320,7 +2324,7 @@ function stageShow(onEnd,mode){
       const d=au.getChannelData(0),w=Math.floor(au.sampleRate/4),n=Math.floor(d.length/w),en=[];for(let i=0;i<n;i++){let q=0;for(let k=i*w;k<(i+1)*w;k+=16)q+=d[k]*d[k];en.push(q)}
       const win=Math.round(ERA_D/250);let best=-1,bi=0;for(let i=0;i+win<=n;i++){let q=0;for(let k=i;k<i+win;k++)q+=en[k];if(q>best){best=q;bi=i}}
       x.at=Math.max(0,Math.min(22,bi/4-.3));HK[x.id]=x.at;store("disco.hook",HK)}catch(e){}};
-  if(PREV.ok!==false)tr.filter(x=>!x.e.synth).forEach(x=>{x.pending=true;PREV.lookup({id:x.id,main:x.e.song[0],title:x.e.song[1],full:!!x.e.full}).then(u=>{x.url=u||null;x.pending=false;if(u&&!ended)analyse(x);
+  if(PREV.ok!==false)tr.filter(x=>!x.e.synth).forEach(x=>{x.pending=true;PREV.lookup({id:x.id,main:x.e.song[0],title:x.e.song[1],full:!!x.e.full,tid:x.e.tid}).then(u=>{x.url=u||null;x.pending=false;if(u&&!ended)analyse(x);
     if(x.late!=null&&!ended){const j=x.late;x.late=null;const sg=segs[si];if(sg&&sg.k==="era"&&sg.j===j){x.on=false;if(u)playEra(j);else eraMusic(x.e.era,now(),Math.max(1,(sg.d-(performance.now()-segStart))/1000))}}})});
   const ramp=(a,to,ms,stop)=>{clearInterval(a._f);const from=a.volume,t1=performance.now();a._f=setInterval(()=>{const q=Math.min(1,(performance.now()-t1)/ms);try{a.volume=Math.max(0,Math.min(1,from+(to-from)*q))}catch(e){}if(q>=1){clearInterval(a._f);if(stop){try{a.pause()}catch(e){}}}},30)};
   const stopSong=ms=>{if(playing){playing.loop=false;ramp(playing,0,ms,true);playing=null}};
