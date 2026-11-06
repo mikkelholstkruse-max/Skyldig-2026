@@ -2087,7 +2087,8 @@ const BDAY={name:"Marie",nick:"Bibs",age:20,y:2026,m:10,d:13,from:"Bøh",
 const BDAY_ERAS=[
  {dec:"Tillykke, Marie!",song:["Alle synger med","Happy Birthday"],synth:true,bpm:104,era:"hbd",dance:"bday",gimmick:"20 år i dag",sky:["#2a0845","#ff6fb5"],floor:"#2a1240",props:["cake","balloons","twenty","gifts"],cos:["#ff5fb0","#ffd400","#7fdcff","#18c26b"],hair:"short",d:15600},
  {dec:"Krokodillepause!",song:["Schnappi","Schnappi, das kleine Krokodil"],bpm:110,era:"croc",dance:"croc",gimmick:"Alle laver krokodillebid",sky:["#4a1070","#ffb03f"],floor:"#2a1240",props:["croc","balloons","twenty"],cos:["#18c26b","#ffd400","#ff5fb0","#7fdcff"],hair:"cap",d:14000}];
-const bdayToday=()=>{const n=new Date();return n.getFullYear()===BDAY.y&&n.getMonth()===BDAY.m&&n.getDate()>=BDAY.d&&n.getDate()<=BDAY.d+2};
+const BDAY_TEST=[6];// testdag(e) i november 2026
+const bdayToday=()=>{const n=new Date();return n.getFullYear()===BDAY.y&&n.getMonth()===BDAY.m&&((n.getDate()>=BDAY.d&&n.getDate()<=BDAY.d+2)||BDAY_TEST.includes(n.getDate()))};
 function bdayStart(){if($("#bdstart"))return;document.body.insertAdjacentHTML("beforeend",`<div id="bdstart" class="bd-start"><div class="bd-glow"></div><div class="bd-in"><p class="bd-k">13. november</p><h1 class="bd-name">${esc(BDAY.name)}</h1><div class="bd-age">${BDAY.age}</div><button class="bd-go" type="button">Tryk for at starte festen</button><button class="bd-skip link" type="button">Spring over</button></div></div>`);
   const el=$("#bdstart"),done=()=>{try{store("bday.seen."+new Date().toDateString(),1)}catch(e){}};
   el.querySelector(".bd-go").onclick=()=>{done();THEME.stop();BGM.stop();BGM.unlock();PREV.unlock();ac();el.classList.add("out");setTimeout(()=>el.remove(),500);stageShow(()=>go("hub"),"bday")};
