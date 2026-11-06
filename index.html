@@ -455,6 +455,7 @@ button.dopt{cursor:pointer;font-family:"Baloo 2",system-ui,sans-serif}
 .bd-to{font-weight:900;letter-spacing:.2em;text-transform:uppercase;font-size:13px;color:#ff3fa4}.bd-msg{white-space:pre-line;font-size:clamp(17px,4.6vw,21px);line-height:1.45;margin:10px 0 12px;min-height:6em}.bd-from{font-weight:900;font-size:18px;opacity:0;transition:opacity .6s}.bd-card.done .bd-from{opacity:1}.bd-next{margin-top:14px;width:100%}
 .nchips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:6px 0 10px;width:100%}.nchip{font:inherit;font-weight:900;font-size:15px;padding:13px 2px;border-radius:14px;border:3px solid var(--c);background:transparent;color:inherit;cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis}.nchip.on{background:var(--c);color:#1a1035;box-shadow:0 4px 0 #1a1035}.nchips.dz .nchip{color:#1a1035}
 .hub-ver{position:fixed;left:10px;bottom:8px;font-size:11px;opacity:.45;pointer-events:none}.bd-gate[hidden],.bd-card[hidden]{display:none!important}.bd-gate{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 55%,rgba(0,0,0,.15),rgba(0,0,0,.6));z-index:5;padding:16px}.bd-gate{opacity:0;transition:opacity .6s}.bd-gate.show{opacity:1}.bd-gate .bd-go{font-size:22px;max-width:320px;line-height:1.25}
+.bd-vwrap{position:fixed;inset:0;z-index:310;background:#000;display:grid;place-items:center;transition:opacity .6s}.bd-vwrap.out{opacity:0}.bd-video{width:100%;height:100%;object-fit:contain;background:#000}
 .st-note{font-size:12px;color:#fff;opacity:.75}
 .st-flash{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 45%,#fff 0%,rgba(255,255,255,.85) 45%,rgba(255,220,250,.6));opacity:0;transition:opacity .4s ease-out}
 .st-flash.blk{background:#000}
@@ -1329,7 +1330,9 @@ function studioView(){
   if(t==="family"){S.lp=S.lp||store("skyldig.localplayers")||FAM4.map((n,i)=>({id:"p"+i,name:n,color:COLORS[i]}));
     body=`<p class="muted">Jeres navne, selfies, kropsbygning og højde. Det bruges på 3D-scenen i Disko og i Skyldig på én telefon. Tryk på cirklen for at tage en selfie lige forfra med godt lys.</p>
     <div class="col-stack" style="gap:10px">${S.lp.map((p,i)=>`<div class="entry" style="align-items:center"><label class="selfie">${av(p,"l")}<span class="cam">FOTO</span><input type="file" accept="image/*" capture="user" data-fsf="${i}" aria-label="Selfie til ${esc(p.name)}"></label><div class="col-stack" style="gap:6px;flex:1;min-width:0"><input type="text" data-fn="${i}" value="${esc(p.name)}" maxlength="16" aria-label="Navn"><select data-fb="${i}" aria-label="Kropsbygning" style="width:100%">${Object.entries(BUILDS).map(([k,v])=>`<option value="${k}"${(p.build||defBody(p.name).b)===k?" selected":""}>${v}</option>`).join("")}</select><div class="row" style="gap:6px;flex-wrap:nowrap;align-items:center"><input type="number" data-fh="${i}" value="${+p.height||defBody(p.name).h}" min="100" max="220" inputmode="numeric" aria-label="Højde i cm" style="width:78px"><span class="muted" style="font-size:13px">cm</span></div></div><button class="x" data-fdel="${i}" aria-label="Fjern">×</button></div>`).join("")}</div>
-    ${S.lp.length<8?`<button class="btn gold sm" id="fadd" style="width:100%">Tilføj person</button>`:""}<p class="muted" style="font-size:13px">Billederne gemmes kun på denne telefon.</p>`}
+    ${S.lp.length<8?`<button class="btn gold sm" id="fadd" style="width:100%">Tilføj person</button>`:""}<p class="muted" style="font-size:13px">Billederne gemmes kun på denne telefon.</p>
+    <div class="lbl" style="margin-top:18px">Åbningsvideo til ${esc(BDAY.name)}s fødselsdag</div><p class="muted" style="font-size:13px">Spiller i fuld skærm, lige når I trykker "Tryk for at starte festen". Gemmes kun på denne telefon, så vis showet herfra.</p>
+    <p id="vstat" class="muted" style="font-size:13px">Tjekker…</p><label class="upl btn gold sm" style="width:100%">Vælg video<input type="file" id="vfile" accept="video/*"></label><button class="link" id="vdel" hidden>Fjern videoen</button>`}
   if(t==="trips")body=`<p class="muted">Skriv sted og år. Spillet laver selv runderne: "Toscana 2013: Hvem blev solskoldet først?" og "Hvilket år var vi i Toscana?". Globussen flyver derhen.</p>
     ${globeHTML("sg",false,"")}${list(PACK.trips,e=>`<b>${esc(e.place)}</b><small>${esc(e.year||"")}</small>`)}
     <form id="f" class="col-stack" style="gap:8px"><input type="text" id="a" list="placelist" placeholder="Sted eller land, fx Toscana eller Italien" required autocomplete="off"><datalist id="placelist">${PLACES.map(p=>`<option value="${esc(p[0])}">`).join("")}${Object.keys(DK_COUNTRY).map(k=>`<option value="${esc(k)}">`).join("")}</datalist><input type="number" id="b" placeholder="År, fx 2013" inputmode="numeric" min="1950" max="2030"><button class="btn gold sm" style="width:100%">Tilføj rejse</button><p class="err" id="ferr" hidden></p></form>`;
@@ -1347,6 +1350,9 @@ function studioView(){
   <div class="panel">${body}</div><p class="muted c" id="saved" style="font-size:13px">${ON.db?"Gemmes i spillet, så alle telefoner får det.":"Gemmes på denne telefon."}</p>`;
   $("#back").onclick=()=>go("hub");
   if(t==="family"){const save=()=>store("skyldig.localplayers",S.lp);
+    const vs=$("#vstat"),vd=$("#vdel"),vf=$("#vfile");const vshow=b=>{if(!vs)return;vs.textContent=b?`Video valgt (${(b.size/1048576).toFixed(1)} MB). Den spiller først i showet.`:"Ingen video valgt endnu.";if(vd)vd.hidden=!b};VIDDB.get("bday").then(vshow);
+    if(vf)vf.onchange=async()=>{const f=vf.files[0];if(!f)return;vs.textContent="Gemmer…";try{await VIDDB.set("bday",f);SFX.coin();vshow(f)}catch(e){vs.textContent="Kunne ikke gemme videoen. Prøv en kortere video."}};
+    if(vd)vd.onclick=async()=>{await VIDDB.set("bday",null);vshow(null)};
     app.querySelectorAll("[data-fsf]").forEach(inp=>inp.onchange=async()=>{if(!inp.files[0])return;try{S.lp[+inp.dataset.fsf].photo=await resizeImage(inp.files[0],200);save();SFX.coin();render()}catch(e){}});
     app.querySelectorAll("[data-fn]").forEach(inp=>inp.onchange=()=>{const v=inp.value.trim();if(v){S.lp[+inp.dataset.fn].name=v;save()}});app.querySelectorAll("[data-fb]").forEach(x=>x.onchange=()=>{S.lp[+x.dataset.fb].build=x.value;save()});app.querySelectorAll("[data-fh]").forEach(x=>x.onchange=()=>{const v=Math.round(+x.value);if(v>=100&&v<=220){S.lp[+x.dataset.fh].height=v;save()}});
     app.querySelectorAll("[data-fdel]").forEach(b=>b.onclick=()=>{if(S.lp.length<=1)return;S.lp.splice(+b.dataset.fdel,1);save();SFX.boing();render()});
@@ -2096,12 +2102,20 @@ const BDAY_ERAS=[
  {dec:"Tillykke, Marie!",song:["","Happy Birthday to You"],tid:1551863153,full:true,from0:true,loop:true,cap:"Happy Birthday to You",bpm:122,era:"hbd",dance:"bday",gimmick:"20 år i dag",sky:["#2a0845","#ff6fb5"],floor:"#2a1240",props:["cake","balloons","twenty","gifts","croc"],cos:["#ff5fb0","#ffd400","#7fdcff","#18c26b","#c38bff"],hair:"short",d:17000}];
 const BDAY_TEST=[6];// testdag(e) i november 2026
 const bdayToday=()=>{const n=new Date();return n.getFullYear()===BDAY.y&&n.getMonth()===BDAY.m&&((n.getDate()>=BDAY.d&&n.getDate()<=BDAY.d+2)||BDAY_TEST.includes(n.getDate()))};
+const VIDDB={db:null,open(){if(this.db)return Promise.resolve(this.db);return new Promise((ok,no)=>{try{const r=indexedDB.open("hjemmebane-video",1);r.onupgradeneeded=()=>r.result.createObjectStore("v");r.onsuccess=()=>{this.db=r.result;ok(this.db)};r.onerror=()=>no(r.error)}catch(e){no(e)}})},
+  async get(k){try{const db=await this.open();return await new Promise(ok=>{const q=db.transaction("v").objectStore("v").get(k);q.onsuccess=()=>ok(q.result||null);q.onerror=()=>ok(null)})}catch(e){return null}},
+  async set(k,v){const db=await this.open();return new Promise((ok,no)=>{const tx=db.transaction("v","readwrite");v==null?tx.objectStore("v").delete(k):tx.objectStore("v").put(v,k);tx.oncomplete=()=>ok(true);tx.onerror=()=>no(tx.error)})}};
 function audioPlayback(){try{if(navigator.audioSession&&navigator.audioSession.type!=="playback")navigator.audioSession.type="playback"}catch(e){}}
 document.addEventListener("pointerdown",audioPlayback,{capture:true});
 const KEEP={el:null,on(){try{if(!this.el){this.el=new Audio();this.el.loop=true}this.el.src=SILENT;this.el.loop=true;const p=this.el.play();if(p)p.catch(()=>{})}catch(e){}},off(){try{this.el&&this.el.pause()}catch(e){}}};
 function bdayStart(){if($("#bdstart"))return;document.body.insertAdjacentHTML("beforeend",`<div id="bdstart" class="bd-start"><div class="bd-glow"></div><div class="bd-in"><p class="bd-k">13. november</p><h1 class="bd-name">${esc(BDAY.name)}</h1><div class="bd-age">${BDAY.age}</div><button class="bd-go" type="button">Tryk for at starte festen</button><button class="bd-skip link" type="button">Spring over</button></div></div>`);
-  const el=$("#bdstart"),done=()=>{try{store("bday.seen."+new Date().toDateString(),1)}catch(e){}};
-  el.querySelector(".bd-go").onclick=()=>{done();audioPlayback();KEEP.on();THEME.stop();BGM.stop();BGM.unlock();PREV.unlock();const a2=ac();try{a2&&a2.resume&&a2.resume()}catch(e){}el.classList.add("out");setTimeout(()=>el.remove(),500);stageShow(()=>{KEEP.off();go("hub")},"bday")};
+  const el=$("#bdstart"),done=()=>{try{store("bday.seen."+new Date().toDateString(),1)}catch(e){}};let vid=null;
+  VIDDB.get("bday").then(b=>{if(!b||!$("#bdstart"))return;vid=document.createElement("video");vid.playsInline=true;vid.setAttribute("playsinline","");vid.preload="auto";vid.src=URL.createObjectURL(b);vid.className="bd-video"});
+  const show=()=>stageShow(()=>{KEEP.off();go("hub")},"bday");
+  el.querySelector(".bd-go").onclick=()=>{done();audioPlayback();KEEP.on();THEME.stop();BGM.stop();BGM.unlock();PREV.unlock();const a2=ac();try{a2&&a2.resume&&a2.resume()}catch(e){}el.classList.add("out");setTimeout(()=>el.remove(),500);
+    if(vid){const wrap=document.createElement("div");wrap.className="bd-vwrap";wrap.appendChild(vid);const sk=document.createElement("button");sk.className="i-skip";sk.type="button";sk.textContent="Spring over";wrap.appendChild(sk);document.body.appendChild(wrap);
+      let fin=false;const next=()=>{if(fin)return;fin=true;try{vid.pause()}catch(e){}wrap.classList.add("out");setTimeout(()=>{wrap.remove();try{URL.revokeObjectURL(vid.src)}catch(e){}},600);show()};
+      vid.onended=next;sk.onclick=e=>{e.stopPropagation();next()};const p=vid.play();if(p)p.catch(()=>{vid.muted=true;vid.play().catch(next)})}else show()};
   el.querySelector(".bd-skip").onclick=()=>{done();el.classList.add("out");setTimeout(()=>el.remove(),500)}}
 const SHOW_ERAS=[
  {dec:"50'erne",song:["Elvis Presley","Jailhouse Rock"],bpm:168,era:"rock50",dance:"twist",gimmick:"Jukeboxen og vinylpladen",sky:["#ffd6e0","#7fd6c8"],floor:"#f4e3c4",props:["jukebox","records","notes"],cos:["#e8384f","#7fd6c8","#ffd166","#1d3557"],hair:"quiff"},
@@ -2113,7 +2127,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=24;
+const APP_V=25;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
