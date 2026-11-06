@@ -454,6 +454,7 @@ button.dopt{cursor:pointer;font-family:"Baloo 2",system-ui,sans-serif}
 .bd-card{position:absolute;left:50%;bottom:max(70px,9vh);transform:translateX(-50%);width:min(560px,calc(100% - 32px));max-height:62vh;overflow:auto;background:rgba(255,250,240,.94);color:#2a1240;border-radius:22px;padding:22px 22px 18px;box-shadow:0 20px 60px #0008,0 0 0 3px #ffd23f;animation:bdin .7s cubic-bezier(.2,1.4,.4,1)}@keyframes bdin{from{transform:translate(-50%,40px) scale(.9);opacity:0}}
 .bd-to{font-weight:900;letter-spacing:.2em;text-transform:uppercase;font-size:13px;color:#ff3fa4}.bd-msg{white-space:pre-line;font-size:clamp(17px,4.6vw,21px);line-height:1.45;margin:10px 0 12px;min-height:6em}.bd-from{font-weight:900;font-size:18px;opacity:0;transition:opacity .6s}.bd-card.done .bd-from{opacity:1}.bd-next{margin-top:14px;width:100%}
 .nchips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:6px 0 10px;width:100%}.nchip{font:inherit;font-weight:900;font-size:15px;padding:13px 2px;border-radius:14px;border:3px solid var(--c);background:transparent;color:inherit;cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis}.nchip.on{background:var(--c);color:#1a1035;box-shadow:0 4px 0 #1a1035}.nchips.dz .nchip{color:#1a1035}
+.hub-ver{position:fixed;left:10px;bottom:8px;font-size:11px;opacity:.45;pointer-events:none}.bd-gate[hidden],.bd-card[hidden]{display:none!important}.bd-gate{position:absolute;inset:0;display:grid;place-items:center;background:#000;z-index:5;padding:16px}.bd-gate .bd-go{font-size:22px;max-width:320px;line-height:1.25}
 .st-note{font-size:12px;color:#fff;opacity:.75}
 .st-flash{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 45%,#fff 0%,rgba(255,255,255,.85) 45%,rgba(255,220,250,.6));opacity:0;transition:opacity .4s ease-out}
 .st-flash.blk{background:#000}
@@ -1760,9 +1761,10 @@ const PREV={ok:null,cache:store("disco.prev")||{},el:null,
       const done=(v,keep)=>{if(fin)return;fin=true;clearTimeout(t);try{delete window[cb]}catch(e){}sc.remove();if(keep){this.cache[s.id]=v;store("disco.prev",this.cache)}res(v)};
       const t=setTimeout(()=>done(null,false),5000);
       window[cb]=d=>{const want=fold(s.main),wt=fold(s.title.replace(/\(.*?\)/g,""));const rs=(d&&d.results)||[];
-        const r=rs.find(x=>fold(x.artistName||"").includes(want.split(" ")[0])&&fold(x.trackName||"").startsWith(wt.slice(0,5)))||rs.find(x=>fold(x.trackName||"").startsWith(wt.slice(0,5)));done(r&&r.previewUrl||null,true)};
+        const r=s.full?(rs.find(x=>fold(x.trackName||"").startsWith(wt)&&!/remix|karaoke|instrumental|metal|punk/i.test((x.trackName||"")+(x.collectionName||""))&&x.previewUrl)||rs.find(x=>fold(x.trackName||"").startsWith(wt)&&x.previewUrl))
+          :rs.find(x=>fold(x.artistName||"").includes(want.split(" ")[0])&&fold(x.trackName||"").startsWith(wt.slice(0,5)))||rs.find(x=>fold(x.trackName||"").startsWith(wt.slice(0,5)));done(r&&r.previewUrl||null,true)};
       sc.onerror=()=>done(null,false);
-      sc.src="https://itunes.apple.com/search?country=dk&entity=song&limit=8&callback="+cb+"&term="+encodeURIComponent(s.main+" "+s.title.replace(/\(.*?\)/g,""));document.head.appendChild(sc)})},
+      sc.src="https://itunes.apple.com/search?country=dk&entity=song&limit="+(s.full?25:8)+"&callback="+cb+"&term="+encodeURIComponent((s.main+" "+s.title.replace(/\(.*?\)/g,"")).trim());document.head.appendChild(sc)})},
   async test(){if(this.ok===true)return true;if(window.claude){this.ok=false;return false}if(this.ok===false&&Date.now()-(this._fail||0)<20000)return false;
     const cands=[SONGS.find(x=>x.title==="Dancing Queen"),SONGS.find(x=>x.title==="Barbie Girl"),SONGS[0]].filter(Boolean);for(const c of cands){const u=await this.lookup(c);if(u){this.ok=true;return true}}this.ok=false;this._fail=Date.now();return false},
   unlock(){try{if(!this.el){this.el=new Audio();this.el.preload="auto"}const a=this.el;if(!a.paused&&a.src&&a.src!==SILENT)return;clearInterval(this._f);a.loop=false;a.muted=false;a.src=SILENT;const p=a.play();if(p)p.catch(()=>{})}catch(e){}},
@@ -2087,7 +2089,7 @@ const BDAY={name:"Marie",nick:"Bibs",age:20,y:2026,m:10,d:13,from:"Bøh",
   msg:"Kæmpe stort tillykke med fødselsdagen, Basse!\n\nJeg håber, du får en helt vidunderlig dag.\n\nDu kæmper, og du gør det så flot midt i al den tumult, du står i. Du holder humøret oppe, du fortsætter kampen, og du giver ikke op. Det er virkelig flot.\n\nJeg elsker dig overalt på hele jorden."};
 const BDAY_ERAS=[
  {dec:"",song:["Schnappi","Schnappi, das kleine Krokodil"],bpm:110,era:"croc",dance:"prank",nocap:true,gimmick:"",sky:["#000000","#030303"],floor:"#060606",props:["croc"],cos:["#ff5fb0","#ffd400","#7fdcff","#18c26b"],hair:"short",d:11000},
- {dec:"Tillykke, Marie!",song:["Alle synger med","Happy Birthday"],synth:true,bpm:104,era:"hbd",dance:"bday",gimmick:"20 år i dag",sky:["#2a0845","#ff6fb5"],floor:"#2a1240",props:["cake","balloons","twenty","gifts","croc"],cos:["#ff5fb0","#ffd400","#7fdcff","#18c26b"],hair:"short",d:15600}];
+ {dec:"Tillykke, Marie!",song:["","Happy Birthday to You"],full:true,from0:true,cap:"Alle synger med · Happy Birthday",bpm:104,era:"hbd",dance:"bday",gimmick:"20 år i dag",sky:["#2a0845","#ff6fb5"],floor:"#2a1240",props:["cake","balloons","twenty","gifts","croc"],cos:["#ff5fb0","#ffd400","#7fdcff","#18c26b"],hair:"short",d:21000}];
 const BDAY_TEST=[6];// testdag(e) i november 2026
 const bdayToday=()=>{const n=new Date();return n.getFullYear()===BDAY.y&&n.getMonth()===BDAY.m&&((n.getDate()>=BDAY.d&&n.getDate()<=BDAY.d+2)||BDAY_TEST.includes(n.getDate()))};
 function audioPlayback(){try{if(navigator.audioSession&&navigator.audioSession.type!=="playback")navigator.audioSession.type="playback"}catch(e){}}
@@ -2128,7 +2130,7 @@ function stageShow(onEnd,mode){
   const T=THREE;document.querySelector("#intro")?.remove();
   const ERA_D=6000,OPEN_D=BD?6200:4400,FLY_D=3400,FIN_D=BD?5600:4800,CARD_D=40000,TOTAL=OPEN_D+FLY_D+ERAS.reduce((s,e)=>s+(e.d||ERA_D),0)+(BD?15300:0)+FIN_D;
   const el=document.createElement("div");el.id="intro";el.className="stage-intro";
-  el.innerHTML=`<canvas id="stg"></canvas><div class="st-cap"><span class="st-dec"></span><span class="st-gim"></span><b class="st-song"></b><span class="st-note"></span></div><div class="bd-card" hidden><div class="bd-to">Til Marie</div><p class="bd-msg"></p><div class="bd-from"></div><button class="dbtn bd-next" type="button" style="--c:#ff3fa4">Videre</button></div><div class="st-flash"></div><div class="st-title"></div><button class="i-skip" type="button">Spring over</button><div class="i-bar"><i style="animation-duration:${TOTAL}ms"></i></div>`;
+  el.innerHTML=`<canvas id="stg"></canvas><div class="st-cap"><span class="st-dec"></span><span class="st-gim"></span><b class="st-song"></b><span class="st-note"></span></div><div class="bd-card" hidden><div class="bd-to">Til Marie</div><p class="bd-msg"></p><div class="bd-from"></div><button class="dbtn bd-next" type="button" style="--c:#ff3fa4">Videre</button></div><div class="st-flash"></div><div class="st-title"></div><div class="bd-gate" hidden><button class="bd-go" type="button">Er I klar til den rigtige fest?</button></div><button class="i-skip" type="button">Spring over</button><div class="i-bar"><i style="animation-duration:${TOTAL}ms"></i></div>`;
   document.body.appendChild(el);const cv=el.querySelector("#stg");
   const R=new T.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));
   const sc=new T.Scene();const cam=new T.PerspectiveCamera(50,1,.1,200);
@@ -2224,16 +2226,16 @@ function stageShow(onEnd,mode){
     const hips=new T.Group();hips.position.y=1.05;body.add(hips);c.hips=hips;c.shirt=[];
     const pants="#1a1035",T2=(r,x,y,z,k,col)=>{const m=part(new T.SphereGeometry(r,20,16),col||p.color);m.position.set(x,y,z);m.scale.set(...k);hips.add(m);if(!col)c.shirt.push(m);return m};
     // kropsbygning: stærk (V-form), lille mave, kvinde med fyldig top eller fyldige hofter
-    if(B==="staerk"){T2(.55,0,.82,0,[1.4,.85,.88]);T2(.42,0,.36,0,[.95,.85,.78])}
+    if(B==="staerk"){T2(.55,0,.8,0,[1.22,.88,.86]);T2(.42,0,.36,0,[.95,.88,.8])}
     else if(B==="mave"){T2(.55,0,.66,0,[1.1,1.05,.9]);T2(.44,0,.36,.2,[1.02,.9,.95])}
     else if(fem){T2(.52,0,.6,0,[1.06,1.08,.86]);const r=B==="top"?.24:.16;[-1,1].forEach(d=>T2(r,d*.2,.8,.32+(B==="top"?.02:0),[1,.92,.9]));
       T2(.5,0,.14,0,[B==="hofte"?1.5:1.12,.66,B==="hofte"?1.15:.92],pants);if(B==="hofte")[-1,1].forEach(d=>{T2(.44,d*.27,.02,-.32,[1,1.05,1],pants);T2(.3,d*.52,.08,-.08,[.8,1,1],pants)})}
     else T2(.55,0,.55,0,[1,1.15,.85]);
-    const shX=B==="staerk"?.8:fem?.56:B==="mave"?.64:.6,ar=B==="staerk"?1.5:B==="mave"?1.12:fem?1.05:1,lr=B==="staerk"?1.25:B==="normal"?1:1.12,hipX=fem?(B==="hofte"?.36:.29):.25;
+    const shX=B==="staerk"?.7:fem?.56:B==="mave"?.64:.6,ar=B==="staerk"?1.25:B==="mave"?1.12:fem?1.05:1,lr=B==="staerk"?1.25:B==="normal"?1:1.12,hipX=fem?(B==="hofte"?.36:.29):.25;
     const neck=new T.Group();neck.position.y=1.25;hips.add(neck);c.neck=neck;
     const head=part(new T.SphereGeometry(.55,24,18),skin,1.05);head.position.y=.5;neck.add(head);c.head=head;c.hair=new T.Group();head.add(c.hair);
     c.sh=[];c.el=[];c.hand=[];c.sleeve=[];[-1,1].forEach((sd,k)=>{const sh=new T.Group();sh.position.set(sd*shX,B==="staerk"?1.05:1.0,0);hips.add(sh);const up=part(new T.CylinderGeometry(.13*ar,.12*ar,.5,10),p.color);up.position.y=-.25;sh.add(up);c.sleeve.push(up);
-      if(B==="staerk"){const dl=part(new T.SphereGeometry(.24,14,12),p.color);sh.add(dl);c.sleeve.push(dl)}
+      if(B==="staerk"){const dl=part(new T.SphereGeometry(.19,14,12),p.color);sh.add(dl);c.sleeve.push(dl)}
       const el=new T.Group();el.position.y=-.5;sh.add(el);const lo=part(new T.CylinderGeometry(.12*ar,.11*ar,.45,10),skin);lo.position.y=-.22;el.add(lo);const hd=part(new T.SphereGeometry(.15*Math.sqrt(ar),12,10),skin);hd.position.y=-.5;el.add(hd);c.sh[k]=sh;c.el[k]=el;c.hand[k]=hd});
     c.hp=[];c.kn=[];c.skate=[];[-1,1].forEach((sd,k)=>{const hp=new T.Group();hp.position.set(sd*hipX,0,0);hips.add(hp);const th=part(new T.CylinderGeometry(.16*lr,.14*lr,.5,10),pants);th.position.y=-.25;hp.add(th);
       const kn=new T.Group();kn.position.y=-.5;hp.add(kn);const sh2=part(new T.CylinderGeometry(.13*lr,.12*lr,.45,10),pants);sh2.position.y=-.22;kn.add(sh2);const shoe=part(new T.SphereGeometry(.2,12,8),"#fff");shoe.scale.set(1,.6,1.5);shoe.position.set(0,-.48,.1);kn.add(shoe);
@@ -2244,7 +2246,8 @@ function stageShow(onEnd,mode){
   const chars=fam.map(mkChar);
   const spot=new T.Group();spot.visible=false;sc.add(spot);{const cone=new T.Mesh(new T.CylinderGeometry(.25,2.4,11,32,1,true),new T.MeshBasicMaterial({color:"#fff6d0",transparent:true,opacity:.1,side:T.DoubleSide,depthWrite:false,fog:false}));cone.position.set(0,6.1,1.3);const pool=new T.Mesh(new T.CircleGeometry(2.4,40),new T.MeshBasicMaterial({color:"#fff6d0",transparent:true,opacity:.22,depthWrite:false}));pool.rotation.x=-Math.PI/2;pool.position.set(0,.63,1.3);spot.add(cone,pool)}
   let mi=fam.findIndex(f=>/^(bibs|marie)/.test(norm(f.name)));if(mi<0)mi=fam.findIndex(f=>f.build==="top");
-  if(BD&&mi>=0){const others=chars.map((c,i)=>i).filter(i=>i!==mi);chars[mi].home.set(0,.6,1.5);[[-2.7,.6,.1],[0,.6,-.9],[2.7,.6,.1]].forEach((p,k)=>{if(others[k]!=null)chars[others[k]].home.set(...p)});
+  if(BD&&mi>=0){chars[mi].home.set(0,.6,1.3);const by=n=>chars.findIndex((c,i)=>i!==mi&&new RegExp("^"+n).test(norm(fam[i].name)));const slot=[[-3.05,.6,.2],[-1.55,.6,.35],[1.55,.6,.35]];
+    const order=[by("bøh|boh"),by("bulle"),by("båbe|babe")];chars.forEach((c,i)=>{if(i!==mi&&!order.includes(i))order[order.indexOf(-1)]=i});order.forEach((ix,k)=>{if(ix>=0&&slot[k])chars[ix].home.set(...slot[k])});
     const cr=new T.Group();const ring=part(new T.CylinderGeometry(.34,.38,.18,20,1,true),"#ffd23f",1.04,{side:T.DoubleSide});cr.add(ring);for(let i=0;i<6;i++){const sp=part(new T.ConeGeometry(.07,.22,6),"#ffd23f");const a=i/6*Math.PI*2;sp.position.set(Math.cos(a)*.34,.18,Math.sin(a)*.34);cr.add(sp);const j=new T.Mesh(new T.SphereGeometry(.05,8,6),toon(["#ff3fa4","#00b8ff"][i%2]));j.position.set(Math.cos(a)*.37,.02,Math.sin(a)*.37);cr.add(j)}
     cr.position.y=.66;cr.rotation.x=-.12;chars[mi].head.add(cr)}
   // skyer til flyveturen og en støvring til landingen
@@ -2279,20 +2282,20 @@ function stageShow(onEnd,mode){
     chars.forEach((c,i)=>{c.shirt.concat(c.sleeve).forEach(m=>m.material.color.set(e.cos[i]));hairFor(c,i,e.hair,e.cos);c.skate.forEach(s=>s.visible=e.dance==="skate")})};
   let baseFov=50;const resize=()=>{R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;baseFov=cam.fov=cam.aspect<1?66:48;cam.updateProjectionMatrix()};resize();addEventListener("resize",resize);
   // tidslinje og lyd
-  const segs=BD?[{k:"dark",d:1300},{k:"era",d:ERAS[0].d,e:ERAS[0],j:0},{k:"open",d:OPEN_D},{k:"fly",d:FLY_D},{k:"era",d:ERAS[1].d,e:ERAS[1],j:1},{k:"card",d:CARD_D},{k:"fin",d:FIN_D}]
+  const segs=BD?[{k:"dark",d:1300},{k:"era",d:ERAS[0].d,e:ERAS[0],j:0},{k:"gate",d:180000},{k:"open",d:OPEN_D},{k:"fly",d:FLY_D},{k:"era",d:ERAS[1].d,e:ERAS[1],j:1},{k:"card",d:CARD_D},{k:"fin",d:FIN_D}]
     :[{k:"open",d:OPEN_D},{k:"fly",d:FLY_D}].concat(ERAS.map((e,j)=>({k:"era",d:e.d||ERA_D,e,j}))).concat([{k:"fin",d:FIN_D}]);
   let si=-1,segStart=performance.now(),ended=false,raf=0,cur=null;const t0=performance.now();introBus();
   const cap=el.querySelector(".st-cap"),title=el.querySelector(".st-title"),flash=el.querySelector(".st-flash");
   // lyd: to afspillere på skift. Den ene er spillets egen sang-afspiller, som telefonen allerede har låst op.
   const HK=store("disco.hook")||{};
-  const tr=ERAS.map(e=>({e,url:null,at:null,id:"show:"+e.song.join("-")}));const card=el.querySelector(".bd-card");
+  const tr=ERAS.map(e=>({e,url:null,at:e.from0?0:null,id:"show:"+e.song.join("-")}));const card=el.querySelector(".bd-card");
     PREV.unlock();BGM.unlock();const AP=[PREV.el,BGM.el];let ai=0,playing=null,prepped=null;
-  tr.forEach(x=>{if(HK[x.id]!=null)x.at=HK[x.id]});
+  tr.forEach(x=>{if(HK[x.id]!=null&&!x.e.from0)x.at=HK[x.id]});
   const analyse=async x=>{if(x.at!=null)return;try{const ctx=ac();if(!ctx)return;const r=await fetch(x.url);if(!r.ok)return;const buf=await r.arrayBuffer();const au=await new Promise((ok,no)=>ctx.decodeAudioData(buf,ok,no));
       const d=au.getChannelData(0),w=Math.floor(au.sampleRate/4),n=Math.floor(d.length/w),en=[];for(let i=0;i<n;i++){let q=0;for(let k=i*w;k<(i+1)*w;k+=16)q+=d[k]*d[k];en.push(q)}
       const win=Math.round(ERA_D/250);let best=-1,bi=0;for(let i=0;i+win<=n;i++){let q=0;for(let k=i;k<i+win;k++)q+=en[k];if(q>best){best=q;bi=i}}
       x.at=Math.max(0,Math.min(22,bi/4-.3));HK[x.id]=x.at;store("disco.hook",HK)}catch(e){}};
-  if(PREV.ok!==false)tr.filter(x=>!x.e.synth).forEach(x=>PREV.lookup({id:x.id,main:x.e.song[0],title:x.e.song[1]}).then(u=>{x.url=u||null;if(u&&!ended)analyse(x)}));
+  if(PREV.ok!==false)tr.filter(x=>!x.e.synth).forEach(x=>PREV.lookup({id:x.id,main:x.e.song[0],title:x.e.song[1],full:!!x.e.full}).then(u=>{x.url=u||null;if(u&&!ended)analyse(x)}));
   const ramp=(a,to,ms,stop)=>{clearInterval(a._f);const from=a.volume,t1=performance.now();a._f=setInterval(()=>{const q=Math.min(1,(performance.now()-t1)/ms);try{a.volume=Math.max(0,Math.min(1,from+(to-from)*q))}catch(e){}if(q>=1){clearInterval(a._f);if(stop){try{a.pause()}catch(e){}}}},30)};
   const stopSong=ms=>{if(playing){ramp(playing,0,ms,true);playing=null}};
   const seekTo=(a,t)=>{const go=()=>{try{a.currentTime=t}catch(e){}};if(a.readyState>=1)go();else a.addEventListener("loadedmetadata",go,{once:true})};
@@ -2304,9 +2307,11 @@ function stageShow(onEnd,mode){
     if(a.readyState>=1){try{a.currentTime=x.at||0}catch(e){}}a.volume=1;a.muted=false;if(a.paused){const p=a.play();if(p)p.catch(()=>eraMusic(x.e.era,now(),(x.e.d||ERA_D)/1000))}playing=a};
   const startSeg=()=>{si++;if(si>=segs.length)return end(false);const sg=segs[si];segStart=performance.now();flash.classList.remove("on");
     if(sg.k==="dark"){cur=ERAS[0];dressEra({...cur,props:[]});chars.forEach(c=>c.root.visible=false);tonearm.visible=false;vinyl.visible=false;cap.classList.remove("on");title.className="st-title"}
+    else if(sg.k==="gate"){stopSong(500);cur=ERAS[1];dressEra({...cur,props:[],sky:["#000000","#000000"],floor:"#000000"});chars.forEach(c=>c.root.visible=false);cap.classList.remove("on");title.className="st-title";
+      const gt=el.querySelector(".bd-gate");gt.hidden=false;gt.querySelector("button").onclick=e=>{e.stopPropagation();gt.querySelector("button").onclick=null;audioPlayback();KEEP.on();try{const a2=ac();a2&&a2.resume&&a2.resume()}catch(x){}PREV.unlock();
+        clearTimeout(startSeg.t);flash.classList.add("blk","on");setTimeout(()=>{gt.hidden=true;startSeg()},350)}}
     else if(sg.k==="open"&&BD){stopSong(450);cur=ERAS[1];dressEra({...cur,props:["cake"],sky:["#05020a","#140a24"],floor:"#0d0818"});chars.forEach(c=>c.root.visible=false);tonearm.visible=false;vinyl.visible=false;
-      title.innerHTML=`<h1 class="i-big">Er I klar til den rigtige fest?</h1>`;title.className="st-title on top";
-      setTimeout(()=>{if(!ended){title.className="st-title";setTimeout(()=>{title.innerHTML=`<p class="i-kicker">13. november 2026</p><h1 class="i-big">${esc(BDAY.name)} bliver ${BDAY.age}</h1>`;title.className="st-title on top"},350)}},2600);
+      title.className="st-title";setTimeout(()=>{if(!ended){title.innerHTML=`<p class="i-kicker">13. november 2026</p><h1 class="i-big">${esc(BDAY.name)} bliver ${BDAY.age}</h1>`;title.className="st-title on top"}},700);
       eraMusic("bdintro",now(),(OPEN_D+FLY_D)/1000)}
     else if(sg.k==="open"){cur=ERAS[0];dressEra({...cur,props:[],sky:["#05020a","#140a24"],floor:"#0d0818"});chars.forEach(c=>c.root.visible=false);tonearm.visible=true;
       title.className="st-title";setTimeout(()=>{title.innerHTML=`<p class="i-kicker">${esc(fam.map(f=>f.name).join(" · "))} præsenterer</p><h1 class="i-big">Musikkens historie</h1>`;title.className="st-title on"},2300);
@@ -2317,7 +2322,7 @@ function stageShow(onEnd,mode){
       const typer=setInterval(()=>{if(ended||segs[si]!==sg){clearInterval(typer);return}n=Math.min(txt.length,n+2);msg.textContent=txt.slice(0,n);if(n>=txt.length){clearInterval(typer);card.classList.add("done")}},38);
       card.querySelector(".bd-next").onclick=e=>{e.stopPropagation();card.querySelector(".bd-next").onclick=null;clearTimeout(startSeg.t);flash.classList.add("on");setTimeout(startSeg,300)}}
     else if(sg.k==="era"){cur=sg.e;title.className="st-title";dressEra(cur);clouds.visible=false;vinyl.visible=false;tonearm.visible=false;chars.forEach(c=>c.root.visible=true);
-      cap.classList.remove("on");void cap.offsetWidth;if(!cur.nocap)cap.classList.add("on");if(cur.dance==="prank")chars.forEach(c=>c.root.visible=false);cap.querySelector(".st-dec").textContent=cur.dec;cap.querySelector(".st-gim").textContent=cur.gimmick;cap.querySelector(".st-song").textContent=`${cur.song[0]} · ${cur.song[1]}`;
+      cap.classList.remove("on");void cap.offsetWidth;if(!cur.nocap)cap.classList.add("on");if(cur.dance==="prank")chars.forEach(c=>c.root.visible=false);cap.querySelector(".st-dec").textContent=cur.dec;cap.querySelector(".st-gim").textContent=cur.gimmick;cap.querySelector(".st-song").textContent=cur.cap||`${cur.song[0]} · ${cur.song[1]}`;
       cap.querySelector(".st-note").textContent=tr[sg.j].url||cur.synth?"":"Den rigtige sang spiller på jeres egen side";setTimeout(()=>{if(!ended)V.kick(now(),.3)},400)}
     else if(BD){card.hidden=true;cap.classList.remove("on");stopSong(700);Object.values(P).forEach(g=>g.visible=false);["balloons","twenty","cake","gifts"].forEach(n=>P[n].visible=true);paintSky("#2a0845","#ff6fb5");
       title.innerHTML=`<h1 class="i-big">Tillykke, ${esc(BDAY.name)}!</h1><p class="i-kicker">Hvad skal vi spille?</p>`;title.className="st-title on top";
@@ -2325,7 +2330,7 @@ function stageShow(onEnd,mode){
     else{cap.classList.remove("on");stopSong(700);Object.values(P).forEach(g=>g.visible=false);["notes","records","flowers","smileys","floppy","phones","earbuds"].forEach(n=>P[n].visible=true);paintSky("#22074a","#ff3fa4");
       title.innerHTML=`${ballHTML(110)}<h1 class="i-logo">DISKO</h1><p class="i-kicker">${SONGS.length} sange. Kan I dem alle?</p>`;title.className="st-title on";setTimeout(spinBalls,30);
       eraMusic("dfinale",now(),FIN_D/1000);setTimeout(()=>shout("Music time!",false,"en-US"),500);confetti(200,.3)}
-    clearTimeout(startSeg.p);clearTimeout(startSeg.q);const nx=segs[si+1];if(nx&&nx.k==="era")startSeg.q=setTimeout(()=>{if(!ended)prep(nx.j)},sg.d-900);if(nx&&(nx.k!=="fly"||BD)&&sg.k!=="card")startSeg.p=setTimeout(()=>{if(ended)return;flash.classList.toggle("blk",BD&&(sg.k==="dark"||nx.k==="open"));flash.classList.add("on");V.noise(now(),.38,.09,{f:500,f2:7000,q:1,wet:.3});if(nx.k==="era")playEra(nx.j)},sg.d-320);
+    clearTimeout(startSeg.p);clearTimeout(startSeg.q);const nx=segs[si+1];if(nx&&nx.k==="era")startSeg.q=setTimeout(()=>{if(!ended)prep(nx.j)},sg.d-900);if(nx&&(nx.k!=="fly"||BD)&&sg.k!=="card"&&sg.k!=="gate")startSeg.p=setTimeout(()=>{if(ended)return;flash.classList.toggle("blk",BD&&(sg.k==="dark"||nx.k==="open"||nx.k==="gate"));flash.classList.add("on");V.noise(now(),.38,.09,{f:500,f2:7000,q:1,wet:.3});if(nx.k==="era")playEra(nx.j)},sg.d-320);
     clearTimeout(startSeg.t);startSeg.t=setTimeout(startSeg,sg.d)};
   const camTo=(x,y,z,lx,ly,lz)=>{cam.position.set(x,y,z);cam.lookAt(lx,ly,lz)};
   const tmp=new T.Vector3(),tmp2=new T.Vector3();
@@ -2346,11 +2351,11 @@ function stageShow(onEnd,mode){
         root.position.set(c.home.x*spread,y,c.home.z+(v>.26&&v<.52?Math.sin(time*1.3+i)*.8:0));root.rotation.set(rx,0,rz);cy+=y/chars.length});
       const a0=Math.min(1,u/.12),a1=Math.min(1,Math.max(0,(u-.9)/.1)),lp=(p,q,z)=>p+(q-p)*z;
       const fx=Math.sin(L*.8)*2.5,fy=cy+2.4,fz=9.5+Math.sin(L)*.8;camTo(lp(lp(0,fx,a0),Math.sin(time*.4)*6,a1),lp(lp(5.6,fy,a0),3.4,a1),lp(lp(10,fz,a0),12,a1),0,lp(lp(1.5,cy,a0),2,a1),0);}
-    else if(sg.k==="card"){camTo(Math.sin(time*.18)*4.5,3.4,9.5,0,2.6,1.2);chars.forEach((c,i)=>{const r=c.root;r.visible=true;r.scale.set(1,1,1);r.rotation.set(0,0,0);c.hips.rotation.set(0,0,0);c.neck.rotation.set(0,0,0);const sw=Math.sin(time*1.6+i);
-        if(i===mi){r.position.set(0,.6,1.5);setArm(c,0,.3,1.2,1.9);setArm(c,1,.3,1.2,1.9);r.rotation.z=sw*.04}else{const h=c.home;r.position.set(h.x*.62,.6,h.z+.6);r.rotation.y=Math.atan2(-h.x,1.5-h.z)*.6;setArm(c,0,1.1+sw*.15,.6,.5);setArm(c,1,1.1-sw*.15,.6,.5)}setLeg(c,0,0,0);setLeg(c,1,0,0)})}
+    else if(sg.k==="card"){camTo(Math.sin(time*.18)*1.2,3.8,11.5,0,2.5,.6);chars.forEach((c,i)=>{const r=c.root;r.visible=true;r.scale.set(1,1,1);r.rotation.set(0,0,0);c.hips.rotation.set(0,0,0);c.neck.rotation.set(0,0,0);const sw=Math.sin(time*1.6+i);
+        if(i===mi){r.position.set(0,.6,1.3);setArm(c,0,.3,1.2,1.9);setArm(c,1,.3,1.2,1.9);r.rotation.z=sw*.04}else{const h=c.home;r.position.set(h.x,.6,h.z);r.rotation.y=-h.x*.12;setArm(c,0,1.1+sw*.15,.6,.5);setArm(c,1,1.1-sw*.15,.6,.5)}setLeg(c,0,0,0);setLeg(c,1,0,0)})}
     else if(sg.k==="era"){const e=cur,st=e.dance;
       // kamera pr. årti
-      const shots={twist:[Math.sin(time*.4)*6,3.4,12-k*1.5,0,2,0],float:[-8+k*6,5,12,0,4,-2],skate:[Math.sin(time*.5)*11,5,Math.cos(time*.5)*11,0,1.6,0],robot:[0,2.6+k*1.5,11.5,0,2.3,0],bounce:[8-k*4,3+k*3,10,0,3,0],shuffle:[-4,3,11-k,0,2.2,0],selfie:[0,3.2,9.5+k*2,0,2.6,0],drones:[Math.sin(time*.3)*7,4+k*4,11,0,3+k*2,0],prank:[Math.sin(time*.3)*1.6,2.7,10.5-k*1.2,0,2.1,1.3],bday:[Math.sin(time*.25)*6,3.9,11+Math.cos(time*.25)*1.5,0,2.4,.6],croc:[Math.sin(time*.35)*4,3,12,.4,1.9,1.2]}[st];camTo(...shots);
+      const shots={twist:[Math.sin(time*.4)*6,3.4,12-k*1.5,0,2,0],float:[-8+k*6,5,12,0,4,-2],skate:[Math.sin(time*.5)*11,5,Math.cos(time*.5)*11,0,1.6,0],robot:[0,2.6+k*1.5,11.5,0,2.3,0],bounce:[8-k*4,3+k*3,10,0,3,0],shuffle:[-4,3,11-k,0,2.2,0],selfie:[0,3.2,9.5+k*2,0,2.6,0],drones:[Math.sin(time*.3)*7,4+k*4,11,0,3+k*2,0],prank:[Math.sin(time*.3)*1.6,2.7,10.5-k*1.2,0,2.1,1.3],bday:[Math.sin(time*.25)*1.4,4,12.4,0,2.3,.4],croc:[Math.sin(time*.35)*4,3,12,.4,1.9,1.2]}[st];camTo(...shots);
       chars.forEach((c,i)=>{const bt=beat+i*.25,s1=Math.sin(bt*Math.PI),ab=Math.abs(s1),on=Math.floor(bt)%2,root=c.root;root.scale.set(1,1,1);root.rotation.set(0,0,0);c.hips.rotation.set(0,0,0);c.neck.rotation.set(0,0,0);
         if(st==="twist"){root.position.set(c.home.x+Math.sin(time*1.5+i)*.5,.6+ab*.1,c.home.z);c.hips.rotation.y=s1*.7;setArm(c,0,.9,.6,1.5);setArm(c,1,.9,.6,1.5);setLeg(c,0,.3,.6);setLeg(c,1,.3,.6);c.neck.rotation.y=-s1*.4}
         if(st==="float"){const a=time*.6+i*Math.PI/2;root.position.set(Math.cos(a)*4.2,3.5+Math.sin(time*1.3+i)*1.2,Math.sin(a)*2.4-1);root.rotation.set(Math.sin(time+i)*.4,-a,Math.sin(time*.7+i)*.5);setArm(c,0,1.4+s1*.3,.2,.2);setArm(c,1,1.4-s1*.3,.2,.2);setLeg(c,0,.4,.6);setLeg(c,1,-.2,.3)}
@@ -2361,8 +2366,8 @@ function stageShow(onEnd,mode){
         if(st==="shuffle"){root.position.set(c.home.x+Math.sin(time*2+i)*.6,.6+ab*.15,c.home.z);setLeg(c,0,on?.8:0,on?.3:0);setLeg(c,1,on?0:.8,on?0:.3);setArm(c,0,.4,on?1.2:.2,1.2);setArm(c,1,.4,on?.2:1.2,1.2);c.hips.rotation.y=Math.sin(bt*Math.PI*.5)*.4}
         if(st==="selfie"){root.position.set(c.home.x*.8,.6+ab*.1,c.home.z+1.2);root.rotation.y=Math.sin(time+i)*.2;if(i===1){setArm(c,1,1.2,1.9,.1)}else setArm(c,1,1.4+s1*.4,.3,.3);setArm(c,0,.8,.2,1.6);setLeg(c,0,0,0);setLeg(c,1,.2,.4);c.neck.rotation.z=s1*.15;
           if(Math.floor(time*1.2)%3===0&&b2<.05&&i===1){confetti(20,.4)}}
-        if(st==="bday"){if(i===mi){root.position.set(0,.6+ab*.3,1.5);root.rotation.y=Math.sin(time*.8)*.35;setArm(c,0,2.6+s1*.3,0,.3);setArm(c,1,2.6-s1*.3,0,.3);setLeg(c,0,ab*.3,ab*.5);setLeg(c,1,ab*.3,ab*.5)}
-          else{const a=time*.45+i*2.1,x=Math.cos(a)*2.9,z=Math.sin(a)*1.6+.9;root.position.set(x,.6+ab*.12,z);root.rotation.y=Math.atan2(-x,1.5-z);setArm(c,0,2.1+s1*.5,.2,.4);setArm(c,1,2.1-s1*.5,.2,.4);setLeg(c,0,on?.4:0,on?.5:0);setLeg(c,1,on?0:.4,on?0:.5)}}
+        if(st==="bday"){const h=c.home;if(i===mi){root.position.set(0,.6+ab*.3,h.z);root.rotation.y=Math.sin(time*.8)*.3;setArm(c,0,2.6+s1*.3,0,.3);setArm(c,1,2.6-s1*.3,0,.3);setLeg(c,0,ab*.3,ab*.5);setLeg(c,1,ab*.3,ab*.5)}
+          else{root.position.set(h.x+Math.sin(time*1.3+i)*.12,.6+ab*.14,h.z);root.rotation.y=-h.x*.08+Math.sin(time*1.1+i)*.15;setArm(c,0,2.1+s1*.5,.2,.4);setArm(c,1,2.1-s1*.5,.2,.4);setLeg(c,0,on?.4:0,on?.5:0);setLeg(c,1,on?0:.4,on?0:.5)}}
         if(st==="croc"){const sn=Math.abs(Math.sin(beat*Math.PI));const h=c.home;root.position.set(h.x*1.05,.6+sn*.12,h.z+(i===mi?.2:.6));c.hips.rotation.y=Math.sin(beat*Math.PI*.5)*.35;setArm(c,1,.12,1.57+.55*sn,0);setArm(c,0,.12,1.57-.55*sn,0);setLeg(c,0,.25*sn,.5*sn);setLeg(c,1,.25*sn,.5*sn)}
         if(st==="drones"){const lift=Math.min(1,k*1.6);root.position.set(c.home.x*1.2,.6+lift*(3+i*.6)+Math.sin(time*2+i)*.2,c.home.z);setArm(c,0,2.9,0,.2);setArm(c,1,2.9,0,.2);setLeg(c,0,.2+s1*.3,.4);setLeg(c,1,.2-s1*.3,.4);root.rotation.z=Math.sin(time+i)*.1;
           const d=P.drones.getObjectByName("drone"+i);if(d){d.position.set(root.position.x,root.position.y+3.4,root.position.z);d.children.forEach(r=>{if(r.name==="rot")r.rotation.y+=.8})}}
@@ -2385,10 +2390,11 @@ function stageShow(onEnd,mode){
       if(P.cds.visible)P.cds.children.forEach(d=>{d.rotation.y+=.1;d.position.y=.7+Math.max(0,Math.sin(beat*Math.PI+d.userData.a))*.3});
       if(P.floppy.visible)P.floppy.children.forEach(f=>{f.rotation.y+=.02*f.userData.s;f.rotation.x+=.01});
       if(P.mp3.visible)P.mp3.rotation.y=Math.sin(time)*.5}
-    if(BD){const prank=sg.k==="era"&&cur&&cur.dance==="prank";spot.visible=prank||sg.k==="dark";if(P.croc.visible){if(prank){P.croc.position.x=Math.sin(time*1.1)*1.2;P.croc.position.z=1.3;P.croc.scale.setScalar(1.45);P.croc.rotation.y=Math.sin(time*.9)*.6}else{P.croc.position.set(3.1,P.croc.position.y,2.5);P.croc.scale.setScalar(1.1);P.croc.rotation.y=-.5}}if(P.cake.visible&&sg.k!=="open"){P.cake.position.set(-3.6,.6,2.3);P.cake.scale.setScalar(.85);P.cake.rotation.y=.35}if(P.cake.visible)P.cake.userData.fl.forEach((f,j)=>f.scale.setScalar(.85+Math.sin(time*18+j*1.7)*.15));
+    if(BD){const prank=sg.k==="era"&&cur&&cur.dance==="prank";spot.visible=prank||sg.k==="dark";if(P.croc.visible){if(prank){P.croc.position.x=Math.sin(time*1.1)*1.2;P.croc.position.z=1.3;P.croc.scale.setScalar(1.45);P.croc.rotation.y=Math.sin(time*.9)*.6}else{P.croc.position.set(3.15,P.croc.position.y,1.9);P.croc.scale.setScalar(.85);P.croc.rotation.y=-.45}}if(P.cake.visible&&sg.k!=="open"){P.cake.position.set(-3.3,.6,2.6);P.cake.scale.setScalar(.6);P.cake.rotation.y=.35}if(P.cake.visible)P.cake.userData.fl.forEach((f,j)=>f.scale.setScalar(.85+Math.sin(time*18+j*1.7)*.15));
       if(P.balloons.visible)P.balloons.children.forEach(b=>{b.position.y+=.012*b.userData.sp;if(b.position.y>16)b.position.y=-1;b.rotation.z=Math.sin(time+b.userData.ph)*.15});
       if(P.twenty.visible){const sp=P.twenty.userData.sp;sp.material.rotation=Math.sin(time*.8)*.05;sp.scale.set(10+Math.sin(time*2)*.3,7.8+Math.sin(time*2)*.25,1)}
       if(P.croc.visible){const u=P.croc.userData,sn=Math.abs(Math.sin(beat*Math.PI));u.jaw.rotation.x=sn*.55;u.head.rotation.y=Math.sin(beat*Math.PI*.5)*.3;u.body.rotation.z=Math.sin(beat*Math.PI)*.12;P.croc.position.y=.6+sn*.15*(prank?2:1);u.arms.forEach((a,j)=>a.rotation.x=-1.2-(j?sn:-sn)*.5);u.legs.forEach((l,j)=>l.rotation.x=(j?1:-1)*Math.sin(beat*Math.PI)*.4);u.tail.rotation.y=Math.sin(time*5)*.5}}
+    else if(BD){camTo(Math.sin(time*.3)*1.2,4,12.4,0,2.6,.4);chars.forEach((c,i)=>{const r=c.root,h=c.home,j=Math.abs(Math.sin(time*3.2+i*.7));r.visible=true;r.rotation.set(0,-h.x*.08,0);r.position.set(h.x,.6+j*1.1,h.z);setArm(c,0,2.7,0,.2);setArm(c,1,2.7,0,.2);setLeg(c,0,j*.4,j*.8);setLeg(c,1,j*.4,j*.8)})}
     else{camTo(Math.sin(time*.4)*9,4,12,0,3,0);chars.forEach((c,i)=>{const a=time*.8+i*Math.PI/2;c.root.position.set(Math.cos(a)*3,.6+Math.abs(Math.sin(time*3+i))*1.2,Math.sin(a)*2);c.root.rotation.set(0,-a,0);setArm(c,0,2.7,0,.2);setArm(c,1,2.7,0,.2)});
       [P.notes,P.records,P.flowers,P.smileys,P.floppy,P.phones,P.earbuds].forEach(g=>g.children.forEach((n,j)=>{const a=time*.5+j;n.position.x+=Math.cos(a)*.03;n.rotation.y+=.03}))}
     // labradoren løber rundt om familien, flyver med og lander
@@ -2414,7 +2420,7 @@ const SEEN_INTRO={};
 function hubView(){
   setTheme("who");BGM.play("hub").then(ok=>{if(!ok&&THEME.want&&ac()&&S.view==="hub")THEME.start()});
   app.innerHTML=`<div class="row" style="justify-content:flex-end;gap:6px"><button class="iconbtn" id="thm">${THEME.want?"Tema til":"Tema fra"}</button>${muteBtn()}</div>
-  <div class="hub"><div class="hub-head"><h1>Hjemmebane</h1><span class="k">SPIL, DER KUN GIVER MENING MED JERES FAMILIE</span></div>
+  <div class="hub"><div class="hub-head"><h1>Hjemmebane</h1><span class="k">SPIL, DER KUN GIVER MENING MED JERES FAMILIE</span></div><span class="hub-ver">Version 19</span>
     <button class="hub-card hub-sk" id="h-sk"><span class="hk-logo">Skyldig!</span><span class="hk-txt">Dommeren vælger i hemmelighed. Resten gætter, hvem det passer på.</span><span class="hk-meta">3 til 8 spillere · hver sin telefon eller én</span></button>
     <button class="hub-card hub-dz" id="h-dz">${ballHTML(70)}<span class="hk-logo">DISKO</span><span class="hk-txt">Musikquiz og bingo med ${SONGS.length} sange fra 1939 til i dag.</span><span class="hk-meta">En DJ og alle andre på hver sin telefon</span></button>
     ${bdayToday()||S.bdayPreview?`<button class="hub-tool hub-bd" id="h-bd"><div><b>Tillykke, ${esc(BDAY.name)}!</b><span>Se fødselsdagsshowet igen</span></div><i aria-hidden="true">›</i></button>`:""}<div class="hub-tools"><button class="hub-tool" id="h-studio"><div><b>Familiestudiet</b><span>Jeres navne, rejser og egne spørgsmål</span></div><i aria-hidden="true">›</i></button></div>
