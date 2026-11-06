@@ -456,6 +456,7 @@ button.dopt{cursor:pointer;font-family:"Baloo 2",system-ui,sans-serif}
 .nchips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:6px 0 10px;width:100%}.nchip{font:inherit;font-weight:900;font-size:15px;padding:13px 2px;border-radius:14px;border:3px solid var(--c);background:transparent;color:inherit;cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis}.nchip.on{background:var(--c);color:#1a1035;box-shadow:0 4px 0 #1a1035}.nchips.dz .nchip{color:#1a1035}
 .hub-ver{position:fixed;left:10px;bottom:8px;font-size:11px;opacity:.45;pointer-events:none}.bd-gate[hidden],.bd-card[hidden]{display:none!important}.bd-gate{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 55%,rgba(0,0,0,.15),rgba(0,0,0,.6));z-index:5;padding:16px}.bd-gate{opacity:0;transition:opacity .6s}.bd-gate.show{opacity:1}.bd-gate .bd-go{font-size:22px;max-width:320px;line-height:1.25}
 .bd-vwrap{position:fixed;inset:0;z-index:310;background:#000;display:grid;place-items:center;transition:opacity .6s}.bd-vwrap.out{opacity:0}.bd-video{width:100%;height:100%;object-fit:contain;background:#000}
+.bd-card.vid{padding:14px}.bd-hv{width:100%;max-height:46vh;border-radius:14px;background:#000;display:block;margin:8px 0 10px;object-fit:contain}.bd-next.pulse{animation:bpulse .7s ease-in-out infinite alternate}
 .st-note{font-size:12px;color:#fff;opacity:.75}
 .st-flash{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 45%,#fff 0%,rgba(255,255,255,.85) 45%,rgba(255,220,250,.6));opacity:0;transition:opacity .4s ease-out}
 .st-flash.blk{background:#000}
@@ -1332,7 +1333,9 @@ function studioView(){
     <div class="col-stack" style="gap:10px">${S.lp.map((p,i)=>`<div class="entry" style="align-items:center"><label class="selfie">${av(p,"l")}<span class="cam">FOTO</span><input type="file" accept="image/*" capture="user" data-fsf="${i}" aria-label="Selfie til ${esc(p.name)}"></label><div class="col-stack" style="gap:6px;flex:1;min-width:0"><input type="text" data-fn="${i}" value="${esc(p.name)}" maxlength="16" aria-label="Navn"><select data-fb="${i}" aria-label="Kropsbygning" style="width:100%">${Object.entries(BUILDS).map(([k,v])=>`<option value="${k}"${(p.build||defBody(p.name).b)===k?" selected":""}>${v}</option>`).join("")}</select><div class="row" style="gap:6px;flex-wrap:nowrap;align-items:center"><input type="number" data-fh="${i}" value="${+p.height||defBody(p.name).h}" min="100" max="220" inputmode="numeric" aria-label="Højde i cm" style="width:78px"><span class="muted" style="font-size:13px">cm</span></div></div><button class="x" data-fdel="${i}" aria-label="Fjern">×</button></div>`).join("")}</div>
     ${S.lp.length<8?`<button class="btn gold sm" id="fadd" style="width:100%">Tilføj person</button>`:""}<p class="muted" style="font-size:13px">Billederne gemmes kun på denne telefon.</p>
     <div class="lbl" style="margin-top:18px">Åbningsvideo til ${esc(BDAY.name)}s fødselsdag</div><p class="muted" style="font-size:13px">Spiller i fuld skærm, lige når I trykker "Tryk for at starte festen". Gemmes kun på denne telefon, så vis showet herfra.</p>
-    <p id="vstat" class="muted" style="font-size:13px">Tjekker…</p><label class="upl btn gold sm" style="width:100%">Vælg video<input type="file" id="vfile" accept="video/*"></label><button class="link" id="vdel" hidden>Fjern videoen</button>`}
+    <p id="vstat" class="muted" style="font-size:13px">Tjekker…</p><label class="upl btn gold sm" style="width:100%">Vælg video<input type="file" id="vfile" accept="video/*"></label><button class="link" id="vdel" hidden>Fjern videoen</button>
+    <div class="lbl" style="margin-top:18px">Din hilsen som video</div><p class="muted" style="font-size:13px">Vises på hilsen-kortet i stedet for teksten. Gemmes kun på denne telefon.</p>
+    <p id="hstat" class="muted" style="font-size:13px">Tjekker…</p><label class="upl btn gold sm" style="width:100%">Vælg hilsen-video<input type="file" id="hfile" accept="video/*"></label><button class="link" id="hdel" hidden>Fjern hilsen-videoen</button>`}
   if(t==="trips")body=`<p class="muted">Skriv sted og år. Spillet laver selv runderne: "Toscana 2013: Hvem blev solskoldet først?" og "Hvilket år var vi i Toscana?". Globussen flyver derhen.</p>
     ${globeHTML("sg",false,"")}${list(PACK.trips,e=>`<b>${esc(e.place)}</b><small>${esc(e.year||"")}</small>`)}
     <form id="f" class="col-stack" style="gap:8px"><input type="text" id="a" list="placelist" placeholder="Sted eller land, fx Toscana eller Italien" required autocomplete="off"><datalist id="placelist">${PLACES.map(p=>`<option value="${esc(p[0])}">`).join("")}${Object.keys(DK_COUNTRY).map(k=>`<option value="${esc(k)}">`).join("")}</datalist><input type="number" id="b" placeholder="År, fx 2013" inputmode="numeric" min="1950" max="2030"><button class="btn gold sm" style="width:100%">Tilføj rejse</button><p class="err" id="ferr" hidden></p></form>`;
@@ -1353,6 +1356,9 @@ function studioView(){
     const vs=$("#vstat"),vd=$("#vdel"),vf=$("#vfile");const vshow=b=>{if(!vs)return;vs.textContent=b?`Video valgt (${(b.size/1048576).toFixed(1)} MB). Den spiller først i showet.`:"Ingen video valgt endnu.";if(vd)vd.hidden=!b};VIDDB.get("bday").then(vshow);
     if(vf)vf.onchange=async()=>{const f=vf.files[0];if(!f)return;vs.textContent="Gemmer…";try{await VIDDB.set("bday",f);SFX.coin();vshow(f)}catch(e){vs.textContent="Kunne ikke gemme videoen. Prøv en kortere video."}};
     if(vd)vd.onclick=async()=>{await VIDDB.set("bday",null);vshow(null)};
+    const hs=$("#hstat"),hd=$("#hdel"),hf=$("#hfile");const hshow=b=>{if(!hs)return;hs.textContent=b?`Hilsen-video valgt (${(b.size/1048576).toFixed(1)} MB). Den erstatter teksten.`:"Ingen hilsen-video. Teksten vises i stedet.";if(hd)hd.hidden=!b};VIDDB.get("hilsen").then(hshow);
+    if(hf)hf.onchange=async()=>{const f=hf.files[0];if(!f)return;hs.textContent="Gemmer…";try{await VIDDB.set("hilsen",f);SFX.coin();hshow(f)}catch(e){hs.textContent="Kunne ikke gemme videoen. Prøv en kortere video."}};
+    if(hd)hd.onclick=async()=>{await VIDDB.set("hilsen",null);hshow(null)};
     app.querySelectorAll("[data-fsf]").forEach(inp=>inp.onchange=async()=>{if(!inp.files[0])return;try{S.lp[+inp.dataset.fsf].photo=await resizeImage(inp.files[0],200);save();SFX.coin();render()}catch(e){}});
     app.querySelectorAll("[data-fn]").forEach(inp=>inp.onchange=()=>{const v=inp.value.trim();if(v){S.lp[+inp.dataset.fn].name=v;save()}});app.querySelectorAll("[data-fb]").forEach(x=>x.onchange=()=>{S.lp[+x.dataset.fb].build=x.value;save()});app.querySelectorAll("[data-fh]").forEach(x=>x.onchange=()=>{const v=Math.round(+x.value);if(v>=100&&v<=220){S.lp[+x.dataset.fh].height=v;save()}});
     app.querySelectorAll("[data-fdel]").forEach(b=>b.onclick=()=>{if(S.lp.length<=1)return;S.lp.splice(+b.dataset.fdel,1);save();SFX.boing();render()});
@@ -2127,7 +2133,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=25;
+const APP_V=27;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
@@ -2332,6 +2338,8 @@ function stageShow(onEnd,mode){
   // lyd: to afspillere på skift. Den ene er spillets egen sang-afspiller, som telefonen allerede har låst op.
   const HK=store("disco.hook")||{};
   const tr=ERAS.map(e=>({e,url:null,at:e.from0?0:null,id:"show:"+e.song.join("-")}));const card=el.querySelector(".bd-card");
+  let hv=null;if(BD)VIDDB.get("hilsen").then(b=>{if(!b||ended)return;hv=document.createElement("video");hv.playsInline=true;hv.setAttribute("playsinline","");hv.preload="auto";hv.src=URL.createObjectURL(b);hv.className="bd-hv"});
+  const primeHv=()=>{if(!hv||hv._primed)return;hv._primed=true;try{const p=hv.play();if(p)p.then(()=>{hv.pause();hv.currentTime=0}).catch(()=>{})}catch(e){}};
     PREV.unlock();BGM.unlock();const AP=[PREV.el,BGM.el];let ai=0,playing=null,prepped=null;
   tr.forEach(x=>{if(HK[x.id]!=null&&!x.e.from0)x.at=HK[x.id]});
   const analyse=async x=>{if(x.at!=null)return;try{const ctx=ac();if(!ctx)return;const r=await fetch(x.url);if(!r.ok)return;const buf=await r.arrayBuffer();const au=await new Promise((ok,no)=>ctx.decodeAudioData(buf,ok,no));
@@ -2341,10 +2349,14 @@ function stageShow(onEnd,mode){
   if(PREV.ok!==false)tr.filter(x=>!x.e.synth).forEach(x=>{x.pending=true;PREV.lookup({id:x.id,main:x.e.song[0],title:x.e.song[1],full:!!x.e.full,tid:x.e.tid}).then(u=>{x.url=u||null;x.pending=false;if(u&&!ended)analyse(x);
     if(x.late!=null&&!ended){const j=x.late;x.late=null;const sg=segs[si];if(sg&&sg.k==="era"&&sg.j===j){x.on=false;if(u)playEra(j);else eraMusic(x.e.era,now(),Math.max(1,(sg.d-(performance.now()-segStart))/1000))}}})});
   const ramp=(a,to,ms,stop)=>{clearInterval(a._f);const from=a.volume,t1=performance.now();a._f=setInterval(()=>{const q=Math.min(1,(performance.now()-t1)/ms);try{a.volume=Math.max(0,Math.min(1,from+(to-from)*q))}catch(e){}if(q>=1){clearInterval(a._f);if(stop){try{a.pause()}catch(e){}}}},30)};
+  // under hilsenen: Happy Birthday lavt i baggrunden
+  let quietBus=null;const quietOff=(ms=600)=>{if(!quietBus||!AC)return;const q=quietBus;quietBus=null;[q.dry,q.wet].forEach(g=>{g.gain.setTargetAtTime(.0001,AC.currentTime,ms/3000);setTimeout(()=>{try{g.disconnect()}catch(e){}},ms+400)})};
+  const duckHbd=dur=>{if(playing){const a=playing,v0=a.volume;let ok=false;try{a.volume=.5;ok=Math.abs(a.volume-.5)<.02;a.volume=v0}catch(e){}if(ok){ramp(a,.16,900);return}stopSong(700)}
+    const prev=AE.dest;const b=introBus();if(!b){AE.dest=prev;return}b.dry.gain.value=.22;b.wet.gain.value=.22;quietBus=b;const passes=Math.ceil((dur+8)/15);for(let k=0;k<passes;k++)eraMusic("hbd",now()+.7+k*15.2,15);AE.dest=prev};
   const stopSong=ms=>{if(playing){playing.loop=false;ramp(playing,0,ms,true);playing=null}};
   const seekTo=(a,t)=>{const go=()=>{try{a.currentTime=t}catch(e){}};if(a.readyState>=1)go();else a.addEventListener("loadedmetadata",go,{once:true})};
   // klargør næste sang lydløst lidt før klippet, så den starter med det samme
-  const prep=j=>{const x=tr[j];if(!x||!x.url)return;ai=(!BD&&j===ERAS.length-1)?0:1-ai;const a=AP[ai];clearInterval(a._f);try{a.pause()}catch(e){}a.src=x.url;a.muted=true;a.volume=1;seekTo(a,x.at||0);const p=a.play();if(p)p.catch(()=>{});prepped={j,a}};
+  const prep=j=>{const x=tr[j];if(!x||!x.url||x.on)return;ai=(!BD&&j===ERAS.length-1)?0:1-ai;const a=AP[ai];clearInterval(a._f);try{a.pause()}catch(e){}a.src=x.url;a.muted=true;a.volume=1;seekTo(a,x.at||0);const p=a.play();if(p)p.catch(()=>{});prepped={j,a}};
   const playEra=j=>{const x=tr[j];if(x.on)return;x.on=true;stopSong(260);
     if(!x.url&&x.pending){x.late=j;x.on=false;stopSong(260);return}
     if(!x.url){eraMusic(x.e.era,now()+.32,(x.e.d||ERA_D)/1000+(BD&&j===1?(OPEN_D+FLY_D)/1000:0));return}
@@ -2354,7 +2366,7 @@ function stageShow(onEnd,mode){
     if(sg.k==="dark"){cur=ERAS[0];dressEra({...cur,props:[]});chars.forEach(c=>c.root.visible=false);tonearm.visible=false;vinyl.visible=false;cap.classList.remove("on");title.className="st-title"}
     else if(sg.k==="gate"){stopSong(60);try{DSFX.scratch()}catch(x){}flash.classList.remove("on","blk");cap.classList.remove("on");title.innerHTML=`<h1 class="i-big">Hov… forkert sang?</h1>`;title.className="st-title on top";
       const gt=el.querySelector(".bd-gate");gt.classList.remove("show");
-      setTimeout(()=>{if(ended||segs[si]!==sg)return;gt.hidden=false;requestAnimationFrame(()=>gt.classList.add("show"))},2300);gt.querySelector("button").onclick=e=>{e.stopPropagation();gt.querySelector("button").onclick=null;audioPlayback();KEEP.on();try{const a2=ac();a2&&a2.resume&&a2.resume()}catch(x){}PREV.unlock();setTimeout(()=>{if(!ended)playEra(1)},120);
+      setTimeout(()=>{if(ended||segs[si]!==sg)return;gt.hidden=false;requestAnimationFrame(()=>gt.classList.add("show"))},2300);gt.querySelector("button").onclick=e=>{e.stopPropagation();gt.querySelector("button").onclick=null;audioPlayback();KEEP.on();primeHv();try{const a2=ac();a2&&a2.resume&&a2.resume()}catch(x){}PREV.unlock();setTimeout(()=>{if(!ended)playEra(1)},120);
         clearTimeout(startSeg.t);gt.classList.remove("show");title.className="st-title";setTimeout(()=>{gt.hidden=true},700);startSeg.from=cam.position.clone();startSeg()}}
     else if(sg.k==="open"&&BD){cur=ERAS[1];dressEra({...cur,props:["cake","croc"],sky:["#000000","#0a0614"],floor:"#0d0818"});startSeg.crocX=P.croc.position.x;chars.forEach(c=>c.root.visible=false);tonearm.visible=false;vinyl.visible=false;
       title.className="st-title";setTimeout(()=>{if(!ended){title.innerHTML=`<p class="i-kicker">13. november 2026</p><h1 class="i-big">${esc(BDAY.name)} bliver ${BDAY.age}</h1>`;title.className="st-title on top"}},700);
@@ -2363,14 +2375,16 @@ function stageShow(onEnd,mode){
       title.className="st-title";setTimeout(()=>{title.innerHTML=`<p class="i-kicker">${esc(fam.map(f=>f.name).join(" · "))} præsenterer</p><h1 class="i-big">Musikkens historie</h1>`;title.className="st-title on"},2300);
       eraMusic("dintro",now(),(OPEN_D+FLY_D)/1000);setTimeout(()=>{DSFX.scratch();V.impact(now(),.45)},2200)}
     else if(sg.k==="fly"){title.className="st-title";DSFX.whoop();V.noise(now(),FLY_D/1000,.07,{f:250,f2:3000,q:.7,wet:.5})}
-    else if(sg.k==="card"){cur={...ERAS[ERAS.length-1],bpm:70};dressEra(cur);cap.classList.remove("on");stopSong(1500);eraMusic("bdcard",now()+.3,22);
-      card.hidden=false;card.querySelector(".bd-from").textContent="Kærlig hilsen "+BDAY.from;const msg=card.querySelector(".bd-msg");msg.textContent="";const txt=BDAY.msg;let n=0;
-      const typer=setInterval(()=>{if(ended||segs[si]!==sg){clearInterval(typer);return}n=Math.min(txt.length,n+2);msg.textContent=txt.slice(0,n);if(n>=txt.length){clearInterval(typer);card.classList.add("done")}},38);
-      card.querySelector(".bd-next").onclick=e=>{e.stopPropagation();card.querySelector(".bd-next").onclick=null;clearTimeout(startSeg.t);flash.classList.add("on");setTimeout(startSeg,300)}}
+    else if(sg.k==="card"){cur={...ERAS[ERAS.length-1],bpm:70};dressEra(cur);cap.classList.remove("on");duckHbd(hv&&isFinite(hv.duration)?hv.duration:40);
+      card.hidden=false;card.querySelector(".bd-from").textContent="Kærlig hilsen "+BDAY.from;const msg=card.querySelector(".bd-msg");msg.textContent="";const txt=hv?"":BDAY.msg;let n=0;
+      if(hv){card.classList.add("vid","done");msg.replaceWith(hv);hv.currentTime=0;hv.muted=false;const go2=()=>{clearTimeout(startSeg.t);const d=isFinite(hv.duration)?hv.duration*1000:CARD_D;startSeg.t=setTimeout(startSeg,d+6000)};
+        hv.onended=()=>card.querySelector(".bd-next").classList.add("pulse");const p=hv.play();if(p)p.then(go2).catch(()=>{hv.controls=true});else go2()}
+      const typer=hv?0:setInterval(()=>{if(ended||segs[si]!==sg){clearInterval(typer);return}n=Math.min(txt.length,n+2);msg.textContent=txt.slice(0,n);if(n>=txt.length){clearInterval(typer);card.classList.add("done")}},38);
+      card.querySelector(".bd-next").onclick=e=>{e.stopPropagation();card.querySelector(".bd-next").onclick=null;try{hv&&hv.pause()}catch(x){}clearTimeout(startSeg.t);flash.classList.add("on");setTimeout(startSeg,300)}}
     else if(sg.k==="era"){cur=sg.e;title.className="st-title";dressEra(cur);clouds.visible=false;vinyl.visible=false;tonearm.visible=false;chars.forEach(c=>c.root.visible=true);
       cap.classList.remove("on");void cap.offsetWidth;if(!cur.nocap)cap.classList.add("on");if(cur.dance==="prank")chars.forEach(c=>c.root.visible=false);cap.querySelector(".st-dec").textContent=cur.dec;cap.querySelector(".st-gim").textContent=cur.gimmick;cap.querySelector(".st-song").textContent=cur.cap||`${cur.song[0]} · ${cur.song[1]}`;
       cap.querySelector(".st-note").textContent=tr[sg.j].url||cur.synth?"":"Den rigtige sang spiller på jeres egen side";setTimeout(()=>{if(!ended)V.kick(now(),.3)},400)}
-    else if(BD){card.hidden=true;cap.classList.remove("on");stopSong(700);Object.values(P).forEach(g=>g.visible=false);["balloons","twenty","cake","gifts"].forEach(n=>P[n].visible=true);paintSky("#2a0845","#ff6fb5");
+    else if(BD){card.hidden=true;cap.classList.remove("on");stopSong(700);quietOff(600);Object.values(P).forEach(g=>g.visible=false);["balloons","twenty","cake","gifts"].forEach(n=>P[n].visible=true);paintSky("#2a0845","#ff6fb5");
       title.innerHTML=`<h1 class="i-big">Tillykke, ${esc(BDAY.name)}!</h1><p class="i-kicker">Hvad skal vi spille?</p>`;title.className="st-title on top";
       eraMusic("dfinale",now(),FIN_D/1000);[0,600,1200].forEach(t=>setTimeout(()=>confetti(160,.3),t))}
     else{cap.classList.remove("on");Object.values(P).forEach(g=>g.visible=false);["notes","records","flowers","smileys","floppy","phones","earbuds"].forEach(n=>P[n].visible=true);paintSky("#22074a","#ff3fa4");
@@ -2466,7 +2480,7 @@ function stageShow(onEnd,mode){
     // ansigter vender altid mod kameraet, navneskilte over hovedet
     chars.forEach(c=>{if(!c.root.visible){c.face.visible=c.tag.visible=false;return}c.face.visible=c.tag.visible=true;c.head.getWorldPosition(tmp);tmp2.copy(cam.position).sub(tmp).normalize();c.face.position.copy(tmp).addScaledVector(tmp2,.58*c.s);c.tag.position.copy(tmp).add(new T.Vector3(0,1.25*c.s,0))});
     R.render(sc,cam);raf=requestAnimationFrame(tick)};
-  const end=skipped=>{if(ended)return;ended=true;clearTimeout(startSeg.t);clearTimeout(startSeg.p);clearTimeout(startSeg.q);cancelAnimationFrame(raf);removeEventListener("resize",resize);const keep=!BD&&!skipped&&playing?playing:null;AP.forEach(a=>{if(a===keep)return;try{clearInterval(a._f);a.pause();a.muted=false;a.volume=1}catch(e){}});if(keep){keep.loop=false;ramp(keep,0,2200,true)}introBusEnd(skipped?.15:.8);try{speechSynthesis.cancel()}catch(e){}
+  const end=skipped=>{if(ended)return;ended=true;try{if(hv){hv.pause();URL.revokeObjectURL(hv.src)}}catch(x){}quietOff(300);clearTimeout(startSeg.t);clearTimeout(startSeg.p);clearTimeout(startSeg.q);cancelAnimationFrame(raf);removeEventListener("resize",resize);const keep=!BD&&!skipped&&playing?playing:null;AP.forEach(a=>{if(a===keep)return;try{clearInterval(a._f);a.pause();a.muted=false;a.volume=1}catch(e){}});if(keep){keep.loop=false;ramp(keep,0,2200,true)}introBusEnd(skipped?.15:.8);try{speechSynthesis.cancel()}catch(e){}
     el.classList.add("out");setTimeout(()=>{el.remove();R.dispose()},600);onEnd&&onEnd()};
   el.querySelector(".i-skip").onclick=e=>{e.stopPropagation();end(true)};
   startSeg();raf=requestAnimationFrame(tick);
