@@ -770,7 +770,7 @@ const TYPES={
 };
 const MAJ=t=>t==="who"||t==="trip";
 const COLORS=["#ff3d7f","#ffd23f","#4de0c5","#8fa8ff","#ff8a3d","#c38bff","#7ae35f","#ff6b6b"];
-const TARGET=21,COURT_SEC={indsigelse:20};
+let TARGET=21;const COURT_SEC={indsigelse:20},LENS={kort:{name:"Kort spil",sk:12,dq:10},langt:{name:"Langt spil",sk:21,dq:20}},lenOf=k=>LENS[k]||LENS.langt;
 const HOME={lat:55.9,lon:10.5};
 /* steder: [navn, lat, lon, land på engelsk] */
 const PLACES=[["Blokhus",57.25,9.58,"Denmark"],["Skagen",57.72,10.58,"Denmark"],["Bornholm",55.13,14.92,"Denmark"],["Lalandia Billund",55.73,9.11,"Denmark"],["Legoland",55.735,9.13,"Denmark"],["Fanø",55.42,8.41,"Denmark"],["Løkken",57.37,9.71,"Denmark"],["Henne Strand",55.73,8.17,"Denmark"],["Hvide Sande",56.0,8.13,"Denmark"],["Samsø",55.87,10.6,"Denmark"],["Ærø",54.88,10.4,"Denmark"],["Rømø",55.13,8.5,"Denmark"],["Marielyst",54.67,11.95,"Denmark"],["København",55.68,12.57,"Denmark"],["Aarhus",56.16,10.2,"Denmark"],
@@ -1085,7 +1085,7 @@ function buildSeq(cats,pack,count=90){
   }
   return seq;
 }
-function newGame(seq,vote){return {vote:vote==="en"?"en":"flertal",status:"play",n:0,qi:0,ji:0,sk:0,ph:"a",seq,scores:{},titles:{},stats:{},trips:[],objUsed:{},rd:null,result:null,court:null,snap:null}}
+function newGame(seq,vote,len){TARGET=lenOf(len).sk;return {target:TARGET,vote:vote==="en"?"en":"flertal",status:"play",n:0,qi:0,ji:0,sk:0,ph:"a",seq,scores:{},titles:{},stats:{},trips:[],objUsed:{},rd:null,result:null,court:null,snap:null}}
 function prepRound(G,players,skip){
   const ids=players.map(p=>p.id);let qi=G.qi||0;if(qi>=(G.seq||[]).length)return null;
   const base=clone(G.seq[qi]);qi++;let ji=G.ji||0;
@@ -1135,7 +1135,7 @@ function objection(G,uid){
 }
 const canObject=(G,uid)=>G.status==="reveal"&&BOARD(G.rd.type)&&!G.result.afterCourt&&(G.result.tops||[G.result.truth]).includes(uid)&&uid!==G.rd.judge&&!(G.objUsed||{})[uid];
 const needsAnswer=(G,uid)=>G.ph!=="b"||!G.rd.judge||uid===G.rd.judge;
-const someoneWon=sc=>Object.values(sc||{}).some(v=>v>=TARGET);
+const someoneWon=(sc,G)=>{if(G&&G.target)TARGET=G.target;return Object.values(sc||{}).some(v=>v>=TARGET)};
 
 /* =========================================================
    SKÆRMDELE
@@ -1196,7 +1196,7 @@ async function reveal(G,players,afterHTML,opts={}){
   const label=v=>isP?`${av(P(v),"m")}<b>${esc(P(v).name)}</b>`:`<b>${esc(v)}</b>`;
   const head=R.truth==null?`<div class="res"><div class="lbl">Ingen svar</div></div>`:`<div class="res"><div class="lbl">${J?esc(J.name)+" sagde":tops.length>1?"Flertallet var delt":"Flertallet sagde"}</div><div class="resv">${tops.map(label).join('<span class="og">og</span>')}</div></div>`;
   const votes=`<div class="votes"><div class="lbl">${J?"Gættene":"Stemmerne"}</div>${order.map(v=>`<div class="vrow${tops.includes(v)?" top":""}"><div class="vw">${label(v)}<span class="vc">${groups[v].length}</span></div><div class="vby">${groups[v].map(id=>`<span class="vote" style="--pc:${P(id).color}">${av(P(id))}${esc(P(id).name)}</span>`).join("")}</div></div>`).join("")||'<p class="muted">Ingen stemmer.</p>'}</div>`;
-  app.innerHTML=`${hud(G.n)}${rd.trip?globeHTML("rg",false,tripCap(rd)):""}${qcard(rd,R.afterCourt?"Efter indsigelsen":"")}<div id="rv" class="col-stack" hidden>${head}${votes}</div><div id="gains" class="gains" hidden></div>${R.flash?`<div class="flashnote ${R.flash.kind}" hidden id="fl">${R.flash.kind==="fire"?`<b>${esc(P(R.flash.id).name)} er on fire</b><span>${R.flash.n} runder i træk med point</span>`:`<b>${esc(P(R.flash.id).name)} er helt ude at cykle</b><span>${R.flash.n} runder i træk uden point</span>`}</div>`:""}<div id="trk" hidden>${track(players,G.scores,G.prevScores)}</div><div id="after" hidden class="col-stack">${afterHTML}</div>`;
+  app.innerHTML=`${hud(G.n)}${rd.trip?globeHTML("rg",false,tripCap(rd)):""}${qcard(rd,R.afterCourt?"Efter indsigelsen":"")}<div id="rv" class="col-stack" hidden>${head}${votes}</div><div id="gains" class="gains" hidden></div>${R.flash?`<div class="flashnote ${R.flash.kind}" hidden id="fl">${R.flash.kind==="fire"?`<b>${esc(P(R.flash.id).name)} er on fire</b><span>${R.flash.n} runder i træk med point</span>`:`<b>${esc(P(R.flash.id).name)} er helt ude at cykle</b><span>${R.flash.n} runder i træk uden point</span>`}</div>`:""}<div id="trk" hidden>${(G.target&&(TARGET=G.target),track(players,G.scores,G.prevScores))}</div><div id="after" hidden class="col-stack">${afterHTML}</div>`;
   const anchor=app.firstElementChild,dead=()=>!anchor.isConnected;wireMute();if(rd.trip&&$("#rg")){GLOBE.mount($("#rg"));GLOBE.flyTo(rd.trip.lat,rd.trip.lon,rd.trip.country,{route:false,zoom:2.3})}
   await sleep(700);if(dead())return;const rv=$("#rv");rv.hidden=false;rv.classList.add("deal");if(!opts.me||SND.mode==="full")SFX.ding();
   await sleep(700);if(dead())return;
@@ -1270,14 +1270,16 @@ function homeView(){
   setTheme("who");BGM.play("skyldig").then(ok=>{if(!ok&&THEME.want&&ac()&&S.view==="home")THEME.start()});
   app.innerHTML=`<div class="row" style="justify-content:space-between;gap:6px"><button class="iconbtn" id="tohub">‹ Alle spil</button><div class="row" style="gap:6px"><button class="iconbtn" id="thm">${THEME.want?"Tema til":"Tema fra"}</button>${muteBtn()}</div></div>
   <div class="marquee"><h1 class="logo">Skyldig!</h1><div class="tag">Hvem af os?</div></div>
-  <p class="c" style="font-size:17px">Et udsagn. Hvem passer det på? <b style="color:var(--bulb)">Først til ${TARGET}</b> vinder.</p>
+  <p class="c" style="font-size:17px">Et udsagn. Hvem passer det på? <b style="color:var(--bulb)">Kort eller langt spil.</b></p>
   <div class="mode">
     <button id="m-online"><b>Hver sin telefon</b><span class="muted">Opret et rum med en kode. Alle telefoner reagerer samtidig.</span></button>
     <button id="m-local"><b>Én telefon</b><span class="muted">Send telefonen rundt om bordet.</span></button>
   </div>
+  <p class="muted" style="text-align:center;margin:4px 0 -4px;font-weight:700">Ét spil. Runderne skifter af sig selv:</p>
   <div class="pitch">
-    <div style="--c:#ffd23f"><b>Flertallet bestemmer</b>Alle stemmer. Stem med flertallet, og få et point.</div>
-    <div style="--c:#ff8a3d"><b>Én bestemmer</b>På skift vælger én, og resten gætter.</div>
+    <div style="--c:#ffd23f"><b>Hvem af os?</b>Et udsagn. Hvem passer det på?</div>
+    <div style="--c:#ff2d4d"><b>Hot seat</b>Én i stolen. Hvad vælger personen?</div>
+    <div style="--c:#4de0c5"><b>Ferieminder</b>Jeres egne ferier på globussen.</div>
     <div style="--c:#b07a3c"><b>Indsigelse!</b>Valgt? Forsvar dig én gang pr. spil.</div>
   </div><button class="link" id="reintro" style="align-self:center">Se introen igen</button>`;
   wireMute();
@@ -1367,9 +1369,10 @@ function studioView(){
 
 function catsHTML(){const c=S.cats||(S.cats=store("skyldig.cats")||["kaerligt","sjove","spicy"]);return `<div class="seg" id="cats">${Object.entries(CATS).map(([k,v])=>`<button type="button" data-cat="${k}" aria-pressed="${c.includes(k)}">${v}</button>`).join("")}</div><p class="muted" style="font-size:13px">Vælg en eller flere kategorier.</p>`}
 function wireCats(after){app.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{const k=b.dataset.cat;let c=(S.cats||[]).slice();c=c.includes(k)?c.filter(x=>x!==k):c.concat(k);if(!c.length){SFX.boing();return}S.cats=c;store("skyldig.cats",c);SFX.select();after()})}
-S.vote=S.vote||store("skyldig.vote")||"flertal";
+S.vote=S.vote||store("skyldig.vote")||"flertal";S.len=S.len||store("skyldig.len")||"langt";
 function voteHTML(){return `<div class="seg2">${[["flertal","Flertallet bestemmer"],["en","Én bestemmer på skift"]].map(([k,t])=>`<button type="button" class="${S.vote===k?"on":""}" data-vote="${k}">${t}</button>`).join("")}</div>`}
-function wireVote(re){app.querySelectorAll("[data-vote]").forEach(b=>b.onclick=()=>{S.vote=b.dataset.vote;store("skyldig.vote",S.vote);SFX.tap();re()})}
+function wireVote(re){app.querySelectorAll("[data-vote]").forEach(b=>b.onclick=()=>{S.vote=b.dataset.vote;store("skyldig.vote",S.vote);SFX.tap();re()});app.querySelectorAll("[data-len]").forEach(b=>b.onclick=()=>{S.len=b.dataset.len;store("skyldig.len",S.len);SFX.tap();re()})}
+function lenHTML(){return `<div class="seg2">${Object.entries(LENS).map(([k,v])=>`<button type="button" class="${S.len===k?"on":""}" data-len="${k}">${v.name}<small style="display:block;font-weight:600;opacity:.7;font-size:12px">Først til ${v.sk}</small></button>`).join("")}</div>`}
 function setupView(){
   setTheme("who");
   S.lp=S.lp||store("skyldig.localplayers")||FAM4.map((n,i)=>({id:"p"+i,name:n,color:COLORS[i]}));
@@ -1378,6 +1381,7 @@ function setupView(){
     <div class="panel"><div class="lbl">Spillere (${S.lp.length}) · tryk på cirklen for en selfie</div>
       <div class="chips">${S.lp.map((p,i)=>`<span class="chip"><label class="selfie">${av(p,"m")}<span class="cam">FOTO</span><input type="file" accept="image/*" capture="user" data-sf="${i}" aria-label="Selfie til ${esc(p.name)}"></label>${esc(p.name)}<button class="x" data-i="${i}" aria-label="Fjern ${esc(p.name)}">×</button></span>`).join("")}</div>
       <form id="addf" class="row" style="flex-wrap:nowrap"><input type="text" id="nm" placeholder="Tilføj navn" maxlength="16" autocomplete="off"><button class="btn gold sm">+</button></form></div>
+    <div class="panel"><div class="lbl">Spillets længde</div>${lenHTML()}</div>
     <div class="panel"><div class="lbl">Hvem afgør svaret?</div>${voteHTML()}</div>
     <div class="panel"><div class="lbl">Kategorier</div>${catsHTML()}</div>
     <button class="btn" id="start" ${S.lp.length<3?"disabled":""}>${S.lp.length<3?"Mindst 3 spillere":"Start spillet"}</button>`;
@@ -1386,12 +1390,12 @@ function setupView(){
     app.querySelectorAll(".x").forEach(b=>b.onclick=()=>{S.lp.splice(+b.dataset.i,1);SFX.boing();paint()});
     app.querySelectorAll("[data-sf]").forEach(inp=>inp.onchange=async()=>{if(!inp.files[0])return;try{S.lp[+inp.dataset.sf].photo=await resizeImage(inp.files[0],160);SFX.coin();paint()}catch(e){}});
     wireCats(paint);wireVote(paint);
-    $("#start").onclick=()=>{store("skyldig.localplayers",S.lp);S.players=S.lp.map((p,i)=>({...p,color:COLORS[i%8]}));S.G=newGame(buildSeq(S.cats,PACK),S.vote);localNext()};
+    $("#start").onclick=()=>{store("skyldig.localplayers",S.lp);S.players=S.lp.map((p,i)=>({...p,color:COLORS[i%8]}));S.G=newGame(buildSeq(S.cats,PACK),S.vote,S.len);localNext()};
   };
   paint();
 }
 function localNext(skip){
-  const G=S.G;if(!skip&&someoneWon(G.scores))return finalScreen(G,S.players,"Spil igen",()=>go("setup"));
+  const G=S.G;if(!skip&&someoneWon(G.scores,G))return finalScreen(G,S.players,"Spil igen",()=>go("setup"));
   const p=prepRound(G,S.players,skip);if(!p)return finalScreen(G,S.players,"Spil igen",()=>go("setup"));
   Object.assign(G,p);markSeen(G.rd.key);S.ans={};S.order=S.players.map(x=>x.id);if(G.rd.judge)S.order.sort((a,b)=>(b===G.rd.judge)-(a===G.rd.judge));S.ai=0;S.lstep="intro";S.view="local";showTray(false);render();
 }
@@ -1413,7 +1417,7 @@ function localView(){
 }
 function localResolve(){const G=S.G;Object.assign(G,resolve(G,S.ans,S.players));S.lstep="reveal";showRevealLocal()}
 function showRevealLocal(){
-  const G=S.G;const won=someoneWon(G.scores);const t=G.result.truth;
+  const G=S.G;const won=someoneWon(G.scores,G);const t=G.result.truth;
   const objBtn=canObject(G,t)?`<button class="btn red" id="obj">Indsigelse fra ${esc(P(t).name)}!</button>`:"";
   reveal(G,S.players,`${objBtn}<button class="btn gold" id="nx">${won?"Vi har en vinder":"Næste runde"}</button>`,{done(){
     $("#nx").onclick=()=>{SFX.whoosh();showTray(false);localNext()};
@@ -1536,7 +1540,7 @@ const ON={
   async join(code,create){
     const name=this.name.trim();if(!name){this.err="Skriv dit navn først.";return render()}
     store("skyldig.myname",name);this.code=code;this.err="";
-    if(create){if(!await this.write(()=>this.ref().set({host:this.me,status:"lobby",cats:S.cats||["kaerligt","sjove","spicy"],vote:S.vote||"flertal",created:Date.now()})))return}
+    if(create){if(!await this.write(()=>this.ref().set({host:this.me,status:"lobby",cats:S.cats||["kaerligt","sjove","spicy"],vote:S.vote||"flertal",len:S.len||"langt",created:Date.now()})))return}
     else{const s=await this.ref().get().catch(()=>null);if(!s||!s.exists){this.err="Ingen rum med koden "+code+". Tjek koden, og at værtens telefon har spillet åbent.";this.code=null;return render()}}
     if(!create){const ps=await this.db.collection("rooms/"+code+"/players").get().catch(()=>null);const same=ps&&ps.docs.find(d=>d.id!==this.me&&norm(d.data().name||"")===norm(name));if(same&&!ps.docs.some(d=>d.id===this.me)){this.me=same.id;store("skyldig.localid",this.me)}}
     const ex=await this.ref("/players/"+this.me).get().catch(()=>null);
@@ -1545,8 +1549,8 @@ const ON={
   },
   async setPhoto(file){try{this.photo=await resizeImage(file,160);store("skyldig.myphoto",this.photo);if(this.code)await this.write(()=>this.ref("/players/"+this.me).update({photo:this.photo}));render()}catch(e){}},
   colored(){return this.players.map((p,i)=>({id:p.id,name:p.name,photo:p.photo||null,color:COLORS[i%8]}))},
-  async start(){await PACKDB.load();const G=newGame(buildSeq(this.R.cats,PACK,90),this.R.vote);await this.setRoom({...G,status:"starting"});this.next()},
-  async next(){if(someoneWon(this.R.scores))return this.setRoom({status:"end"});this.busy=null;const p=prepRound(this.R,this.colored());if(!p)return this.setRoom({status:"end"});markSeen(p.rd.key);await this.setRoom(p)},
+  async start(){await PACKDB.load();const G=newGame(buildSeq(this.R.cats,PACK,90),this.R.vote,this.R.len);await this.setRoom({...G,status:"starting"});this.next()},
+  async next(){if(someoneWon(this.R.scores,this.R))return this.setRoom({status:"end"});this.busy=null;const p=prepRound(this.R,this.colored());if(!p)return this.setRoom({status:"end"});markSeen(p.rd.key);await this.setRoom(p)},
   async skipQ(){SFX.whoosh();this.busy=null;await this.next()},
   answersFor(){const R=this.R,v={};this.answers.filter(x=>x.n===R?.n&&x.ph===R?.ph).forEach(x=>v[x.uid]=x.a);return v},
   async answer(a){const R=this.R;await this.write(()=>this.ref(`/answers/r${R.n}${R.ph}-${this.me}`).set({n:R.n,ph:R.ph,uid:this.me,a}))},
@@ -1570,7 +1574,7 @@ function onlineView(){
     setTheme("who");
     app.innerHTML=`<div class="hud"><span class="logo sm">Skyldig!</span><button class="link" id="back">Tilbage</button></div>
     <div class="panel"><div class="row" style="flex-wrap:nowrap;gap:16px">${selfieBtn()}<div style="flex:1;min-width:0" class="col-stack"><div class="lbl">Dit navn</div><input type="text" id="myname" maxlength="16" value="${esc(o.name)}" placeholder="Eller skriv et nyt navn" autocomplete="off"></div></div>${nameChips("myname",o.name)}<p class="muted" style="font-size:13px">Tryk på cirklen for en selfie. Den vises i spillet.</p></div>
-    <div class="panel"><div class="lbl">Opret nyt rum</div><div class="lbl" style="margin-top:4px">Hvem afgør svaret?</div>${voteHTML()}<div class="lbl" style="margin-top:10px">Kategorier</div>${catsHTML()}<button class="btn" id="create">Opret rum</button></div>
+    <div class="panel"><div class="lbl">Opret nyt rum</div><div class="lbl" style="margin-top:4px">Spillets længde</div>${lenHTML()}<div class="lbl" style="margin-top:10px">Hvem afgør svaret?</div>${voteHTML()}<div class="lbl" style="margin-top:10px">Kategorier</div>${catsHTML()}<button class="btn" id="create">Opret rum</button></div>
     <div class="panel"><div class="lbl">Eller hop ind med en kode</div><form id="jf" class="row" style="flex-wrap:nowrap"><input type="text" id="code" maxlength="4" value="${esc(S.prefill||"")}" placeholder="ABCD" style="text-transform:uppercase;font-family:var(--f-display);letter-spacing:.2em" autocomplete="off"><button class="btn gold sm">Hop ind</button></form></div>${o.err?`<p class="err">${esc(o.err)}</p>`:""}`;
     const keep=()=>o.name=$("#myname").value;$("#back").onclick=()=>go("home");wireSelfie();$("#myself").addEventListener("change",keep);
     wireCats(()=>{keep();render()});wireVote(()=>{keep();render()});
@@ -1582,7 +1586,7 @@ function onlineView(){
   S.players=o.colored();setQuiet(!o.isHost());const err=o.err?`<p class="err">${esc(o.err)}</p>`:"";
   if(R.status==="lobby"||R.status==="starting"){
     o.shown=null;setTheme("who");
-    app.innerHTML=`<div class="hud"><span class="logo sm">Skyldig!</span><div class="row" style="gap:6px"><span class="pill">${R.vote==="en"?"Én bestemmer":"Flertallet"} · ${esc((R.cats||[]).map(c=>CATS[c]).join(" · "))}</span>${muteBtn()}</div></div>
+    app.innerHTML=`<div class="hud"><span class="logo sm">Skyldig!</span><div class="row" style="gap:6px"><span class="pill">${lenOf(R.len).name} · ${R.vote==="en"?"Én bestemmer":"Flertallet"} · ${esc((R.cats||[]).map(c=>CATS[c]).join(" · "))}</span>${muteBtn()}</div></div>
     <div class="panel c"><div class="lbl">${canQR()?"Scan for at være med":"Rumkode"}</div>${canQR()?`<div class="dqr" id="sqr"></div>`:""}<div class="code">${esc(o.code)}</div><p class="muted">${canQR()?"Scan med kameraet, eller tryk \"Hver sin telefon\" og skriv koden.":"Åbn spillet på hver telefon, tryk \"Hver sin telefon\" og skriv koden."}</p></div>
     <div class="panel"><div class="lbl">I rummet (${S.players.length})</div><div class="chips">${S.players.map(p=>`<span class="chip deal">${p.id===o.me?selfieBtn().replace('class="av l"','class="av m"'):av(p,"m")}${esc(p.name)}${p.id===R.host?' <span class="muted" style="font-size:12px">vært</span>':""}${o.isHost()&&p.id!==o.me?`<button class="x" data-kick="${esc(p.id)}" aria-label="Fjern ${esc(p.name)}">×</button>`:""}</span>`).join("")}</div><p class="muted" style="font-size:13px">Tryk på dit eget billede for at tage en selfie.</p></div>
     ${o.isHost()?`<button class="btn" id="st" ${S.players.length<3||R.status==="starting"?"disabled":""}>${S.players.length<3?"Venter på mindst 3":"Start spillet"}</button>`:`<p class="muted c">Venter på at værten starter…</p>`}${err}<button class="link" id="lv">Forlad rummet</button>`;
@@ -1614,7 +1618,7 @@ function onlineView(){
   }
   if(R.status==="reveal"&&R.result){
     const key="rev"+R.n+R.ph;if(o.shown===key)return;o.shown=key;setTheme(R.rd.type);
-    const won=someoneWon(R.scores);
+    const won=someoneWon(R.scores,R);
     const mayObj=canObject(R,o.me);
     const after=`${mayObj?`<button class="btn red" id="obj">Indsigelse!</button><p class="muted c" style="font-size:13px">Du kan gøre indsigelse én gang pr. spil.</p>`:""}${o.isHost()?`<button class="btn gold" id="nx">${won?"Vi har en vinder":"Næste runde"}</button>`:`<p class="muted c">Værten starter næste runde.</p>`}`;
     reveal(R,S.players,after,{me:o.me,done(){if(o.isHost()&&$("#nx"))$("#nx").onclick=e=>{e.target.disabled=true;SFX.whoosh();showTray(false);o.next()};const ob=$("#obj");if(ob)ob.onclick=()=>{ob.disabled=true;ob.textContent="Indsigelse sendt";o.objectNow()}}});
@@ -1736,7 +1740,7 @@ const beatBtn=()=>`<button class="dchip" id="beat">${BEAT.want?"Musik til":"Musi
 function wireBeat(){const b=$("#beat");if(b)b.onclick=()=>{BEAT.toggle();b.textContent=BEAT.want?"Musik til":"Musik fra"}}
 const dTop=(left,mid)=>`<div class="dtop">${left||"<span></span>"}${mid?`<span class="dchip solid">${mid}</span>`:""}${beatBtn()}</div>`;
 function vinylHTML(s,revealed,color){return `<div class="vinyl-wrap"><div class="vinyl${revealed?" revealed":""}"><div class="label" style="--c:${color}">${revealed?`<div class="lab-in"><b>${esc(s.main)}</b><span>${esc(s.title)}</span><em>${s.year}</em></div>`:`<div class="lab-in"><b>?</b></div>`}</div></div></div>`}
-function playBtn(s){return `<a class="dbtn play" href="${appleLink(s)}" target="_blank" rel="noopener" id="dplay" style="--c:#fc3c44">Afspil i Apple Music</a>`}
+function playBtn(s){return `<a class="dbtn play" href="${appleLink(s)}" target="_blank" rel="noopener" id="dplay" style="--c:#fc3c44">Afspil sangen</a>`}
 function wirePlay(){const p=$("#dplay");if(p)p.addEventListener("click",()=>{if(BEAT.on)BEAT.stop();DSFX.pop()})}
 function scoreRow(players,scores,gold){return `<div class="dscores">${players.map(p=>`<span class="dsc" style="--c:${p.color}">${av(p)}<b>${scores[p.id]||0}</b>${gold&&!gold[p.id]?`<i class="gold-dot" title="Har guldplade"></i>`:""}</span>`).join("")}</div>`}
 
@@ -1832,7 +1836,7 @@ const DO={code:null,R:null,players:[],answers:[],bingos:[],cheats:[],unsub:[],sh
     const name=(ON.name||"").trim();if(!name){D.err="Skriv dit navn først, så du kan være med.";return render()}store("skyldig.myname",name);
     const full=!!window.SKYLDIG_MUSICKIT&&await MK.authorize();const auto=full||await PREV.test();
     const L="ABCDEFGHJKLMNPRSTUVXYZ";this.code=Array.from({length:4},()=>L[Math.random()*L.length|0]).join("");
-    const level=D.level||store("disco.level")||"svaer";if(!await this.write(()=>this.ref().set({host:ON.me,mode,auto,full,level,status:"lobby",n:0,sid:null,played:[],scores:{},gold:{},created:Date.now()})))return;
+    const level=D.level||store("disco.level")||"svaer";if(!await this.write(()=>this.ref().set({host:ON.me,mode,auto,full,level,len:D.len||store("disco.len")||"langt",status:"lobby",n:0,sid:null,played:[],scores:{},gold:{},created:Date.now()})))return;
     if(auto)await this.write(()=>this.ref("/players/"+ON.me).set({name,photo:ON.photo||null,joined:Date.now()}));
     lastGame("disko",this.code,true);this.subscribe();go("disco",{dv:"room"})},
   async join(code){await ON.init();if(!ON.db){D.err="Kunne ikke forbinde. Tjek at telefonen er på internettet, og prøv igen.";return render()}
@@ -1844,7 +1848,7 @@ const DO={code:null,R:null,players:[],answers:[],bingos:[],cheats:[],unsub:[],sh
     lastGame("disko",code,(s.data()||{}).host===ON.me);this.subscribe();DSFX.whoop();go("disco",{dv:"room"})},
   roundAns(){const R=this.R,v={};this.answers.filter(x=>x.n===R?.n).forEach(x=>v[x.uid]={a:x.a,g:!!x.g});return v},
   async answer(a,g){const R=this.R;await this.write(()=>this.ref(`/answers/r${R.n}-${ON.me}`).set({n:R.n,uid:ON.me,a,g:!!g}))},
-  async next(){D.hint=null;AUTO.clear();PREV.stop();MK.stop();const R=this.R;if(R.mode==="quiz"&&Object.values(R.scores||{}).some(v=>v>=DISCO_TARGET))return this.setRoom({status:"end"});
+  async next(){D.hint=null;AUTO.clear();PREV.stop();MK.stop();const R=this.R;if(R.mode==="quiz"&&Object.values(R.scores||{}).some(v=>v>=lenOf(R.len).dq))return this.setRoom({status:"end"});
     let pick=nextSongFor(R,R.mode),url=null;
     if(R.auto&&!R.full){for(let k=0;k<6;k++){url=await PREV.lookup(SONGS[pick.sid]);if(url)break;pick=nextSongFor({...R,played:pick.played},R.mode);pick.n=(R.n||0)+1}}
     await this.setRoom({...pick,status:"play",result:null});
@@ -1862,11 +1866,11 @@ function discoView(){
   discoEnter();const v=S.dv||"home";
   if(v==="home"){
     app.innerHTML=`${dTop(`<button class="dchip" id="dback">‹ Alle spil</button>`)}
-    ${ballHTML(150)}<h1 class="dlogo">DISKO</h1><p class="dtag">${SONGS.length} sange fra 1939 til i dag · to sværhedsgrader</p>
+    ${ballHTML(150)}<h1 class="dlogo">DISKO</h1><p class="dtag">${SONGS.length} sange fra 1939 til i dag</p>
     <div class="dpanel"><b>Dit navn</b>${nameChips("dname0",ON.name||store("skyldig.myname"),true)}<input class="dinput" type="text" id="dname0" maxlength="16" value="${esc(ON.name||store("skyldig.myname")||"")}" placeholder="Eller skriv et nyt navn" autocomplete="off"></div>
-    <div class="dpanel"><b>Sværhedsgrad</b><div class="dseg" id="dlvl">${Object.entries(LEVELS).map(([k,v])=>`<button type="button" data-lv="${k}" aria-pressed="${(D.level||store("disco.level")||"svaer")===k}">${v}</button>`).join("")}</div><p class="dsmall">${(D.level||store("disco.level")||"svaer")==="ekspert"?`Ekspert: de mindre kendte sange fra de store navne.`:`Svær: de store hits.`}</p></div>
+    <div class="dpanel"><b>Spillets længde</b><div class="dseg" id="dlen">${Object.entries(LENS).map(([k,v])=>`<button type="button" data-dl="${k}" aria-pressed="${(D.len||store("disco.len")||"langt")===k}">${v.name}</button>`).join("")}</div><p class="dsmall">Musikquiz: først til ${lenOf(D.len||store("disco.len")).dq} point.</p></div>
     <div class="dmodes">
-      <button class="dcard" id="d-quiz" style="--c:#ff3fa4"><b>Musikquiz</b><span>Sangen spiller, og alle svarer på egen telefon. Først til ${DISCO_TARGET}.</span></button>
+      <button class="dcard" id="d-quiz" style="--c:#ff3fa4"><b>Musikquiz</b><span>Sangen spiller, og alle svarer på egen telefon.</span></button>
       <button class="dcard" id="d-bingo" style="--c:#00b8ff"><b>Disko-bingo</b><span>Alle får en plade. Man kan kun krydse af, hvis en sang, der faktisk er spillet, passer.</span></button>
       <button class="dcard" id="d-join" style="--c:#ff8a00"><b>Hop ind</b><span>Har nogen startet en Disko? Scan QR-koden på deres skærm, eller skriv koden her.</span></button>
     </div>
@@ -1874,7 +1878,7 @@ function discoView(){
     ${D.err?`<p class="dnote" style="background:#fff">${esc(D.err)}</p>`:""}
     <button class="dchip skipbtn" id="dreintro">Se introen igen</button>`;
     spinBalls();wireBeat();BGM.play("disko").then(ok=>{if(ok)BEAT.stop()});$("#dback").onclick=()=>{go("hub")};D.err="";const dri=$("#dreintro");if(dri)dri.onclick=()=>{discoLeave();openGame("disko",true)};
-    app.querySelectorAll("[data-lv]").forEach(b=>b.onclick=()=>{ON.name=$("#dname0").value;D.level=b.dataset.lv;store("disco.level",D.level);DSFX.pop();discoView()});const nm=()=>{ON.name=$("#dname0").value};$("#d-quiz").onclick=()=>{nm();DSFX.whoop();DO.create("quiz")};$("#d-bingo").onclick=()=>{nm();DSFX.whoop();DO.create("bingo")};$("#d-join").onclick=()=>{DSFX.whoop();go("disco",{dv:"join"})};
+    app.querySelectorAll("[data-dl]").forEach(b=>b.onclick=()=>{ON.name=$("#dname0").value;D.len=b.dataset.dl;store("disco.len",D.len);DSFX.pop();discoView()});const nm=()=>{ON.name=$("#dname0").value};$("#d-quiz").onclick=()=>{nm();DSFX.whoop();DO.create("quiz")};$("#d-bingo").onclick=()=>{nm();DSFX.whoop();DO.create("bingo")};$("#d-join").onclick=()=>{DSFX.whoop();go("disco",{dv:"join"})};
     return;
   }
   if(v==="join"){
@@ -1893,7 +1897,7 @@ function discoRoom(){
   const err=D.err?`<p class="dnote" style="background:#fff">${esc(D.err)}</p>`:"";D.err="";
   if(R.status==="lobby"){
     DO.shown=null;
-    app.innerHTML=`${dTop(`<button class="dchip" id="dlv">Forlad</button>`,`${R.mode==="quiz"?"Musikquiz":"Disko-bingo"} · ${LEVELS[R.level||"svaer"]}`)}
+    app.innerHTML=`${dTop(`<button class="dchip" id="dlv">Forlad</button>`,`${R.mode==="quiz"?"Musikquiz · "+lenOf(R.len).name:"Disko-bingo"}`)}
     ${canQR()?"":ballHTML(110)}<div class="dpanel c"><b>${canQR()?"Scan for at være med":"Koden"}</b>${canQR()?`<div class="dqr" id="dqr"></div>`:""}<div class="dcode">${esc(DO.code)}</div><p class="dsmall">${canQR()?"Scan med kameraet, eller tryk \"Hop ind\" og skriv koden.":"Alle andre åbner Disko, trykker \"Hop ind\" og skriver koden."}${host?(R.auto?" Din telefon spiller musikken, og du er med som spiller.":" Din telefon er DJ."):""}</p></div>
     <div class="dpanel"><b>På dansegulvet (${players.length})</b><div class="dplayers">${players.map(p=>`<span class="dpl" style="--c:${p.color}">${av(p,"m")}${esc(p.name)}</span>`).join("")||'<span class="dsmall">Venter på de første…</span>'}</div></div>
     ${host?`<button class="dbtn" id="dstart" style="--c:#ff3fa4" ${players.length<1?"disabled":""}>Start ${R.mode==="quiz"?"quizzen":"bingoen"}</button>`:`<p class="dnote">Venter på at DJ'en starter…</p>`}${err}`;
@@ -1950,7 +1954,7 @@ function discoRoom(){
     if(DO.shown===key)return;DO.shown=key;const x=(R.result?.ans||{})[me],got=(R.result?.gain||{})[me]||0;
     app.innerHTML=`${dTop("",`Runde ${R.n}`)}${vinylHTML(s,true,T.color)}
     <div class="dpanel c"><b style="font-size:22px">${got?`+${got} point!`:x?"Ikke denne gang":"Du nåede ikke at svare"}</b><span class="dsmall">Rigtigt svar: <b>${esc(answerText(R.type,s,prev))}</b>${x?` · Dit svar: ${esc(R.type==="aarti"?decName(x.a):x.a)}`:""}${x?.g?" · guldplade brugt":""}</span></div>
-    ${revealList(R,players,s,prev)}${scoreRow(players,R.scores||{},R.gold)}<a class="dchip skipbtn" href="${appleLink(s)}" target="_blank" rel="noopener">Åbn sangen i Apple Music</a><p class="dsmall c">${R.auto?"Sangen kører videre. DJ'en starter næste, når I er klar.":"DJ'en starter næste plade."}</p>`;
+    ${revealList(R,players,s,prev)}${scoreRow(players,R.scores||{},R.gold)}<p class="dsmall c">${R.auto?"Sangen kører videre. DJ'en starter næste, når I er klar.":"DJ'en starter næste plade."}</p>`;
     if(host&&R.auto){app.insertAdjacentHTML("afterbegin",djBar(R));wireDjBar(R)}
     wireBeat();if(got){DSFX.yay();confetti(120,.35)}else DSFX.nope();return;
   }
@@ -2094,7 +2098,7 @@ const MK={ready:false,music:null,
   stop(){try{this.music&&this.music.pause()}catch(e){}}
 };
 /* baggrundssange: 30-sekunders klip fra Apple, med link til sangen */
-const BGM_LISTS={hub:[["Pharrell Williams","Happy"]],skyldig:[["George Michael","Careless Whisper"],["Rockwell","Somebody's Watching Me"]],disko:[["Village People","Y.M.C.A."],["Boney M.","Daddy Cool"]]};
+const BGM_LISTS={hub:[["Pharrell Williams","Happy"],["Mark Ronson","Uptown Funk"],["Justin Timberlake","Can't Stop the Feeling!"]],skyldig:[["George Michael","Careless Whisper"],["Rockwell","Somebody's Watching Me"],["Michael Jackson","Smooth Criminal"]],disko:[["Village People","Y.M.C.A."],["Boney M.","Daddy Cool"],["ABBA","Dancing Queen"]]};
 const BGM={ctx:null,i:0,el:null,want:store("hub.bgm")!==false,cur:null,
   async play(ctx){if(!this.want||SND.mode==="quiet"||this.ctx===ctx&&this.el&&!this.el.paused)return false;if(!await PREV.test())return false;
     this.ctx=ctx;const list=BGM_LISTS[ctx];const pick=list[this.i++%list.length];const so={id:"bg:"+pick.join("-"),main:pick[0],title:pick[1]};
@@ -2104,7 +2108,7 @@ const BGM={ctx:null,i:0,el:null,want:store("hub.bgm")!==false,cur:null,
     this.cur=so;this.chip();return true},
   stop(){this.ctx=null;const a=this.el;$("#bgmchip")?.remove();if(!a||a.paused)return;clearInterval(this._f);const src=a.src;let v=a.volume;this._f=setInterval(()=>{v=Math.max(0,v-.05);a.volume=v;if(v<=0){clearInterval(this._f);if(a.src===src)a.pause()}},40)},
   unlock(){try{if(!this.el){this.el=new Audio();this.el.onended=()=>{const c=this.ctx;this.ctx=null;if(c)this.play(c)}}const a=this.el;if(!a.paused&&a.src&&a.src!==SILENT)return;clearInterval(this._f);a.loop=false;a.muted=false;a.src=SILENT;const p=a.play();if(p)p.catch(()=>{})}catch(e){}},
-  chip(){$("#bgmchip")?.remove();if(!this.cur)return;document.body.insertAdjacentHTML("beforeend",`<a id="bgmchip" href="${appleLink(this.cur)}" target="_blank" rel="noopener"><i></i><span>${esc(this.cur.main)} · ${esc(this.cur.title)}</span><em>Apple Music</em></a>`)},
+  chip(){$("#bgmchip")?.remove();if(!this.cur)return;document.body.insertAdjacentHTML("beforeend",`<a id="bgmchip" href="${appleLink(this.cur)}" target="_blank" rel="noopener"><i></i><span>${esc(this.cur.main)} · ${esc(this.cur.title)}</span></a>`)},
   toggle(){this.want=!this.want;store("hub.bgm",this.want);if(!this.want)this.stop()}
 };
 /* ---------- 3D-scenen: familien på scenen gennem fire årtier ---------- */
@@ -2143,7 +2147,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=31;
+const APP_V=32;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
