@@ -2004,7 +2004,7 @@ function snyder(sub="Det felt passer ikke",hold){
 /* snyd med Shazam: forlader man spillet, mens sangen kører, opdager telefonen det */
 /* fanger både at man skifter app, og at man trækker kontrolcenteret ned (Shazam-knappen dér skjuler ikke siden, den tager kun fokus) */
 const awayStart=()=>{const R=DO.R;if(!R||!DO.code||D.away||Date.now()-(D.okAway||0)<4000)return;if(R.status==="play"&&S.view==="disco")D.away={t:Date.now(),n:R.n,code:DO.code,mode:R.mode}};
-const awayEnd=()=>{if(document.visibilityState==="hidden"||!document.hasFocus())return;const a=D.away;D.away=null;if(a&&a.code===DO.code&&DO.R&&Date.now()-a.t>1200)appCheat(a)};
+const awayEnd=()=>{if(document.visibilityState==="hidden"||!document.hasFocus())return;const a=D.away;D.away=null;if(a&&a.code===DO.code&&DO.R&&Date.now()-a.t>2000)appCheat(a)};
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")awayStart();else awayEnd()});
 addEventListener("blur",()=>setTimeout(()=>{if(!document.hasFocus())awayStart()},150));addEventListener("focus",awayEnd);addEventListener("pagehide",awayStart);
 function appCheat(a){const R=DO.R;let sub="Du forlod spillet, mens sangen kørte. Shazam tæller ikke!";
@@ -2151,7 +2151,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=33;
+const APP_V=34;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
