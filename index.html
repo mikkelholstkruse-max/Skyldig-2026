@@ -1389,7 +1389,7 @@ function findPlace(q){if(String(q||"").includes(",")){const parts=String(q).spli
   const partial=PLACES.find(x=>norm(x[0]).startsWith(n)&&n.length>=3);if(partial)return {place:partial[0],lat:partial[1],lon:partial[2],country:partial[3]};return null}
 const SITEFAM={tried:false,vids:{},
   async init(){if(this.tried)return;this.tried=true;if(!/^https?:/.test(location.protocol))return;try{const r=await fetch("fam/familie.json",{cache:"no-store"});if(!r.ok)return;const j=await r.json();const lp=store("skyldig.localplayers")||FAM4.map((n,i)=>({id:"p"+i,name:n,color:COLORS[i]}));let ch=false;
-    (j.lp||[]).forEach(q=>{const p=lp.find(x=>norm(x.name)===norm(q.name));if(p){if(!p.photo&&q.photo){p.photo=q.photo;ch=true}}else{lp.push({id:"s"+Math.random().toString(36).slice(2,7),name:q.name,color:COLORS[lp.length%8],photo:q.photo||null,build:q.build,height:q.height});ch=true}});
+    (j.lp||[]).forEach(q=>{const p=lp.find(x=>norm(x.name)===norm(q.name));if(p){if(q.photo&&(!p.photo||(q.t||0)>(p.t||0))&&p.photo!==q.photo){p.photo=q.photo;p.t=Math.max(p.t||0,q.t||0);ch=true}}else{lp.push({id:"s"+Math.random().toString(36).slice(2,7),name:q.name,color:COLORS[lp.length%8],photo:q.photo||null,build:q.build,height:q.height});ch=true}});
     if(ch){store("skyldig.localplayers",lp);S.lp=lp;if(S.view==="hub"||S.view==="studio")render()}}catch(e){}},
   async video(k){if(k in this.vids)return this.vids[k];let u=null;try{if(/^https?:/.test(location.protocol)){const r=await fetch("fam/"+k+".mp4",{method:"HEAD",cache:"no-store"});if(r.ok)u="fam/"+k+".mp4"}}catch(e){}return this.vids[k]=u}};
 setTimeout(()=>SITEFAM.init(),300);
@@ -2318,7 +2318,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=46;
+const APP_V=47;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
