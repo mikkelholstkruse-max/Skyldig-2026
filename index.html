@@ -1402,30 +1402,30 @@ function importFamPack(obj){if(!obj||!Array.isArray(obj.lp))return 0;S.lp=S.lp||
 const TRIP_EXTRA={
  "porto og ericeira":{story:"Porto 2019: Portvin, god mad og en brandalarm, hvor Bulle løb ud med Nutellaen i stedet for alt det vigtige.",
    clue:"Hvor løb Bulle ud med Nutellaen, da brandalarmen gik?",
-   who:[["Hvem ville løbe først ud ad døren, hvis brandalarmen gik igen?","Flugtmesteren"],["Hvem ville åbne en portvinsbar, hvis de flyttede til Porto?","Portvinsbaronen"]]},
+   who:[["Hvem ville løbe først ud ad døren, hvis brandalarmen gik igen?","Flugtmesteren"],["Hvem blev den største portvinskender på turen?","Portvinsbaronen"]]},
  "azorerne":{story:"Azorerne 2022: Vandreture på bjergtoppe, hortensiaer overalt, og en bil, der endte på en gåsti. Bulle sagde noget lidt for hårdt, og Båbe blev ked af det.",
    clue:"Hvor endte vi med at køre bilen ind på en gåsti?",
-   who:[["Hvem ville kunne bo helt alene på en ø midt i Atlanterhavet?","Øboen"],["Hvem ville give op først på en bjergtur?","Bjergflygtningen"],["Hvem ville igen sige: Den gåsti ligner da en vej?","Gåstiens chauffør"]]},
+   who:[["Hvem var mest vild med hortensiaerne?","Blomsterelskeren"],["Hvem ville kunne bo på en ø midt i Atlanterhavet?","Øboen"],["Hvem gik længst på vandreturene uden at klage?","Bjerggeden"]]},
  "rom":{story:"Rom 2023: Romerriget, Vatikanet, kanon pizza og is, og Bøh mødte sin ven Marc.",
    clue:"Hvor mødte Bøh sin ven Marc?",
    who:[["Hvem spiste flest is?","Isdronningen"],["Hvem fik mest ud af alt det gamle: ruinerne, kirkerne og Vatikanet?","Historienørden"],["Hvem ville kunne blive munk eller nonne i Vatikanet?","Den hellige"]],
    hot:[["Hvad var det bedste ved Rom for {n}?",["Pizzaen","Isen","Vatikanet","Ruinerne"]]]},
  "tanzania og zanzibar":{story:"Tanzania og Zanzibar 2023: Alle Big Five, en leopard i et træ, en skorpion på væggen og ren luksus.",
    clue:"Hvor fandt vi en skorpion på væggen?",
-   who:[["Hvem var mest bange om natten?","Natteskræk"],["Hvem ville have opdaget skorpionen sidst?","Skorpionens bedste ven"],["Hvem ville blive boende på luksushotellet for altid, hvis de kunne?","Luksusdyret"],["Hvem ville klare sig bedst alene på savannen en nat?","Savannens overlever"]],
+   who:[["Hvem var mest bange om natten?","Natteskræk"],["Hvem ville have opdaget skorpionen sidst?","Skorpionens bedste ven"],["Hvem nød luksusen mest?","Luksusdyret"],["Hvem ville klare sig bedst alene på savannen en nat?","Savannens overlever"]],
    hot:[["Hvad var det bedste ved Tanzania for {n}?",["Safarien","Luksushotellet","Stranden på Zanzibar","Tennis"]]]},
  "new york":{story:"New York 2024: Storbyen, og Broadway den aften, hvor nyheden om attentatet på Trump kom.",
    clue:"Hvor sad vi i teatret, da nyheden om attentatet på Trump kom?",
    who:[["Hvem er mest storbymenneske?","Storbydyret"],["Hvem ville du sende alene til New York i en måned?","New Yorkeren"]]},
  "malaga":{story:"Malaga 2025: Sol, vandreture, stjålne pærer og en italiensk aften med en Negroni for meget og en stor nyhed.",
    clue:"Hvor stjal Bøh og Bibs pærer?",
-   who:[["Hvem stjal flest pærer?","Pæretyven"],["Hvem havde den største nyhed med hjem fra en ferie?","Feriens store nyhed"],["Hvem ville kunne snakke sig ud af det, hvis vi blev taget i at stjæle pærer?","Pæreadvokaten"]]},
+   who:[["Hvem stjal flest pærer?","Pæretyven"],["Hvem havde den største nyhed med hjem fra en ferie?","Feriens store nyhed"]]},
  "normandiet":{story:"Normandiet 2025: Versailles, kystbyerne, katedralen i Chartres lyst op om aftenen og tidevandet ved Mont-Saint-Michel. Og en camping, alle undtagen Bøh var glade for, mens tre lå og hostede hele natten.",
    clue:"Hvor så vi tidevandet komme ind?",
-   who:[["Hvem sov dårligst på campingpladsen?","Campingofferet"],["Hvem hostede højest i teltet om natten?","Hostekongen"],["Hvem ville blive fanget af tidevandet ved Mont-Saint-Michel?","Tidevandets offer"],["Hvem ville passe bedst ind som konge eller dronning på Versailles?","Versailles-majestæten"]]},
+   who:[["Hvem sov dårligst på campingpladsen?","Campingofferet"],["Hvem hostede højest i teltet om natten?","Hostekongen"],["Hvem ville blive fanget af tidevandet ved Mont-Saint-Michel?","Tidevandets offer"]]},
  "canada":{story:"Canada 2026: Bjergene, bjørnene og luksus overalt, men Vancouver var skuffende som by.",
    clue:"Hvor så vi bjørne?",
-   who:[["Hvem sov mest i bilen?","Bagsædesoveren"],["Hvem ville klare sig bedst, hvis vi mødte en bjørn?","Bjørnetæmmeren"],["Hvem ville bjørnen spise først?","Bjørnefrokost"]],
+   who:[["Hvem sov mest i bilen?","Bagsædesoveren"],["Hvem ville klare sig bedst, hvis vi mødte en bjørn?","Bjørnetæmmeren"],["Hvem kunne flytte op i bjergene?","Bjergmennesket"]],
    hot:[["Hvad var højdepunktet i Canada for {n}?",["Bjergene","Bjørnene","Hotellerne","Bilturen"]]]}};
 const tripX=t=>TRIP_EXTRA[norm(t.place)]||{};
 const FAMILY_TRIPS=[
@@ -2318,7 +2318,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=45;
+const APP_V=46;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
