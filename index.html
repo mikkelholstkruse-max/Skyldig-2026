@@ -2022,7 +2022,7 @@ function discoView(){
     <div class="dpanel"><b>Spillets længde</b><div class="dseg" id="dlen">${Object.entries(LENS).map(([k,v])=>`<button type="button" data-dl="${k}" aria-pressed="${(D.len||store("disco.len")||"langt")===k}">${v.name}</button>`).join("")}</div><p class="dsmall">Musikquiz: først til ${lenOf(D.len||store("disco.len")).dq} point.</p></div>
     <div class="dmodes">
       <button class="dcard" id="d-quiz" style="--c:#ff3fa4"><b>Musikquiz</b><span>Sangen spiller, og alle svarer på egen telefon.</span></button>
-      <button class="dcard" id="d-bingo" style="--c:#00b8ff"><b>Disko-bingo</b><span>Alle får en plade. Man kan kun krydse af, hvis en sang, der faktisk er spillet, passer.</span></button>
+      <button class="dcard" id="d-bingo" style="--c:#00b8ff"><b>Disko-bingo</b><span>Alle får en plade. Gæt hvem der synger. Gætter du rigtigt, må du krydse et felt, der passer på sangen.</span></button>
       <button class="dcard" id="d-join" style="--c:#ff8a00"><b>Hop ind</b><span>Har nogen startet en Disko? Scan QR-koden på deres skærm, eller skriv koden her.</span></button>
     </div>
     <div class="drounds">${Object.values(DRT).map(r=>`<span style="--c:${r.color}">${r.name}</span>`).join("")}</div>
@@ -2135,34 +2135,41 @@ function newBingoCard(){BSIM.init();const f=BSIM.f,ids=BINGO_SQ.map((x,i)=>i).fi
 function bingoLines(m){const L=[];for(let r=0;r<4;r++)L.push([0,1,2,3].map(c=>r*4+c));for(let c=0;c<4;c++)L.push([0,1,2,3].map(r=>r*4+c));L.push([0,5,10,15],[3,6,9,12]);return L.filter(l=>l.every(i=>m[i]!=null)).length}
 function bingoCard(R,players){
   const ck="disco.card."+DO.code;let card=D.card&&D.card.code===DO.code?D.card:store(ck);if(!card||!card.sq){card={...newBingoCard(),code:DO.code,done:{}};store(ck,card)}card.done=card.done||{};D.card=card;
-  const cur=R.status==="reveal"&&R.sid!=null?SONGS[R.sid]:null;const canMark=!!cur&&!card.done[cur.id];
+  card.guess=card.guess||{};const cur=R.status==="reveal"&&R.sid!=null?SONGS[R.sid]:null;const playing=R.status==="play"&&R.sid!=null;
+  const myGuess=cur?card.guess[cur.id]:playing?card.guess[R.sid]:null,guessed=cur?isRight("kunstner",cur,myGuess)>0:false;const canMark=!!cur&&!card.done[cur.id]&&guessed;
   const valid=cur?card.sq.map((k,i)=>k>=0&&card.mark[i]==null&&BINGO_SQ[k][1](cur)?i:-1).filter(i=>i>=0):[];
   const showHint=cur&&D.hint===cur.id;const lines=bingoLines(card.mark);
-  const key="b"+R.status+R.n+JSON.stringify(card.mark)+(card.called||0)+(showHint?"h":"")+DO.bingos.length+DO.cheats.length;if(DO.shown===key)return;DO.shown=key;
+  const key="b"+R.status+R.n+JSON.stringify(card.mark)+(card.called||0)+(showHint?"h":"")+DO.bingos.length+DO.cheats.length+(myGuess||"");if(DO.shown===key)return;DO.shown=key;
   const cheat={};DO.cheats.forEach(c=>cheat[c.name]=(cheat[c.name]||0)+1);
   app.innerHTML=`${dTop("",lines?`${lines} × BINGO`:`Sang ${R.n||0}`)}
   ${cur?`<div class="dprev big"><span class="dsmall">Afsløret</span><b>${esc(cur.main)} · ${esc(cur.title)}</b>${cur.unsure?"":` <em>${cur.year}</em>`}</div>
-    <p class="bstate ${canMark?"go":"done"}">${canMark?(showHint?(valid.length?"Det grønne felt passer. Kryds det nu.":"Ingen felter på din plade passer til denne sang."):"Kryds ét felt, der passer. Forkert felt = CHEATER!"):"Du har krydset for denne sang."}</p>`
-   :`<div class="dprev big"><span class="dsmall">Lyt med</span><b>Der spilles en sang…</b></div><p class="bstate wait">Du kan krydse, når DJ'en afslører sangen.</p>`}
+    <p class="bstate ${canMark?"go":"done"}">${canMark?(showHint?(valid.length?"Det grønne felt passer. Kryds det nu.":"Ingen felter på din plade passer til denne sang."):`Rigtigt gættet! Kryds ét felt, der passer. Forkert felt = CHEATER!`):card.done[cur.id]?"Du har krydset for denne sang.":myGuess?`Du gættede ${esc(myGuess)}. Ingen kryds denne gang.`:"Du nåede ikke at gætte. Ingen kryds denne gang."}</p>`
+   :playing?(myGuess?`<div class="dprev big"><span class="dsmall">Dit gæt</span><b>${esc(myGuess)}</b></div><p class="bstate wait">Gættet er låst. Gætter du rigtigt, må du krydse, når DJ'en afslører sangen.</p>`
+     :`<div class="dpanel"><b>Hvem synger?</b><p class="dsmall">Gæt kunstneren for at måtte krydse på pladen.</p><div id="bgw"></div><button class="dbtn" id="bglock" style="--c:#18c26b" disabled>Lås gættet</button></div>`)
+   :`<div class="dprev big"><span class="dsmall">Lyt med</span><b>Venter på næste sang…</b></div>`}
   <div class="bgrid">${card.sq.map((k,i)=>k<0?`<div class="bsq free on">${ballHTML(44)}</div>`:`<button class="bsq${card.mark[i]!=null?" on":""}${showHint&&valid.includes(i)?" hint":""}${!canMark&&card.mark[i]==null?" dis":""}" data-sq="${i}" style="--c:${["#ff3fa4","#00b8ff","#ffd400","#18c26b","#7a3cff","#ff8a00"][(i*7)%6]}">${esc(BINGO_SQ[k][0])}${card.mark[i]!=null&&card.mark[i]>=0?`<small>${esc(SONGS[card.mark[i]].main)}</small>`:""}</button>`).join("")}</div>
   <button class="dbtn bcall${lines>(card.called||0)?" ready":""}" id="dbingo" style="--c:${lines>(card.called||0)?"#ff3fa4":"#7a3cff"}">BINGO!</button>
   <p class="dsmall c">Glemmer du at krydse, før næste sang starter, er chancen væk. Tryk kun BINGO, når du har en hel række.</p>
   ${DO.bingos.length||Object.keys(cheat).length?`<div class="dpanel">${DO.bingos.length?`<b>Bingo</b><span>${DO.bingos.map(b=>esc(b.name)).join(", ")}</span>`:""}${Object.keys(cheat).length?`<b>Cheaterlisten</b><span>${Object.entries(cheat).map(([n,c])=>`${esc(n)} ×${c}`).join(" · ")}</span>`:""}</div>`:""}`;
   spinBalls();wireBeat();
+  if(playing&&!myGuess&&$("#bgw")){let pick=null;const w=pickerUI("kunstner",v=>{pick=v;$("#bglock").disabled=false});$("#bgw").innerHTML=w.html;w.wire();
+    $("#bglock").onclick=()=>{if(!pick)return;card.guess[R.sid]=pick;store(ck,card);DSFX.stamp();DO.shown=null;bingoCard(DO.R,players)}}
   $("#dbingo").onclick=()=>{const L=bingoLines(card.mark);
     if(L>(card.called||0)){card.called=L;store(ck,card);SND.allow=true;DSFX.bingo();SND.allow=false;siren("BINGO!","Rejs dig og dans",true);[0,400,800].forEach(t=>setTimeout(()=>confetti(170,.3),t));DO.callBingo();DO.shown=null;bingoCard(DO.R,players)}
-    else{snyder(L?"Den række har du allerede råbt for":"Du har ikke en hel række endnu");DO.cheat("bingo",R.n)}};
+    else{if(!cheatOK()){dToast(L?"Den række har du allerede råbt for":"Du har ikke en hel række endnu");return}snyder(L?"Den række har du allerede råbt for":"Du har ikke en hel række endnu");DO.cheat("bingo",R.n)}};
   app.querySelectorAll("[data-sq]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sq;
     if(card.mark[i]!=null)return;
     if(!cur){dToast("Vent til DJ'en afslører sangen");SFX.tap();return}
-    if(!canMark){dToast("Du har allerede krydset for denne sang");SFX.tap();return}
+    if(!canMark){dToast(card.done[cur.id]?"Du har allerede krydset for denne sang":"Du skal gætte kunstneren rigtigt for at krydse");SFX.tap();return}
     if(valid.includes(i)){card.mark[i]=cur.id;card.done[cur.id]=true;D.hint=null;store(ck,card);DSFX.stamp();
       const r=b.getBoundingClientRect();confetti(60,(r.top+r.height/2)/innerHeight);
       if(bingoLines(card.mark)>(card.called||0))setTimeout(()=>dToast("Du har en række! Tryk BINGO!"),300);
       DO.shown=null;bingoCard(DO.R,players);return}
+    if(!cheatOK()){dToast("Det felt passer ikke");SFX.tap();return}
     snyder();DO.cheat();setTimeout(()=>{D.hint=cur.id;DO.shown=null;if(DO.R)bingoCard(DO.R,players)},1700)});
 }
 function dToast(t){const n=document.createElement("div");n.className="dtoast";n.textContent=t;document.body.appendChild(n);setTimeout(()=>n.remove(),2000)}
+function cheatOK(){const n=Date.now();if(n<(D.cheatUntil||0))return false;D.cheatUntil=n+10000;return true}
 function snyder(sub="Det felt passer ikke",hold){
   $("#snyder")?.remove();document.body.insertAdjacentHTML("beforeend",`<div id="snyder"><div><div class="s1">CHEATER!</div><div class="s2">${esc(sub)}</div>${hold?`<button class="dbtn" id="snyok" style="--c:#ff3fa4;margin-top:22px">Ja, jeg cheatede</button>`:""}</div></div>`);
   const yell=()=>{SND.allow=true;DSFX.snyder();SND.allow=false;shout("Cheater! Cheater!",true,"en-US");shake()};yell();
@@ -2175,7 +2182,7 @@ const awayStart=()=>{const R=DO.R;if(!R||!DO.code||D.away||Date.now()-(D.okAway|
 const awayEnd=()=>{if(document.visibilityState==="hidden"||!document.hasFocus())return;const a=D.away;D.away=null;if(a&&a.code===DO.code&&DO.R&&Date.now()-a.t>2000)appCheat(a)};
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")awayStart();else awayEnd()});
 addEventListener("blur",()=>setTimeout(()=>{if(!document.hasFocus())awayStart()},150));addEventListener("focus",awayEnd);addEventListener("pagehide",awayStart);
-function appCheat(a){const R=DO.R;let sub="Du forlod spillet, mens sangen kørte. Shazam tæller ikke!";
+function appCheat(a){if(!cheatOK())return;const R=DO.R;let sub="Du forlod spillet, mens sangen kørte. Shazam tæller ikke!";
   if(a.mode==="quiz")sub+=" Det koster 1 point.";else{const card=D.card;if(card&&R){const pl=(R.played||[]).slice().reverse();for(const sid of pl){const i=card.mark.findIndex((m,k)=>m===sid&&card.sq[k]>=0);if(i>=0){card.mark[i]=null;store("disco.card."+DO.code,card);sub+=" Du mister et kryds.";break}}}}
   snyder(sub,true);DO.cheat("app",a.n);DO.shown=null;setTimeout(()=>{if(S.view==="disco")render()},300)}
 
@@ -2318,7 +2325,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=47;
+const APP_V=48;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
