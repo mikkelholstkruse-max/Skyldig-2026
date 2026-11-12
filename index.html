@@ -1790,9 +1790,9 @@ const decadeOf=y=>Math.floor(y/10)*10;
 const decName=d=>d<1960?"Før 1960":`${String(d).slice(2)}'erne`;
 const appleLink=s=>"https://music.apple.com/dk/search?term="+encodeURIComponent(s.main+" "+s.title.replace(/\(.*?\)/g,""));
 const DRT={
- aar:{name:"Årstals-dart",color:"#ff3fa4",sub:"Gæt udgivelsesåret.",pts:"Præcist 3 · inden for 2 år 2 · rigtigt årti 1",dated:true},
+ aar:{name:"Årstals-dart",color:"#ff3fa4",sub:"Gæt udgivelsesåret.",pts:"Præcist 2 · inden for 2 år 1",dated:true},
  kunstner:{name:"Hvem synger?",color:"#00b8ff",sub:"Find kunstneren i kataloget.",pts:"Rigtigt 2"},
- titel:{name:"Hvad hedder den?",color:"#ff8a00",sub:"Find titlen i kataloget.",pts:"Rigtigt 3"},
+ titel:{name:"Hvad hedder den?",color:"#ff8a00",sub:"Find titlen i kataloget.",pts:"Rigtigt 2"},
  aarti:{name:"Tidsmaskinen",color:"#7a3cff",sub:"Hvilket årti er den fra?",pts:"Rigtigt 1",dated:true},
  foreller:{name:"Før eller efter?",color:"#18c26b",sub:"Er den ældre eller nyere end forrige plade?",pts:"Rigtigt 1",dated:true},
 };
@@ -1818,8 +1818,8 @@ function search(list,q){const f=fold(q);if(!f)return [];const words=f.split(" ")
 function isRight(type,s,a,prev){
   if(a==null)return 0;
   if(type==="kunstner")return s.names.concat([s.main]).some(n=>fold(n)===fold(a))?2:0;
-  if(type==="titel")return fold(a)===fold(s.title)?3:0;
-  if(type==="aar"){const d=Math.abs(Number(a)-s.year);return d===0?3:d<=2?2:decadeOf(Number(a))===decadeOf(s.year)?1:0}
+  if(type==="titel")return fold(a)===fold(s.title)?2:0;
+  if(type==="aar"){const d=Math.abs(Number(a)-s.year);return d===0?2:d<=2?1:0}
   if(type==="aarti")return Number(a)===decadeOf(s.year)?1:0;
   if(type==="foreller")return a===(s.year<prev.year?"Ældre":"Nyere")?1:0;return 0}
 function answerText(type,s,prev){if(type==="kunstner")return s.main;if(type==="titel")return s.title;if(type==="aar")return String(s.year);if(type==="aarti")return decName(decadeOf(s.year));if(type==="foreller")return s.year<prev.year?"Ældre":"Nyere"}
@@ -2005,7 +2005,7 @@ const DO={code:null,R:null,players:[],answers:[],bingos:[],cheats:[],unsub:[],sh
     await this.setRoom({...pick,status:"play",result:null});
     if(R.auto){D.paused=false;if(R.full){if(!await MK.play(SONGS[pick.sid])){url=await PREV.lookup(SONGS[pick.sid]);PREV.play(url)}}else if(url)PREV.play(url);AUTO.onPlay()}},
   async reveal(){AUTO.clear();const R=this.R,s=SONGS[R.sid],prev=R.prev!=null?SONGS[R.prev]:null;if(R.mode==="bingo"){await this.setRoom({status:"reveal",result:{}});AUTO.onReveal();return}
-    const v=this.roundAns(),gain={},gold={...(R.gold||{})};Object.entries(v).forEach(([uid,x])=>{const p=isRight(R.type,s,x.a,prev)*(x.g&&!gold[uid]?2:1);if(x.g)gold[uid]=true;if(p)gain[uid]=p});
+    const v=this.roundAns(),gain={},gold={...(R.gold||{})};Object.entries(v).forEach(([uid,x])=>{const g=x.g&&!gold[uid],b=isRight(R.type,s,x.a,prev),p=g?(b?b*2:-1):b;if(x.g)gold[uid]=true;if(p)gain[uid]=p});
     const scores={...(R.scores||{})};Object.entries(gain).forEach(([u,p])=>scores[u]=(scores[u]||0)+p);
     await this.setRoom({status:"reveal",result:{ans:v,gain},scores,gold,prevScores:R.scores||{}});AUTO.onReveal()},
   async cheat(kind="felt",n=0){await this.write(()=>ON.db.collection("disco/"+this.code+"/cheats").add({cid:ON.me+"-"+Date.now(),uid:ON.me,name:ON.name,kind,n,at:Date.now()}))},
@@ -2096,7 +2096,7 @@ function discoRoom(){
     <div class="dbanner" style="--c:${T.color}"><b>${esc(T.name)}</b><span>${esc(T.sub)}</span><small>${esc(T.pts)}</small></div>
     ${R.type==="foreller"&&prev?`<div class="dprev">Forrige plade: <b>${esc(prev.main)} · ${esc(prev.title)}</b> (${prev.year})</div>`:""}
     ${w.html}
-    ${hasGold?`<button type="button" class="dpl gold" id="dgold" style="--c:#ffd400"><i class="gold-dot"></i> Brug min guldplade (dobbelt point)</button>`:""}
+    ${hasGold?`<button type="button" class="dpl gold" id="dgold" style="--c:#ffd400"><i class="gold-dot"></i> Brug min guldplade (dobbelt point · forkert svar −1)</button>`:""}
     <button class="dbtn" id="dlock" style="--c:#18c26b" disabled>Lås svaret</button>`;
     wireBeat();wireDjBar(R);w.wire();const g=$("#dgold");if(g)g.onclick=()=>{gold=!gold;g.classList.toggle("on",gold);DSFX.pop()};
     $("#dlock").onclick=e=>{if(pick==null)return;e.target.disabled=true;DSFX.chord();DO.answer(pick,gold)};return;
@@ -2104,14 +2104,14 @@ function discoRoom(){
   if(R.status==="reveal"){
     if(DO.shown===key)return;DO.shown=key;const x=(R.result?.ans||{})[me],got=(R.result?.gain||{})[me]||0;
     app.innerHTML=`${dTop("",`Runde ${R.n}`)}${vinylHTML(s,true,T.color)}
-    <div class="dpanel c"><b style="font-size:22px">${got?`+${got} point!`:x?"Ikke denne gang":"Du nåede ikke at svare"}</b><span class="dsmall">Rigtigt svar: <b>${esc(answerText(R.type,s,prev))}</b>${x?` · Dit svar: ${esc(R.type==="aarti"?decName(x.a):x.a)}`:""}${x?.g?" · guldplade brugt":""}</span></div>
+    <div class="dpanel c"><b style="font-size:22px">${got>0?`+${got} point!`:got<0?`${got} point. Guldpladen ramte forkert`:x?"Ikke denne gang":"Du nåede ikke at svare"}</b><span class="dsmall">Rigtigt svar: <b>${esc(answerText(R.type,s,prev))}</b>${x?` · Dit svar: ${esc(R.type==="aarti"?decName(x.a):x.a)}`:""}${x?.g?" · guldplade brugt":""}</span></div>
     ${revealList(R,players,s,prev)}${scoreRow(players,R.scores||{},R.gold)}<p class="dsmall c">${R.auto?"Sangen kører videre. DJ'en starter næste, når I er klar.":"DJ'en starter næste plade."}</p>`;
     if(host&&R.auto){app.insertAdjacentHTML("afterbegin",djBar(R));wireDjBar(R)}
     wireBeat();if(got){DSFX.yay();confetti(120,.35)}else DSFX.nope();return;
   }
 }
 function revealList(R,players,s,prev){if(R.mode!=="quiz")return "";const A=R.result?.ans||{},G=R.result?.gain||{};
-  return `<div class="dpanel"><b>Svarene</b>${players.map(p=>{const x=A[p.id];return `<div class="drow"><span></span>${av(p)}<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}: ${x?esc(R.type==="aarti"?decName(x.a):x.a):"–"}${x?.g?' <i class="gold-dot"></i>':""}</span><em>${G[p.id]?"+"+G[p.id]:""}</em></div>`}).join("")}</div>`}
+  return `<div class="dpanel"><b>Svarene</b>${players.map(p=>{const x=A[p.id];return `<div class="drow"><span></span>${av(p)}<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}: ${x?esc(R.type==="aarti"?decName(x.a):x.a):"–"}${x?.g?' <i class="gold-dot"></i>':""}</span><em>${G[p.id]?(G[p.id]>0?"+":"")+G[p.id]:""}</em></div>`}).join("")}</div>`}
 
 /* ---------- bingo med kontrol ---------- */
 /* bankoplader med samme sværhed: hver plade prøves af i 150 simulerede spil, og kun plader tæt på målet bruges */
@@ -2325,7 +2325,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=48;
+const APP_V=49;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
