@@ -462,6 +462,17 @@ button.dopt{cursor:pointer;font-family:"Baloo 2",system-ui,sans-serif}
 .votes{display:flex;flex-direction:column;gap:8px}.vrow{padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.04)}.vrow.top{background:rgba(255,210,63,.12);box-shadow:inset 0 0 0 2px rgba(255,210,63,.5)}.vw{display:flex;align-items:center;gap:8px;font-size:17px}.vc{margin-left:auto;font-weight:900;opacity:.8}.vby{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .seg2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.seg2 button{font:inherit;font-weight:800;padding:12px 8px;border-radius:14px;border:2px solid rgba(255,255,255,.25);background:transparent;color:inherit;cursor:pointer}.seg2 button.on{background:var(--bulb,#ffd23f);color:#1a1035;border-color:transparent}
 #netbar{position:fixed;left:50%;top:max(10px,env(safe-area-inset-top));transform:translateX(-50%);z-index:400;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:#ff2d4d;color:#fff;font-weight:800;font-size:14px;box-shadow:0 8px 30px #0006;max-width:calc(100% - 24px)}#netbar.ok{background:#18c26b}#netbar.ok button{display:none}#netbar button{font:inherit;font-weight:900;border:0;border-radius:999px;padding:6px 12px;background:#fff;color:#1a1035}
+.accused.duel{display:flex;align-items:center;justify-content:center;gap:14px}.accused.duel .vs{font-size:28px;color:var(--bulb);position:relative}
+.vspick{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}.vspick button{display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:16px;padding:10px 12px;color:inherit;font:inherit;font-weight:800}
+.readsc{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;transition:opacity .55s}
+.readsc.out{opacity:0;pointer-events:none}.readsc .rs-in{position:relative;display:flex;flex-direction:column;align-items:center;gap:12px;max-width:520px}
+.readsc .rs-tag{font-size:13px;letter-spacing:.22em;text-transform:uppercase;opacity:.8}.readsc .rs-sub{margin:0;opacity:.8}
+.readsc.lit{background:radial-gradient(circle at 50% 42%,#fff6d0 0%,#ffd23f 30%,#ff7a00 62%,#2a0d10 100%);color:#1a0b05;animation:rsLit .9s ease-out}
+.readsc.lit .btn{background:#1a0b05;color:#ffd23f;box-shadow:0 6px 0 #000}
+.readsc.lit .rs-q{font-size:clamp(26px,7.5vw,40px);line-height:1.15;margin:4px 0;text-shadow:0 2px 0 rgba(255,255,255,.4)}.readsc.lit .rs-type{font-weight:900}
+.readsc.dark{background:transparent;color:#fff4e6}.readsc.dark .rs-ink{position:absolute;inset:-60%;background:radial-gradient(circle,#05010a 55%,rgba(5,1,10,.0) 70%);animation:rsInk 1.6s ease-in forwards;transform-origin:50% 50%}
+.readsc.dark .rs-in{animation:rsIn 1s .9s both}.readsc.dark .rs-who{font-size:30px;margin:0}.readsc .rs-cd{font-size:44px;color:#ffd23f;font-variant-numeric:tabular-nums}
+@keyframes rsInk{0%{transform:scale(.05);opacity:.6}100%{transform:scale(1.4);opacity:1}}@keyframes rsIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes rsLit{0%{filter:brightness(.2)}60%{filter:brightness(1.4)}100%{filter:none}}
 .flashnote{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px;border-radius:16px;text-align:center}.flashnote b{font-size:20px}.flashnote.fire{background:linear-gradient(90deg,#ff7a00,#ff2d4d);color:#fff}.flashnote.cold{background:#2d6bff33;box-shadow:inset 0 0 0 2px #7fdcff}
 .awards{display:flex;flex-direction:column;gap:8px}.award{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.06)}.award b{display:block}.award span.k{font-size:13px;opacity:.75}
 .st-note{font-size:12px;color:#fff;opacity:.75}
@@ -796,7 +807,7 @@ const TYPES={
 };
 const MAJ=t=>t==="who"||t==="trip";
 const COLORS=["#ff3d7f","#ffd23f","#4de0c5","#8fa8ff","#ff8a3d","#c38bff","#7ae35f","#ff6b6b"];
-let TARGET=21;const COURT_SEC={indsigelse:20},LENS={kort:{name:"Kort spil",sk:12,dq:10},langt:{name:"Langt spil",sk:21,dq:20}},lenOf=k=>LENS[k]||LENS.langt;
+let TARGET=21;const COURT_SEC={indsigelse:15},LENS={kort:{name:"Kort spil",sk:12,dq:10},langt:{name:"Langt spil",sk:21,dq:20}},lenOf=k=>LENS[k]||LENS.langt;
 const HOME={lat:55.9,lon:10.5};
 /* steder: [navn, lat, lon, land på engelsk] */
 const PLACES=[["Blokhus",57.25,9.58,"Denmark"],["Skagen",57.72,10.58,"Denmark"],["Bornholm",55.13,14.92,"Denmark"],["Lalandia Billund",55.73,9.11,"Denmark"],["Legoland",55.735,9.13,"Denmark"],["Fanø",55.42,8.41,"Denmark"],["Løkken",57.37,9.71,"Denmark"],["Henne Strand",55.73,8.17,"Denmark"],["Hvide Sande",56.0,8.13,"Denmark"],["Samsø",55.87,10.6,"Denmark"],["Ærø",54.88,10.4,"Denmark"],["Rømø",55.13,8.5,"Denmark"],["Marielyst",54.67,11.95,"Denmark"],["København",55.68,12.57,"Denmark"],["Aarhus",56.16,10.2,"Denmark"],
@@ -1156,9 +1167,10 @@ function resolve(G,ans,players){
   if(BOARD(rd.type))(res.tops||(res.truth?[res.truth]:[])).forEach(id=>picked[id]=(picked[id]||0)+1);
   return {status:"reveal",result:{ans:all,...res,afterCourt:G.ph==="b",flash},streak,miss,picked,hits,scores,titles,stats,trips,snap,prevScores:G.scores,court:G.court?{...G.court,done:true}:null};
 }
-function objection(G,uid){
-  const s=G.snap||{};return {status:"court",ph:"b",court:{reason:"indsigelse",by:uid,firstAns:G.result?.ans||null},objUsed:{...(G.objUsed||{}),[uid]:true},scores:s.scores||G.scores,titles:s.titles||G.titles,stats:s.stats||G.stats,trips:s.trips||G.trips,streak:s.streak||G.streak,miss:s.miss||G.miss,picked:s.picked||G.picked,hits:s.hits||G.hits,result:null,snap:null};
+function objection(G,uid,vs){
+  const s=G.snap||{};return {status:"court",ph:"b",rd:{...G.rd,cand:[uid,vs]},court:{reason:"faktisk",by:uid,vs,firstAns:G.result?.ans||null},objUsed:{...(G.objUsed||{}),[uid]:true},scores:s.scores||G.scores,titles:s.titles||G.titles,stats:s.stats||G.stats,trips:s.trips||G.trips,streak:s.streak||G.streak,miss:s.miss||G.miss,picked:s.picked||G.picked,hits:s.hits||G.hits,result:null,snap:null};
 }
+const vsOptions=(G,uid,players)=>players.filter(p=>p.id!==uid&&p.id!==G.rd.judge&&(G.rd.cand||[]).includes(p.id));
 const canObject=(G,uid)=>G.status==="reveal"&&BOARD(G.rd.type)&&!G.result.afterCourt&&(G.result.tops||[G.result.truth]).includes(uid)&&uid!==G.rd.judge&&!(G.objUsed||{})[uid];
 const needsAnswer=(G,uid)=>G.ph!=="b"||!G.rd.judge||uid===G.rd.judge;
 const someoneWon=(sc,G)=>{if(G&&G.target)TARGET=G.target;return Object.values(sc||{}).some(v=>v>=TARGET)};
@@ -1222,7 +1234,7 @@ async function reveal(G,players,afterHTML,opts={}){
   const label=v=>isP?`${av(P(v),"m")}<b>${esc(P(v).name)}</b>`:`<b>${esc(v)}</b>`;
   const head=R.truth==null?`<div class="res"><div class="lbl">Ingen svar</div></div>`:`<div class="res"><div class="lbl">${J?esc(J.name)+" sagde":tops.length>1?"Flertallet var delt":"Flertallet sagde"}</div><div class="resv">${tops.map(label).join('<span class="og">og</span>')}</div></div>`;
   const votes=`<div class="votes"><div class="lbl">${J?"Gættene":"Stemmerne"}</div>${order.map(v=>`<div class="vrow${tops.includes(v)?" top":""}"><div class="vw">${label(v)}<span class="vc">${groups[v].length}</span></div><div class="vby">${groups[v].map(id=>`<span class="vote" style="--pc:${P(id).color}">${av(P(id))}${esc(P(id).name)}</span>`).join("")}</div></div>`).join("")||'<p class="muted">Ingen stemmer.</p>'}</div>`;
-  app.innerHTML=`${hud(G.n)}${rd.trip?globeHTML("rg",false,tripCap(rd)):""}${qcard(rd,R.afterCourt?"Efter indsigelsen":"")}<div id="rv" class="col-stack" hidden>${head}${votes}</div><div id="gains" class="gains" hidden></div>${R.flash?`<div class="flashnote ${R.flash.kind}" hidden id="fl">${R.flash.kind==="fire"?`<b>${esc(P(R.flash.id).name)} er on fire</b><span>${R.flash.n} runder i træk med point</span>`:`<b>${esc(P(R.flash.id).name)} er helt ude at cykle</b><span>${R.flash.n} runder i træk uden point</span>`}</div>`:""}<div id="trk" hidden>${(G.target&&(TARGET=G.target),track(players,G.scores,G.prevScores))}</div><div id="after" hidden class="col-stack">${afterHTML}</div>`;
+  app.innerHTML=`${hud(G.n)}${rd.trip?globeHTML("rg",false,tripCap(rd)):""}${qcard(rd,R.afterCourt?"Efter duellen":"")}<div id="rv" class="col-stack" hidden>${head}${votes}</div><div id="gains" class="gains" hidden></div>${R.flash?`<div class="flashnote ${R.flash.kind}" hidden id="fl">${R.flash.kind==="fire"?`<b>${esc(P(R.flash.id).name)} er on fire</b><span>${R.flash.n} runder i træk med point</span>`:`<b>${esc(P(R.flash.id).name)} er helt ude at cykle</b><span>${R.flash.n} runder i træk uden point</span>`}</div>`:""}<div id="trk" hidden>${(G.target&&(TARGET=G.target),track(players,G.scores,G.prevScores))}</div><div id="after" hidden class="col-stack">${afterHTML}</div>`;
   const anchor=app.firstElementChild,dead=()=>!anchor.isConnected;wireMute();if(rd.trip&&$("#rg")){GLOBE.mount($("#rg"));GLOBE.flyTo(rd.trip.lat,rd.trip.lon,rd.trip.country,{route:false,zoom:2.3})}
   await sleep(700);if(dead())return;const rv=$("#rv");rv.hidden=false;rv.classList.add("deal");if(!opts.me||SND.mode==="full")SFX.ding();
   await sleep(700);if(dead())return;
@@ -1234,13 +1246,27 @@ async function reveal(G,players,afterHTML,opts={}){
 }
 /* retssalen */
 
+function pickVs(G,uid,players,box,onPick){const opts=vsOptions(G,uid,players);if(!box)return;
+  box.innerHTML=`<div class="panel"><div class="lbl">Det var faktisk…</div><div class="vspick">${opts.map(p=>`<button type="button" data-vs="${esc(p.id)}">${av(p,"m")}<span>${esc(p.name)}</span></button>`).join("")}</div><button class="link" id="vsno" style="margin-top:8px">Fortryd</button></div>`;
+  box.querySelectorAll("[data-vs]").forEach(b=>b.onclick=()=>{SFX.gavel();onPick(b.dataset.vs)});const no=box.querySelector("#vsno");if(no)no.onclick=()=>onPick(null)}
+/* oplæseren: én telefon lyser op med udsagnet, de andre går i sort, indtil det er læst højt */
+const READ_SEC=15;
+function readerOf(R,players){const ps=players.filter(p=>!(R.rd.type==="hot"&&p.id===R.rd.judge));if(!ps.length)return null;return ps[((R.n||1)-1)%ps.length]}
+function readScene(R,rdr,o,key,onOpen){$("#readsc")?.remove();const me=rdr.id===o.me,rd=R.rd;let done=false;
+  document.body.insertAdjacentHTML("beforeend",me?`<div id="readsc" class="readsc lit"><div class="rs-in"><div class="rs-tag">Du læser op</div><div class="rs-type">${esc(TYPES[rd.type].name)}</div><h2 class="rs-q">${esc(rd.q)}</h2><p class="rs-sub">Læs det højt for de andre. Langsomt og dramatisk.</p><button class="btn gold" id="rsgo">Vis for alle nu</button><p class="rs-sub" style="opacity:.6">Ellers kommer det frem om <b id="rscd">${READ_SEC}</b> sekunder</p></div></div>`
+    :`<div id="readsc" class="readsc dark"><div class="rs-ink"></div><div class="rs-in"><div class="rs-tag">Shhh…</div>${av(rdr,"xl")}<h2 class="rs-who">${esc(rdr.name)} læser op</h2><p class="rs-sub">Kig op, og lyt.</p><b class="rs-cd" id="rscd">${READ_SEC}</b></div></div>`);
+  try{me?SFX.fanfare():SFX.whoosh()}catch(e){}
+  const el=$("#readsc"),t0=Date.now();
+  const fin=()=>{if(done)return;done=true;clearInterval(it);(o.opened=o.opened||{})[R.n]=1;o._openCb=null;if(el){el.classList.add("out");setTimeout(()=>el.remove(),600)}if(o.shown===key)onOpen()};
+  const it=setInterval(()=>{if(!el.isConnected||o.shown!==key||!o.R||o.R.n!==R.n){done=true;clearInterval(it);el.remove();return}const left=Math.max(0,READ_SEC-(Date.now()-t0)/1000),cd=$("#rscd");if(cd)cd.textContent=Math.ceil(left);if(left<=0)fin()},200);
+  o._openCb={n:R.n,f:fin};const go=$("#rsgo");if(go)go.onclick=()=>{try{o.rm&&o.rm.emit("open",{n:R.n})}catch(e){}fin()}}
 function courtHTML(G,sec){
-  const c=G.court,J=G.rd.judge?P(G.rd.judge):null,B=P(c.by);
+  const c=G.court,J=G.rd.judge?P(G.rd.judge):null,B=P(c.by),Y=c.vs?P(c.vs):null;
   return `${hud(G.n)}<div class="court"><div class="gavel" aria-hidden="true"><svg viewBox="0 0 120 80"><rect x="10" y="66" width="70" height="10" rx="3" fill="#8a5a2a"/><g class="hd"><rect x="44" y="6" width="44" height="22" rx="5" fill="#b07a3c"/><rect x="62" y="26" width="8" height="46" rx="3" fill="#8a5a2a" transform="rotate(40 66 28)"/></g></svg></div>
-  <h2>Indsigelse!</h2><p style="position:relative;font-weight:800">${esc(B.name)} protesterer.</p>
-  <div class="accused"><div class="who acc" data-c="${esc(c.by)}">${av(B,"l")}<span>${esc(B.name)}</span></div></div>
+  <h2>Det var faktisk…!</h2><p style="position:relative;font-weight:800">${esc(B.name)} siger, det faktisk er ${Y?esc(Y.name):"en anden"}!</p>
+  <div class="accused duel"><div class="who acc" data-c="${esc(c.by)}">${av(B,"l")}<span>${esc(B.name)}</span></div>${Y?`<b class="vs">VS</b><div class="who acc" data-c="${esc(c.vs)}">${av(Y,"l")}<span>${esc(Y.name)}</span></div>`:""}</div>
   <div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,244,230,.12)" stroke-width="10"/><circle id="rc" cx="60" cy="60" r="52" fill="none" stroke="#ffd23f" stroke-width="10" stroke-linecap="round" stroke-dasharray="327" stroke-dashoffset="0"/></svg><b id="cd">${sec}</b></div>
-  <p class="muted" style="position:relative">Forsvar dig højt. Resten må gerne blande sig. ${J?`Når tiden er gået, beslutter ${esc(J.name)} igen. Alle andres gæt står ved magt.`:"Når tiden er gået, stemmer alle igen."}</p></div>`;
+  <p class="muted" style="position:relative">Begge forsvarer sig højt. ${J?`Når tiden er gået, vælger ${esc(J.name)} mellem de to.`:"Når tiden er gået, stemmer alle: hvem af de to?"}</p></div>`;
 }
 function runCourt(sec,onDone){
   SFX.gavel();setTimeout(SFX.gavel,1050);const t0=Date.now();let last=sec;
@@ -1306,7 +1332,7 @@ function homeView(){
     <div style="--c:#ffd23f"><b>Hvem af os?</b>Et udsagn. Hvem passer det på?</div>
     <div style="--c:#ff2d4d"><b>Hot seat</b>Én i stolen. Hvad vælger personen?</div>
     <div style="--c:#4de0c5"><b>Ferieminder</b>Jeres egne ferier på globussen.</div>
-    <div style="--c:#b07a3c"><b>Indsigelse!</b>Valgt? Forsvar dig én gang pr. spil.</div>
+    <div style="--c:#b07a3c"><b>Det var faktisk…!</b>Valgt? Peg på en anden. Én gang pr. spil.</div>
   </div><button class="link" id="reintro" style="align-self:center">Se introen igen</button>`;
   wireMute();
   $("#thm").onclick=()=>{THEME.toggle();$("#thm").textContent=THEME.want?"Tema til":"Tema fra"};
@@ -1319,12 +1345,40 @@ function homeView(){
 /* =========================================================
    FAMILIESTUDIET
    ========================================================= */
+/* ---------- synkronisering: alle telefoner i samme rum ender med samme familie, billeder, rejser og spørgsmål ---------- */
+const SYNC={
+  bundle(){return {lp:store("skyldig.localplayers")||null,lpdel:store("skyldig.lpdel")||{},pack:store("skyldig.pack")||null,pdel:store("skyldig.pdel")||{},seen:store("skyldig.seen")||[],throws:store("skyldig.throws")||[]}},
+  pkey(kind,e){if(kind==="trips")return norm(e.place)+"|"+(e.year||"");if(kind==="who"||kind==="quiz"||kind==="quotes")return norm(e.q);if(kind==="words")return norm(e.w);if(kind==="nicks")return norm(e.name)+"|"+norm(e.nick);return JSON.stringify(e)},
+  tomb(store_,key){const d=store(store_)||{};d[key]=Date.now();store(store_,d)},
+  merge(b){if(!b)return;let ch=false;
+    // sletninger
+    const lpdel={...(store("skyldig.lpdel")||{})};Object.entries(b.lpdel||{}).forEach(([k,t])=>{if(!(lpdel[k]>=t)){lpdel[k]=t;ch=true}});store("skyldig.lpdel",lpdel);
+    const pdel={...(store("skyldig.pdel")||{})};Object.entries(b.pdel||{}).forEach(([k,t])=>{if(!(pdel[k]>=t)){pdel[k]=t;ch=true}});store("skyldig.pdel",pdel);
+    // familien (navne, selfies, kropsbygning, højde): nyeste ændring vinder
+    if(b.lp||store("skyldig.localplayers")){let mine=clone(store("skyldig.localplayers")||[]);const before=JSON.stringify(mine);
+      (b.lp||[]).forEach(q=>{if(!q||!q.name)return;const k=norm(q.name);if((lpdel[k]||0)>(q.t||0))return;const i=mine.findIndex(x=>norm(x.name)===k);
+        if(i<0){const e=clone(q);if(mine.some(x=>x.id===e.id))e.id="p"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);mine.push(e)}
+        else{const a=mine[i];if((q.t||0)>(a.t||0))mine[i]={...a,...clone(q),id:a.id};else Object.keys(q).forEach(f=>{if(a[f]==null&&q[f]!=null)a[f]=q[f]})}});
+      mine=mine.filter(x=>!((lpdel[norm(x.name)]||0)>(x.t||0)));
+      if(JSON.stringify(mine)!==before&&mine.length){store("skyldig.localplayers",mine);if(S.view!=="setup")S.lp=mine;ch=true}}
+    // rejser, egne spørgsmål osv.
+    if(b.pack){const P0=JSON.stringify(PACK);["trips","who","quiz","quotes","words","nicks"].forEach(kind=>{const cur=PACK[kind]=PACK[kind]||[];const have=new Set(cur.map(e=>this.pkey(kind,e)));
+        (b.pack[kind]||[]).forEach(e=>{if(!e||e.ex)return;const k=this.pkey(kind,e);if(have.has(k)||(pdel[kind+":"+k]||0)>0&&!(e.t>pdel[kind+":"+k]))return;cur.push(clone(e));have.add(k)});
+        PACK[kind]=cur.filter(e=>!(pdel[kind+":"+this.pkey(kind,e)]>(e.t||0)))});
+      if(!PACK.victory&&b.pack.victory)PACK.victory=b.pack.victory;if(JSON.stringify(PACK)!==P0){store("skyldig.pack",PACK);try{PACKDB.save()}catch(e){}ch=true}}
+    // spørgsmål, I har haft
+    (b.seen||[]).forEach(k=>{if(!SEEN.has(k)){SEEN.add(k);ch=true}});store("skyldig.seen",[...SEEN].slice(-4000));
+    // billeder til at kaste
+    const tids=new Set(THROWS.map(t=>t.id));(b.throws||[]).forEach(t=>{if(t&&t.id&&!tids.has(t.id)&&!pdel["throw:"+t.id]){THROWS.push(t);tids.add(t.id);ch=true;try{ON.db&&ON.db.doc("throws/"+t.id).set(t)}catch(e){}}});THROWS=THROWS.filter(t=>{const gone=pdel["throw:"+t.id];if(gone)try{ON.db&&ON.db.doc("throws/"+t.id).delete()}catch(e){}return !gone});store("skyldig.throws",THROWS);
+    if(ch){if(S.view==="studio")render();if(!this._told){this._told=1;try{dToast("Familien er synkroniseret med de andre telefoner")}catch(e){}}}
+    return ch}
+};
 const PACKDB={
   async load(){await ON.init();if(!ON.db)return;try{const sn=await ON.db.doc("pack/seen").get();if(sn.exists)(sn.data().k||[]).forEach(k=>SEEN.add(k))}catch(e){}try{const s=await ON.db.doc("pack/family").get();if(s.exists){PACK=noEx(Object.assign(clone(DEFAULT_PACK),s.data()));store("skyldig.pack",PACK)}}catch(e){}
     try{const q=await ON.db.collection("throws").get();THROWS=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.at||0)-(b.at||0));store("skyldig.throws",THROWS)}catch(e){}},
   async save(){store("skyldig.pack",PACK);if(!ON.db)return "local";try{await ON.db.doc("pack/family").set(clone(PACK));return "db"}catch(e){return "local"}},
   async addThrow(img){const t={img,at:Date.now()};if(ON.db){try{const ref=await ON.db.collection("throws").add(t);THROWS.push({id:ref.id,...t});store("skyldig.throws",THROWS);return}catch(e){}}THROWS.push({id:"l"+Date.now(),...t});store("skyldig.throws",THROWS)},
-  async delThrow(id){THROWS=THROWS.filter(t=>t.id!==id);store("skyldig.throws",THROWS);if(ON.db)try{await ON.db.doc("throws/"+id).delete()}catch(e){}}
+  async delThrow(id){SYNC.tomb("skyldig.pdel","throw:"+id);THROWS=THROWS.filter(t=>t.id!==id);store("skyldig.throws",THROWS);if(ON.db)try{await ON.db.doc("throws/"+id).delete()}catch(e){}}
 };
 function findPlace(q){if(String(q||"").includes(",")){const parts=String(q).split(",").map(x=>x.trim()).filter(Boolean);const r=findPlace(parts[0])||findPlace(parts[parts.length-1]);return r?{...r,place:parts[0]}:null}const n=norm(q);const p=PLACES.find(x=>norm(x[0])===n);if(p)return {place:p[0],lat:p[1],lon:p[2],country:p[3]};
   const dk=Object.keys(DK_COUNTRY).find(k=>norm(k)===n);const en=dk?DK_COUNTRY[dk]:null;GLOBE.init();
@@ -1360,7 +1414,7 @@ function studioView(){
   <div class="tabs">${Object.entries(tabs).map(([k,v])=>`<button data-tab="${k}" aria-pressed="${k===t}">${v}</button>`).join("")}</div>
   <div class="panel">${body}</div><p class="muted c" id="saved" style="font-size:12px;opacity:.6">Version ${APP_V}</p>`;
   $("#back").onclick=()=>go("hub");
-  if(t==="family"){const save=()=>store("skyldig.localplayers",S.lp);
+  if(t==="family"){const save=()=>{const old=store("skyldig.localplayers")||[];S.lp.forEach(p=>{const o=old.find(x=>x.id===p.id);const strip=x=>JSON.stringify({...x,t:0});if(!o||strip(o)!==strip(p))p.t=Date.now()});store("skyldig.localplayers",S.lp)};
     const vs=$("#vstat"),vd=$("#vdel"),vf=$("#vfile");const vshow=b=>{if(!vs)return;vs.textContent=b?`Video valgt (${(b.size/1048576).toFixed(1)} MB). Den spiller først i showet.`:"Ingen video valgt endnu.";if(vd)vd.hidden=!b};VIDDB.get("bday").then(vshow);
     if(vf)vf.onchange=async()=>{const f=vf.files[0];if(!f)return;vs.textContent="Gemmer…";try{await VIDDB.set("bday",f);SFX.coin();vshow(f)}catch(e){vs.textContent="Kunne ikke gemme videoen. Prøv en kortere video."}};
     if(vd)vd.onclick=async()=>{await VIDDB.set("bday",null);vshow(null)};
@@ -1369,12 +1423,12 @@ function studioView(){
     if(hd)hd.onclick=async()=>{await VIDDB.set("hilsen",null);hshow(null)};
     app.querySelectorAll("[data-fsf]").forEach(inp=>inp.onchange=async()=>{if(!inp.files[0])return;try{S.lp[+inp.dataset.fsf].photo=await resizeImage(inp.files[0],200);save();SFX.coin();render()}catch(e){}});
     app.querySelectorAll("[data-fn]").forEach(inp=>inp.onchange=()=>{const v=inp.value.trim();if(v){S.lp[+inp.dataset.fn].name=v;save()}});app.querySelectorAll("[data-fb]").forEach(x=>x.onchange=()=>{S.lp[+x.dataset.fb].build=x.value;save()});app.querySelectorAll("[data-fh]").forEach(x=>x.onchange=()=>{const v=Math.round(+x.value);if(v>=100&&v<=220){S.lp[+x.dataset.fh].height=v;save()}});
-    app.querySelectorAll("[data-fdel]").forEach(b=>b.onclick=()=>{if(S.lp.length<=1)return;S.lp.splice(+b.dataset.fdel,1);save();SFX.boing();render()});
+    app.querySelectorAll("[data-fdel]").forEach(b=>b.onclick=()=>{if(S.lp.length<=1)return;const gone=S.lp.splice(+b.dataset.fdel,1)[0];if(gone)SYNC.tomb("skyldig.lpdel",norm(gone.name));save();SFX.boing();render()});
     const fa=$("#fadd");if(fa)fa.onclick=()=>{S.lp.push({id:"p"+Date.now(),name:"Ny",color:COLORS[S.lp.length%8]});save();render()}}
   app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{SFX.tap();go("studio",{tab:b.dataset.tab})});
   if(t==="trips"&&$("#sg")){if(GLOBE.mount($("#sg"))){const last=(PACK.trips||[]).slice(-1)[0];if(S.flyTo){const f=S.flyTo;S.flyTo=null;$("#sg .cap").innerHTML=`<b>${esc(f.place)}</b><span>${esc(f.year||"")}</span>`;GLOBE.flyTo(f.lat,f.lon,f.country)}else GLOBE.idleSpin()}}
   const commit=async()=>{const where=await PACKDB.save();render();const s=$("#saved");if(s)s.textContent=where==="db"?"Gemt i spillet til alle telefoner.":"Gemt på denne telefon."};
-  app.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{PACK[t].splice(+b.dataset.del,1);SFX.boing();await commit()});
+  app.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{const gone=PACK[t].splice(+b.dataset.del,1)[0];if(gone)SYNC.tomb("skyldig.pdel",t+":"+SYNC.pkey(t,gone));SFX.boing();await commit()});
   app.querySelectorAll("[data-dt]").forEach(b=>b.onclick=async()=>{await PACKDB.delThrow(b.dataset.dt);SFX.boing();render()});
   const tf=$("#tf");if(tf)tf.onchange=async()=>{const m=$("#tmsg");m.textContent="Tilføjer…";for(const f of tf.files){try{await PACKDB.addThrow(await resizeImage(f,180,true,"image/jpeg"))}catch(e){}}SFX.coin();render()};
   const f=$("#f");if(f)f.onsubmit=async e=>{e.preventDefault();const v=id=>($("#"+id)?.value||"").trim();
@@ -1385,6 +1439,7 @@ function studioView(){
     if(t==="quotes")PACK.quotes.push({q:v("a"),who:v("b")});
     if(t==="who")PACK.who.push({q:v("a").endsWith("?")?v("a"):v("a")+"?",title:v("b")||"Familiens dom"});
     if(t==="extra")PACK.victory=v("a");
+    {const arr=PACK[t];if(Array.isArray(arr)&&arr.length){const last=arr[arr.length-1];if(last&&typeof last==="object")last.t=Date.now()}}
     SFX.coin();confetti(40,.6);await commit()};
   const ce=$("#clearex");if(ce)ce.onclick=async()=>{["trips","nicks","words","quiz","quotes","who"].forEach(k=>PACK[k]=(PACK[k]||[]).filter(x=>!x.ex));await commit()};
 }
@@ -1444,10 +1499,10 @@ function localView(){
 function localResolve(){const G=S.G;Object.assign(G,resolve(G,S.ans,S.players));S.lstep="reveal";showRevealLocal()}
 function showRevealLocal(){
   const G=S.G;const won=someoneWon(G.scores,G);const t=G.result.truth;
-  const objBtn=canObject(G,t)?`<button class="btn red" id="obj">Indsigelse fra ${esc(P(t).name)}!</button>`:"";
+  const objBtn=canObject(G,t)&&vsOptions(G,t,S.players).length?`<div id="vsbox"></div><button class="btn red" id="obj">${esc(P(t).name)}: Det var faktisk…!</button>`:"";
   reveal(G,S.players,`${objBtn}<button class="btn gold" id="nx">${won?"Vi har en vinder":"Næste runde"}</button>`,{done(){
     $("#nx").onclick=()=>{SFX.whoosh();showTray(false);localNext()};
-    const ob=$("#obj");if(ob)ob.onclick=()=>{Object.assign(G,objection(G,t));S.lstep="court";showTray(false);render()}}});
+    const ob=$("#obj");if(ob)ob.onclick=()=>{ob.hidden=true;pickVs(G,t,S.players,$("#vsbox"),vs=>{if(!vs){$("#vsbox").innerHTML="";ob.hidden=false;return}Object.assign(G,objection(G,t,vs));S.lstep="court";showTray(false);render()})}}});
 }
 
 /* ---------- Rum uden opsætning: værtens telefon er selv serveren (direkte forbindelse mellem telefonerne) ---------- */
@@ -1502,11 +1557,14 @@ const PDB={
     return new Promise((ok,no)=>{const p=this.mkPeer();this.peer=p;let d=false;p.on("open",()=>{d=true;ok()});p.on("error",e=>{if(!d){d=true;no({code:"no-network"})}});p.on("disconnected",()=>{setTimeout(()=>{try{if(!p.destroyed&&p.disconnected)p.reconnect()}catch(x){}},1000)});setTimeout(()=>{if(!d){d=true;no({code:"no-network"})}},9000)})},
   async connect(){try{await this.ensurePeer()}catch(e){return false}return new Promise(res=>{if(!this.peer||this.peer.destroyed)return res(false);
     const c=this.peer.connect(this.pid(this.key),{reliable:true,serialization:"json"});let done=false;const fin=v=>{if(!done){done=true;res(v)}};
-    c.on("data",r=>{const m=this.rx(r,c);if(!m)return;if(m&&m.t==="sync"){try{this.conn&&this.conn!==c&&this.conn.close()}catch(e){}this.conn=c;this.docs=m.docs||{};this.fireAll();netBar();fin(true)}else this.onMsg(m,c)});
+    c.on("data",r=>{const m=this.rx(r,c);if(!m)return;if(m&&m.t==="sync"){try{this.conn&&this.conn!==c&&this.conn.close()}catch(e){}this.conn=c;this.docs=m.docs||{};this.fireAll();netBar();fin(true);try{PDB.tx(c,{t:"fam",b:SYNC.bundle()})}catch(e){}}else this.onMsg(m,c)});
     c.on("close",()=>{if(this.conn===c){this.conn=null;netBar()}});c.on("error",()=>fin(false));
     const pe=e=>{if(e.type==="peer-unavailable")fin(false)};this.peer.on("error",pe);setTimeout(()=>{try{this.peer&&this.peer.off&&this.peer.off("error",pe)}catch(e){}fin(false)},9000)})},
   apply(op,path,data){if(op==="delete")delete this.docs[path];else if(op==="update")this.docs[path]=Object.assign({},this.docs[path]||{},data);else this.docs[path]=data;this.fire(path)},
   onMsg(m,c){if(!m)return;
+    // familien deles: telefonen sender sin kopi til lederen, lederen samler og sender den samlede kopi til alle
+    if(m.t==="fam"&&this.host){SYNC.merge(m.b);const out={t:"famall",b:SYNC.bundle()};this.conns.forEach(x=>{if(x.open)PDB.tx(x,out)});return}
+    if(m.t==="famall"&&!this.host){SYNC.merge(m.b);return}
     if(m.t==="w"){this.apply(m.op,m.path,m.data);if(this.host){this.saveSnap();const out={t:"w",op:"set",path:m.path,data:this.docs[m.path]??null};if(m.op==="delete")out.op="delete";this.conns.forEach(x=>{if(x.open)PDB.tx(x,out)})}}
     if(m.t==="ev"){if(this.host)this.conns.forEach(x=>{if(x!==c&&x.open)PDB.tx(x,m)});(this.evs[m.ev]||[]).forEach(f=>f({data:m.data,isMe:false}))}},
   async write(op,path,data){data=data==null?data:JSON.parse(JSON.stringify(data));const rk=this.roomOf(path);
@@ -1558,7 +1616,7 @@ const ON={
     this.unsub.push(this.db.collection(base+"/players").onSnapshot(s=>{this.players=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.joined-b.joined);this.hostCheck();if(this.R?.status==="lobby"||!this.R)render()},fail));
     this.unsub.push(this.db.collection(base+"/answers").onSnapshot(s=>{this.answers=s.docs.map(d=>d.data());this.hostCheck();if(this.R?.status==="play"||this.R?.status==="court")render()},fail));
     this.unsub.push(this.db.doc(base+"/ctl/objection").onSnapshot(s=>{if(s.exists)this.onObjection(s.data())},()=>{}));
-    if(this.room?.join){this.rm=this.room.join("skyldig-"+this.code);this.unsub.push(this.rm.on("throw",m=>{if(!m.isMe&&m.data?.id)flyThrow(String(m.data.id),Number(m.data.s)||Math.random())}))}
+    if(this.room?.join){this.rm=this.room.join("skyldig-"+this.code);this.unsub.push(this.rm.on("throw",m=>{if(!m.isMe&&m.data?.id)flyThrow(String(m.data.id),Number(m.data.s)||Math.random())}));this.unsub.push(this.rm.on("open",m=>{const n=m.data&&m.data.n;(this.opened=this.opened||{})[n]=1;if(this._openCb&&this._openCb.n===n)this._openCb.f()}))}
     else if(this.fb){const since=Date.now();this.unsub.push(this.db.collection(base+"/throws").where("at",">",since).onSnapshot(s=>s.docChanges().forEach(c=>{const d=c.doc.data();if(c.type==="added"&&d.by!==this.me)flyThrow(String(d.id),Number(d.s)||Math.random())}),()=>{}))}
   },
   emitThrow(id){try{if(this.rm)this.rm.emit("throw",{id,s:Math.random()});else if(this.fb&&this.code)this.db.collection("rooms/"+this.code+"/throws").add({id,s:Math.random(),at:Date.now(),by:this.me})}catch(e){}},
@@ -1589,8 +1647,8 @@ const ON={
     if(R.rd.judge&&!(R.rd.judge in v))return;
     if(force||(need.length&&need.every(p=>p.id in v))){if(!Object.keys(v).length)return;this.busy=key;this.setRoom(resolve(R,v,ps))}
   },
-  async objectNow(){const R=this.R;await this.write(()=>this.ref("/ctl/objection").set({n:R.n,uid:this.me,at:Date.now()}))},
-  onObjection(o){const R=this.R;if(!this.isHost()||!R||R.status!=="reveal"||o.n!==R.n)return;if(!canObject(R,o.uid))return;this.busy=null;this.setRoom(objection(R,o.uid))},
+  async objectNow(vs){const R=this.R;await this.write(()=>this.ref("/ctl/objection").set({n:R.n,uid:this.me,vs,at:Date.now()}))},
+  onObjection(o){const R=this.R;if(!this.isHost()||!R||R.status!=="reveal"||o.n!==R.n)return;if(!canObject(R,o.uid)||!o.vs||!vsOptions(R,o.uid,this.colored()).some(p=>p.id===o.vs))return;this.busy=null;this.setRoom(objection(R,o.uid,o.vs))},
   async kick(id){if(this.isHost())await this.write(()=>this.ref("/players/"+id).delete())}
 };
 const selfieBtn=()=>`<label class="selfie">${av({name:ON.name||"?",color:"#ffd23f",photo:ON.photo},"l")}<span class="cam">FOTO</span><input type="file" accept="image/*" capture="user" id="myself" aria-label="Tag en selfie"></label>`;
@@ -1635,22 +1693,23 @@ function onlineView(){
     const skip=o.isHost()?`<div class="row" style="justify-content:center;gap:4px"><button class="link" id="skip">Fortsæt uden dem, der mangler</button><button class="link" id="skipq">Spring runden over</button></div>`:"";
     if(o.shown===key){const pr=$("#prog");if(pr)pr.outerHTML=prog.split("</div>")[0]+"</div>";const c=$("#cnt2");if(c)c.textContent=`${done} af ${need.length} har svaret`;return}
     o.shown=key;
-    if(mine){app.innerHTML=`${hud(R.n)}${qcard(rd,waitOnly?"Indsigelse":"Låst")}<div class="panel handoff"><div class="lbl">${waitOnly?esc(P(rd.judge).name)+" afgør igen":"Dit svar er låst"}</div><div class="name" style="font-size:28px">${waitOnly?esc(P(rd.judge).name)+" tænker…":"Venter på resten"}</div>${prog}</div>${skip}${err}`;wireMute();const sk=$("#skip");if(sk)sk.onclick=()=>o.hostCheck(true);const sq=$("#skipq");if(sq)sq.onclick=()=>{sq.disabled=true;o.skipQ()};return}
+    if(mine){app.innerHTML=`${hud(R.n)}${qcard(rd,waitOnly?"Duel":"Låst")}<div class="panel handoff"><div class="lbl">${waitOnly?esc(P(rd.judge).name)+" afgør igen":"Dit svar er låst"}</div><div class="name" style="font-size:28px">${waitOnly?esc(P(rd.judge).name)+" tænker…":"Venter på resten"}</div>${prog}</div>${skip}${err}`;wireMute();const sk=$("#skip");if(sk)sk.onclick=()=>o.hostCheck(true);const sq=$("#skipq");if(sq)sq.onclick=()=>{sq.disabled=true;o.skipQ()};return}
     const isRevote=R.status==="court";
     if(!isRevote)SFX.intro();
     app.innerHTML=`${hud(R.n)}${isRevote?"":typeCard(rd)}${!isRevote&&rd.trip?globeHTML("ig",false,tripCap(rd)):""}${qcard(rd,isRevote?"Genstemning":"Runde "+R.n)}<div id="ansArea" class="col-stack" hidden></div>${prog}${skip}${err}`;
     wireMute();const sk=$("#skip");if(sk)sk.onclick=()=>o.hostCheck(true);const sq=$("#skipq");if(sq)sq.onclick=()=>{sq.disabled=true;o.skipQ()};
     if(!isRevote&&rd.trip&&$("#ig")){GLOBE.mount($("#ig"));GLOBE.flyTo(rd.trip.lat,rd.trip.lon,rd.trip.country)}
-    const delay=isRevote?0:rd.trip?3600:2400;
-    setTimeout(()=>{if(o.shown!==key)return;const ui=answerUI(rd,o.me,a=>o.answer(a));const area=$("#ansArea");if(!area)return;app.querySelector(".typecard")?.remove();app.querySelector(".event")?.remove();area.innerHTML=ui.html;area.hidden=false;ui.wire();if(!isRevote)SFX.whoosh()},delay);
+    const showAns=delay=>setTimeout(()=>{if(o.shown!==key)return;const ui=answerUI(rd,o.me,a=>o.answer(a));const area=$("#ansArea");if(!area)return;app.querySelector(".typecard")?.remove();app.querySelector(".event")?.remove();area.innerHTML=ui.html;area.hidden=false;ui.wire();if(!isRevote)SFX.whoosh()},delay);
+    const rdr=!isRevote&&R.ph!=="b"?readerOf(R,S.players):null;
+    if(rdr&&!(o.opened||{})[R.n]&&!done)readScene(R,rdr,o,key,()=>showAns(700));else showAns(isRevote?0:rd.trip?3600:2400);
     return;
   }
   if(R.status==="reveal"&&R.result){
     const key="rev"+R.n+R.ph;if(o.shown===key)return;o.shown=key;setTheme(R.rd.type);
     const won=someoneWon(R.scores,R);
     const mayObj=canObject(R,o.me);
-    const after=`${mayObj?`<button class="btn red" id="obj">Indsigelse!</button><p class="muted c" style="font-size:13px">Du kan gøre indsigelse én gang pr. spil.</p>`:""}${o.isHost()?`<button class="btn gold" id="nx">${won?"Vi har en vinder":"Næste runde"}</button>`:`<p class="muted c">Værten starter næste runde.</p>`}`;
-    reveal(R,S.players,after,{me:o.me,done(){if(o.isHost()&&$("#nx"))$("#nx").onclick=e=>{e.target.disabled=true;SFX.whoosh();showTray(false);o.next()};const ob=$("#obj");if(ob)ob.onclick=()=>{ob.disabled=true;ob.textContent="Indsigelse sendt";o.objectNow()}}});
+    const after=`${mayObj&&vsOptions(R,o.me,S.players).length?`<div id="vsbox"></div><button class="btn red" id="obj">Det var faktisk…!</button><p class="muted c" style="font-size:13px" id="vsnote">Peg på en anden. Én gang pr. spil.</p>`:""}${o.isHost()?`<button class="btn gold" id="nx">${won?"Vi har en vinder":"Næste runde"}</button>`:`<p class="muted c">Værten starter næste runde.</p>`}`;
+    reveal(R,S.players,after,{me:o.me,done(){if(o.isHost()&&$("#nx"))$("#nx").onclick=e=>{e.target.disabled=true;SFX.whoosh();showTray(false);o.next()};const ob=$("#obj");if(ob)ob.onclick=()=>{ob.hidden=true;$("#vsnote")?.remove();pickVs(R,o.me,S.players,$("#vsbox"),vs=>{if(!vs){$("#vsbox").innerHTML="";ob.hidden=false;return}$("#vsbox").innerHTML=`<p class="muted c">Sendt. Duellen starter…</p>`;o.objectNow(vs)})}}});
     return;
   }
   if(R.status==="end"){if(o.shown==="end")return;o.shown="end";finalScreen(R,S.players,o.isHost()?"Ny omgang i samme rum":"Venter på værten",()=>{if(o.isHost())o.setRoom({status:"lobby"})})}
@@ -1992,7 +2051,24 @@ function revealList(R,players,s,prev){if(R.mode!=="quiz")return "";const A=R.res
   return `<div class="dpanel"><b>Svarene</b>${players.map(p=>{const x=A[p.id];return `<div class="drow"><span></span>${av(p)}<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}: ${x?esc(R.type==="aarti"?decName(x.a):x.a):"–"}${x?.g?' <i class="gold-dot"></i>':""}</span><em>${G[p.id]?"+"+G[p.id]:""}</em></div>`}).join("")}</div>`}
 
 /* ---------- bingo med kontrol ---------- */
-function newBingoCard(){const sq=shuffle(BINGO_SQ.map((x,i)=>i)).slice(0,15);sq.splice(7,0,-1);return {sq,mark:{7:-1}}}
+/* bankoplader med samme sværhed: hver plade prøves af i 150 simulerede spil, og kun plader tæt på målet bruges */
+const BSIM={M:null,Mdk:null,L:null,
+  init(){if(this.M)return;const lv=SONGS.filter(s=>s.lvl==="svaer"),dk=lv.filter(s=>s.dk);this.M=lv.map(s=>BINGO_SQ.map(x=>!!x[1](s)));this.Mdk=dk.map(s=>BINGO_SQ.map(x=>!!x[1](s)));
+    const L=[];for(let r=0;r<4;r++)L.push([0,1,2,3].map(c=>r*4+c));for(let c=0;c<4;c++)L.push([0,1,2,3].map(r=>r*4+c));L.push([0,5,10,15],[3,6,9,12]);this.L=L;
+    // hvor ofte hvert felt passer
+    this.f=BINGO_SQ.map((x,i)=>.78*this.M.filter(r=>r[i]).length/this.M.length+.22*this.Mdk.filter(r=>r[i]).length/Math.max(1,this.Mdk.length))},
+  run(sq,N){this.init();const {M,Mdk,L}=this;let tot=0;for(let n=0;n<N;n++){const m=new Array(16).fill(false);m[7]=true;let k=0;for(;k<60;k++){const row=Math.random()<.22&&Mdk.length?Mdk[Math.random()*Mdk.length|0]:M[Math.random()*M.length|0];
+    let best=-1,bs=-1;for(let i=0;i<16;i++){if(m[i]||sq[i]<0||!row[sq[i]])continue;let sc=0;for(const l of L)if(l.includes(i)){let c=0;for(const j of l)if(m[j])c++;if(c>sc)sc=c}if(sc>bs){bs=sc;best=i}}
+    if(best>=0){m[best]=true;if(L.some(l=>l.every(j=>m[j])))break}}tot+=k+1}return tot/N}};
+const BINGO_OFF=new Set([8,12]);// "Udenlandsk kunstner" passer på næsten alt, "Eurovision" næsten aldrig
+const BINGO_TARGET=8.5;
+function newBingoCard(){BSIM.init();const f=BSIM.f,ids=BINGO_SQ.map((x,i)=>i).filter(i=>!BINGO_OFF.has(i));
+  const easy=ids.filter(i=>f[i]>=.28),mid=ids.filter(i=>f[i]>=.11&&f[i]<.28),hard=ids.filter(i=>f[i]<.11);
+  let best=null,bd=99;
+  for(let t=0;t<60;t++){let e=shuffle(easy);const li=e.indexOf(17),ui=e.indexOf(18);if(li>=0&&ui>=0)e.splice(Math.max(li,ui),1);// aldrig både lige og ulige årstal
+    const pick=shuffle([...e.slice(0,3),...shuffle(mid).slice(0,8),...shuffle(hard).slice(0,4)]);if(pick.length<15)continue;const sq=pick.slice(0,15);sq.splice(7,0,-1);
+    const d=Math.abs(BSIM.run(sq,150)-BINGO_TARGET);if(d<bd){bd=d;best=sq}if(d<.25)break}
+  return {sq:best,mark:{7:-1}}}
 function bingoLines(m){const L=[];for(let r=0;r<4;r++)L.push([0,1,2,3].map(c=>r*4+c));for(let c=0;c<4;c++)L.push([0,1,2,3].map(r=>r*4+c));L.push([0,5,10,15],[3,6,9,12]);return L.filter(l=>l.every(i=>m[i]!=null)).length}
 function bingoCard(R,players){
   const ck="disco.card."+DO.code;let card=D.card&&D.card.code===DO.code?D.card:store(ck);if(!card||!card.sq){card={...newBingoCard(),code:DO.code,done:{}};store(ck,card)}card.done=card.done||{};D.card=card;
@@ -2110,7 +2186,7 @@ function skyldigIntro(onEnd){
    {d:2800,music:"sgavel",bg:"#120620",cls:"s-judge",html:`<div class="s-gavel"><svg viewBox="0 0 120 80"><rect x="10" y="66" width="70" height="10" rx="3" fill="#8a5a2a"/><g class="hd"><rect x="44" y="6" width="44" height="22" rx="5" fill="#b07a3c"/><rect x="62" y="26" width="8" height="46" rx="3" fill="#8a5a2a" transform="rotate(40 66 28)"/></g></svg></div><h2 class="s-line">Et udsagn.</h2><h2 class="s-line l2">Hvem passer det på?</h2>`},
    {d:2800,music:"sthread",bg:"#1d0b30",cls:"s-threads",html:`<svg class="s-svg" viewBox="0 0 320 400" preserveAspectRatio="none"><path d="M30 40 Q160 220 290 360"/><path d="M290 50 Q140 200 40 340"/><path d="M160 20 Q80 220 170 380"/><path d="M20 200 Q160 120 300 210"/></svg><h2 class="s-word">Stemmer.</h2><h2 class="s-word w2">Uenighed.</h2><h2 class="s-word w3">Grin.</h2>`},
    {d:2600,music:"sflash",bg:"#120620",cls:"s-flash",html:`<span class="f1">Hvem af os?</span><span class="f2">Hot seat</span><span class="f3">Ferieminder</span>`},
-    {d:2600,music:"sobj",bg:"#2a0d10",cls:"s-obj",html:`<div class="s-stamp">INDSIGELSE!</div>`},
+    {d:2600,music:"sobj",bg:"#2a0d10",cls:"s-obj",html:`<div class="s-stamp" style="font-size:clamp(32px,10.5vw,60px);text-align:center;line-height:1.05">DET VAR<br>FAKTISK…!</div>`},
    {d:3800,music:"sfinale",bg:"#1a0a2b",cls:"s-fin",html:`<h1 class="s-logo">Skyldig!</h1><p class="s-tag">Hvor godt kender I hinanden?</p>`,after:()=>{setTimeout(()=>confetti(160,.3),300)}},
   ];
   playIntro(scenes,{cls:"skyldig-intro",onEnd});
@@ -2180,7 +2256,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=36;
+const APP_V=37;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
