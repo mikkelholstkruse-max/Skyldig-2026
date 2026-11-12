@@ -1405,7 +1405,7 @@ const TRIP_EXTRA={
    who:[["Hvem ville løbe først ud ad døren, hvis brandalarmen gik igen?","Flugtmesteren"],["Hvem ville åbne en portvinsbar, hvis de flyttede til Porto?","Portvinsbaronen"]]},
  "azorerne":{story:"Azorerne 2022: Vandreture på bjergtoppe, hortensiaer overalt, og en bil, der endte på en gåsti. Bulle sagde noget lidt for hårdt, og Båbe blev ked af det.",
    clue:"Hvor endte vi med at køre bilen ind på en gåsti?",
-   who:[["Hvem ville blive eremit på en ø midt i Atlanterhavet?","Eremitten"],["Hvem ville give op først på en bjergtur?","Bjergflygtningen"],["Hvem ville igen sige: Den gåsti ligner da en vej?","Gåstiens chauffør"]]},
+   who:[["Hvem ville kunne bo helt alene på en ø midt i Atlanterhavet?","Øboen"],["Hvem ville give op først på en bjergtur?","Bjergflygtningen"],["Hvem ville igen sige: Den gåsti ligner da en vej?","Gåstiens chauffør"]]},
  "rom":{story:"Rom 2023: Romerriget, Vatikanet, kanon pizza og is, og Bøh mødte sin ven Marc.",
    clue:"Hvor mødte Bøh sin ven Marc?",
    who:[["Hvem spiste flest is?","Isdronningen"],["Hvem fik mest ud af alt det gamle: ruinerne, kirkerne og Vatikanet?","Historienørden"],["Hvem ville kunne blive munk eller nonne i Vatikanet?","Den hellige"]],
@@ -2318,7 +2318,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=44;
+const APP_V=45;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
