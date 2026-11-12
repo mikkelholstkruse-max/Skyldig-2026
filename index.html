@@ -798,6 +798,7 @@ const DEFAULT_PACK={
 const TYPES={
  who:{name:"Hvem af os?",color:"#ff3d7f",sub:"",pts:""},
  trip:{name:"Ferieminder",color:"#4de0c5",sub:"",pts:""},
+ where:{name:"Hvor var vi?",color:"#4de0c5",sub:"",pts:"Rigtigt +2"},
  tripyear:{name:"Rejsedommen",color:"#4de0c5",sub:"Hvilket år var det?",pts:"Tættest +2 · præcist +3"},
  hot:{name:"Hot seat",color:"#ff8a3d",sub:"",pts:""},
  quiz:{name:"Familiearkivet",color:"#62d1ff",sub:"Hvor godt husker I jer selv?",pts:"Rigtigt +2"},
@@ -1077,7 +1078,7 @@ const GLOBE={
   }
 };
 function globeHTML(id,tall,cap){return `<div class="globe${tall?" tall":""}" id="${id}"><div class="cap">${cap||""}</div></div>`}
-function tripCap(rd){return `<b>${esc(rd.trip.place)}</b><span>${esc(rd.trip.year||"")}</span>`}
+function tripCap(rd,show){if(rd.type==="where"&&!show)return `<b>Hvor var vi?</b><span>?</span>`;return `<b>${esc(rd.trip.place)}</b><span>${esc(rd.trip.year||"")}</span>`}
 
 /* =========================================================
    SPILMOTOR (ens for én telefon og online)
@@ -1094,15 +1095,15 @@ function buildSeq(cats,pack,count=90){
   let who=[];cats.forEach(c=>who=who.concat(WHO[c]));
   const own=(pack.who||[]).map(x=>[x.q,x.title||"Familiens dom"]);
   const trips=(pack.trips||[]).filter(t=>t.lat!=null);const K=x=>x[0];
-  const tripItems=trips.flatMap(t=>TRIPQ.map(q=>({t,q,k:t.place+": "+q[0]})));
-  const pools={who:freshFirst(own,K).concat(freshFirst(who,K)),hot:freshFirst(HOT,K),trivia:freshFirst(TRIVIA,K),est:freshFirst(EST,K),
-    trip:freshFirst(tripItems,x=>x.k),tripyear:freshFirst(trips.filter(t=>t.year),t=>"år:"+t.place),
+  const tripItems=trips.flatMap(t=>TRIPQ.map(q=>({t,q,k:t.place+": "+q[0]}))),tripOwn=trips.flatMap(t=>(tripX(t).who||[]).map(q=>({t,q,k:t.place+": "+q[0]}))),tripHot=trips.flatMap(t=>tripX(t).hot||[]);
+  const pools={who:freshFirst(own,K).concat(freshFirst(who,K)),hot:freshFirst(tripHot,K).filter(x=>!SEEN.has(K(x))).concat(freshFirst(HOT,K)),where:trips.length>=3?freshFirst(trips,t=>"hvor:"+t.place):[],trivia:freshFirst(TRIVIA,K),est:freshFirst(EST,K),
+    trip:freshFirst(tripOwn,x=>x.k).filter(x=>!SEEN.has(x.k)).concat(freshFirst(tripItems,x=>x.k)),tripyear:freshFirst(trips.filter(t=>t.year),t=>"år:"+t.place),
     quiz:freshFirst((pack.quiz||[]).map(x=>({q:x.q,a:x.a,w:x.w,ex:x.ex})).concat((pack.words||[]).map(w=>({q:`Hvad betyder "${w.w}" i vores familie?`,a:w.def,w:shuffle((pack.words||[]).filter(o=>o!==w).map(o=>o.def).concat(shuffle(FAKE_DEFS))).slice(0,3),ex:w.ex}))),x=>x.q),
     quote:freshFirst(pack.quotes||[],x=>x.q)};
   // samme rejse ikke to gange i træk
   const tr=[];let rest=pools.trip.slice();while(rest.length){const last=tr[tr.length-1];let i=rest.findIndex(x=>!last||x.t.place!==last.t.place);if(i<0)i=0;tr.push(rest.splice(i,1)[0])}pools.trip=tr;
   const idx={};const take=k=>{const p=pools[k];idx[k]=idx[k]||0;return idx[k]<p.length?p[idx[k]++]:null};
-  const pattern=["who","who","hot","who","trip","who","who","hot","who","trip","who","who","hot","who","trip"];
+  const pattern=["who","who","hot","who","trip","who","who","hot","who","trip","where","who","hot","who","trip"];
   const seq=[];
   for(let i=0;seq.length<count&&i<1200;i++){
     let k=pattern[i%pattern.length];let it=take(k);
@@ -1114,6 +1115,7 @@ function buildSeq(cats,pack,count=90){
     else if(k==="trivia")rd={type:"trivia",q:it[0],ans:it[1][0],opts:shuffle(it[1]),key:it[0]};
     else if(k==="est")rd={type:"est",q:it[0],ans:it[1],unit:it[2],key:it[0]};
     else if(k==="trip")rd={type:"trip",q:`${it.t.place}${it.t.year?" "+it.t.year:""}: ${it.q[0]}`,title:`${it.q[1]} · ${it.t.place}`,trip:it.t,ex:!!it.t.ex,key:it.k};
+    else if(k==="where"){const others=shuffle(trips.filter(t=>t.place!==it.place)).slice(0,3).map(t=>t.place);rd={type:"where",q:"Hvor var vi?",ans:it.place,opts:shuffle([it.place,...others]),trip:it,story:tripX(it).story||"",key:"hvor:"+it.place}}
     else if(k==="tripyear")rd={type:"tripyear",q:`Hvilket år var vi i ${it.place}?`,ans:Number(it.year),unit:"",trip:it,ex:!!it.ex,key:"år:"+it.place};
     else if(k==="quiz")rd={type:"quiz",q:it.q,ans:it.a,opts:shuffle([it.a,...(it.w||[]).filter(Boolean)].slice(0,4)),ex:!!it.ex,key:it.q};
     else if(k==="quote")rd={type:"quote",q:it.q,ans:it.who,ex:!!it.ex,key:it.q};
@@ -1160,12 +1162,13 @@ function resolve(G,ans,players){
   const scores={...G.scores};Object.entries(res.gain).forEach(([id,n])=>scores[id]=(scores[id]||0)+n);
   const titles=clone(G.titles)||{},stats=clone(G.stats)||{},trips=(G.trips||[]).slice();
   if(JUDGE(rd.type)){const ids=players.map(p=>p.id);for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++){const a=ids[i],b=ids[j];if(all[a]==null||all[b]==null)continue;const k=a<b?a+"|"+b:b+"|"+a;stats[k]=stats[k]||{agree:0,dis:0};all[a]===all[b]?stats[k].agree++:stats[k].dis++}}
-  if(rd.trip){const nm=id=>(players.find(p=>p.id===id)||{name:"?"}).name;const verdict=BOARD(rd.type)?(res.truth?`${rd.q.split(": ").slice(1).join(": ")} ${(res.tops||[res.truth]).map(nm).join(" og ")}`:""):`Året var ${rd.trip.year}`;trips.push({place:rd.trip.place,year:rd.trip.year,lat:rd.trip.lat,lon:rd.trip.lon,country:rd.trip.country,verdict})}
+  if(rd.trip){const nm=id=>(players.find(p=>p.id===id)||{name:"?"}).name;const verdict=BOARD(rd.type)?(res.truth?`${rd.q.split(": ").slice(1).join(": ")} ${(res.tops||[res.truth]).map(nm).join(" og ")}`:""):rd.type==="where"?(rd.story||rd.trip.place):`Året var ${rd.trip.year}`;trips.push({place:rd.trip.place,year:rd.trip.year,lat:rd.trip.lat,lon:rd.trip.lon,country:rd.trip.country,verdict})}
   const streak=clone(G.streak)||{},miss=clone(G.miss)||{},picked=clone(G.picked)||{},hits=clone(G.hits)||{};let flash=null;
   players.forEach(p=>{const g=res.gain[p.id]||0;if(g>0){streak[p.id]=(streak[p.id]||0)+1;miss[p.id]=0;hits[p.id]=(hits[p.id]||0)+1}else if(all[p.id]!=null&&p.id!==rd.judge){miss[p.id]=(miss[p.id]||0)+1;streak[p.id]=0}
     if([3,5,7].includes(streak[p.id])&&g>0)flash={id:p.id,kind:"fire",n:streak[p.id]};else if(!flash&&[4,6].includes(miss[p.id]))flash={id:p.id,kind:"cold",n:miss[p.id]}});
   if(BOARD(rd.type))(res.tops||(res.truth?[res.truth]:[])).forEach(id=>picked[id]=(picked[id]||0)+1);
-  return {status:"reveal",result:{ans:all,...res,afterCourt:G.ph==="b",flash},streak,miss,picked,hits,scores,titles,stats,trips,snap,prevScores:G.scores,court:G.court?{...G.court,done:true}:null};
+  const tp=clone(G.tp)||{};if(rd.type==="trip")(res.tops||(res.truth?[res.truth]:[])).forEach(id=>tp[id]=(tp[id]||0)+1);
+  return {status:"reveal",result:{ans:all,...res,afterCourt:G.ph==="b",flash},streak,miss,picked,hits,tp,scores,titles,stats,trips,snap,prevScores:G.scores,court:G.court?{...G.court,done:true}:null};
 }
 function objection(G,uid,vs){
   const s=G.snap||{};return {status:"court",ph:"b",rd:{...G.rd,cand:[uid,vs]},court:{reason:"faktisk",by:uid,vs,firstAns:G.result?.ans||null},objUsed:{...(G.objUsed||{}),[uid]:true},scores:s.scores||G.scores,titles:s.titles||G.titles,stats:s.stats||G.stats,trips:s.trips||G.trips,streak:s.streak||G.streak,miss:s.miss||G.miss,picked:s.picked||G.picked,hits:s.hits||G.hits,result:null,snap:null};
@@ -1232,9 +1235,9 @@ async function reveal(G,players,afterHTML,opts={}){
   const groups={};Object.entries(g).forEach(([id,v])=>{(groups[v]=groups[v]||[]).push(id)});const order=Object.keys(groups).sort((x,y)=>groups[y].length-groups[x].length);
   const tops=R.tops||(R.truth!=null?[R.truth]:[]);
   const label=v=>isP?`${av(P(v),"m")}<b>${esc(P(v).name)}</b>`:`<b>${esc(v)}</b>`;
-  const head=R.truth==null?`<div class="res"><div class="lbl">Ingen svar</div></div>`:`<div class="res"><div class="lbl">${J?esc(J.name)+" sagde":tops.length>1?"Flertallet var delt":"Flertallet sagde"}</div><div class="resv">${tops.map(label).join('<span class="og">og</span>')}</div></div>`;
+  const head=R.truth==null?`<div class="res"><div class="lbl">Ingen svar</div></div>`:`<div class="res"><div class="lbl">${!JUDGE(rd.type)?"Rigtigt svar":J?esc(J.name)+" sagde":tops.length>1?"Flertallet var delt":"Flertallet sagde"}</div><div class="resv">${tops.map(label).join('<span class="og">og</span>')}</div></div>`;
   const votes=`<div class="votes"><div class="lbl">${J?"Gættene":"Stemmerne"}</div>${order.map(v=>`<div class="vrow${tops.includes(v)?" top":""}"><div class="vw">${label(v)}<span class="vc">${groups[v].length}</span></div><div class="vby">${groups[v].map(id=>`<span class="vote" style="--pc:${P(id).color}">${av(P(id))}${esc(P(id).name)}</span>`).join("")}</div></div>`).join("")||'<p class="muted">Ingen stemmer.</p>'}</div>`;
-  app.innerHTML=`${hud(G.n)}${rd.trip?globeHTML("rg",false,tripCap(rd)):""}${qcard(rd,R.afterCourt?"Efter duellen":"")}<div id="rv" class="col-stack" hidden>${head}${votes}</div><div id="gains" class="gains" hidden></div>${R.flash?`<div class="flashnote ${R.flash.kind}" hidden id="fl">${R.flash.kind==="fire"?`<b>${esc(P(R.flash.id).name)} er on fire</b><span>${R.flash.n} runder i træk med point</span>`:`<b>${esc(P(R.flash.id).name)} er helt ude at cykle</b><span>${R.flash.n} runder i træk uden point</span>`}</div>`:""}<div id="trk" hidden>${(G.target&&(TARGET=G.target),track(players,G.scores,G.prevScores))}</div><div id="after" hidden class="col-stack">${afterHTML}</div>`;
+  app.innerHTML=`${hud(G.n)}${rd.trip?globeHTML("rg",false,tripCap(rd,true)):""}${rd.type==="where"&&rd.story?`<div class="panel c" style="font-weight:800">${esc(rd.story)}</div>`:""}${qcard(rd,R.afterCourt?"Efter duellen":"")}<div id="rv" class="col-stack" hidden>${head}${votes}</div><div id="gains" class="gains" hidden></div>${R.flash?`<div class="flashnote ${R.flash.kind}" hidden id="fl">${R.flash.kind==="fire"?`<b>${esc(P(R.flash.id).name)} er on fire</b><span>${R.flash.n} runder i træk med point</span>`:`<b>${esc(P(R.flash.id).name)} er helt ude at cykle</b><span>${R.flash.n} runder i træk uden point</span>`}</div>`:""}<div id="trk" hidden>${(G.target&&(TARGET=G.target),track(players,G.scores,G.prevScores))}</div><div id="after" hidden class="col-stack">${afterHTML}</div>`;
   const anchor=app.firstElementChild,dead=()=>!anchor.isConnected;wireMute();if(rd.trip&&$("#rg")){GLOBE.mount($("#rg"));GLOBE.flyTo(rd.trip.lat,rd.trip.lon,rd.trip.country,{route:false,zoom:2.3})}
   await sleep(700);if(dead())return;const rv=$("#rv");rv.hidden=false;rv.classList.add("deal");if(!opts.me||SND.mode==="full")SFX.ding();
   await sleep(700);if(dead())return;
@@ -1291,7 +1294,7 @@ function networkSVG(players,stats){
   return `<svg class="netw" viewBox="0 0 ${W} ${H+20}" role="img" aria-label="Hvem var enige og uenige">${lines}${nodes}</svg><div class="col-stack" style="gap:6px">${cap.map(c=>`<p>${c}</p>`).join("")||'<p class="muted">Ikke nok Hvem af os-runder til et kort.</p>'}</div><p class="muted" style="font-size:13px">Rød streg: uenigheder. Prikket grøn: enigheder. Tallet er antal uenigheder.</p>`;
 }
 function awardsHTML(G,players){const top=(o,min=1)=>{let best=null;players.forEach(p=>{const v=(o||{})[p.id]||0;if(v>=min&&(!best||v>best.v))best={p,v}});return best};
-  const a=[],pk=top(G.picked,2),ht=top(G.hits,2);
+  const a=[],pk=top(G.picked,2),ht=top(G.hits,2),fk=top(G.tp,2);if(fk){const fem=["top","hofte","farmor"].includes(defBody(fk.p.name).b);a.push([fem?"Feriedronningen":"Feriekongen",fk.p,`Valgt i ${fk.v} ferieminder`])}
   if(pk)a.push(["Mest udpeget",pk.p,`Valgt ${pk.v} gange`]);if(ht&&(!pk||ht.p.id!==pk.p.id||true))a.push(["Tankelæseren",ht.p,`Point i ${ht.v} runder`]);
   if(!a.length)return "";return `<div class="panel awards"><span class="lbl">Aftenens priser</span>${a.map(([t,p,k])=>`<div class="award">${av(p,"m")}<div><b>${esc(t)}: ${esc(p.name)}</b><span class="k">${esc(k)}</span></div></div>`).join("")}</div>`}
 async function finalScreen(G,players,againLabel,again){
@@ -1389,6 +1392,20 @@ function importFamPack(obj){if(!obj||!Array.isArray(obj.lp))return 0;S.lp=S.lp||
   obj.lp.forEach(q=>{if(!q||!q.name)return;const i=S.lp.findIndex(x=>norm(x.name)===norm(q.name));const now=Date.now();
     if(i>=0){S.lp[i]={...S.lp[i],...(q.photo?{photo:q.photo}:{}),...(q.build?{build:q.build}:{}),...(q.height?{height:q.height}:{}),t:now}}else S.lp.push({id:"p"+now.toString(36)+n,name:q.name,color:COLORS[S.lp.length%8],photo:q.photo||null,build:q.build,height:q.height,t:now});n++});
   store("skyldig.localplayers",S.lp);return n}
+const TRIP_EXTRA={
+ "porto og ericeira":{story:"Porto 2019: Brandalarmen gik, og Bulle løb ud med Nutellaen i stedet for alt det vigtige.",
+   who:[["Hvem ville redde Nutellaen, hvis brandalarmen gik igen?","Nutella-redderen"],["Hvem blev den største portvinskender på turen?","Portvinsbaronen"],["Hvem ville flytte til Ericeira for at surfe?","Surferen"]],
+   hot:[["Porto: Brandalarmen går igen. Hvad redder {n}?",["Passene","Telefonen","Portvinen","Nutellaen"]]]},
+ "normandiet":{story:"Normandiet 2025: God bilferie. Kun én syntes, campingen var god.",
+   who:[["Hvem synes stadig, campingen var god?","Campingens eneste fan"],["Hvem sov dårligst på campingpladsen?","Campingofferet"],["Hvem var bedst til at bestemme ruten på bilturen?","Kortlæseren"]],
+   hot:[["Bilferie igen. Hvad vælger {n} at sove i?",["Telt på camping","Hotel","Sommerhus","Bilen"]]]},
+ "rom":{story:"Rom 2023: Mad, mad og den gamle bydel.",who:[["Hvem gik mest i stå foran ruinerne?","Ruinrotten"]]},
+ "azorerne":{story:"Azorerne 2022: Natur, natur og natur."},
+ "tanzania og zanzibar":{story:"Tanzania og Zanzibar 2023: Safari og luksushotel."},
+ "new york":{story:"New York 2024: Storbyen. Attentatet på Trump skete, mens vi var derovre."},
+ "malaga":{story:"Malaga 2025: Godt vejr og god mad."},
+ "canada":{story:"Canada 2026: Bilferie med fokus på naturen."}};
+const tripX=t=>TRIP_EXTRA[norm(t.place)]||{};
 const FAMILY_TRIPS=[
  {place:"Porto og Ericeira",year:2019,month:"juli",lat:41.15,lon:-8.61,country:"Portugal"},
  {place:"Azorerne",year:2022,month:"juli",lat:37.74,lon:-25.67,country:"Portugal"},
@@ -1653,7 +1670,7 @@ const ON={
     lastGame("skyldig",code,create||!!PDB.host);SFX.coin();this.subscribe();S.sub="room";render();
   },
   async setPhoto(file){try{this.photo=await resizeImage(file,160);store("skyldig.myphoto",this.photo);if(this.code)await this.write(()=>this.ref("/players/"+this.me).update({photo:this.photo}));render()}catch(e){}},
-  colored(){return this.players.map((p,i)=>({id:p.id,name:p.name,photo:p.photo||null,color:COLORS[i%8]}))},
+  colored(){return this.players.map((p,i)=>({id:p.id,name:p.name,photo:p.photo||famPhoto(p.name)||null,color:COLORS[i%8]}))},
   async start(){await PACKDB.load();const G=newGame(buildSeq(this.R.cats,PACK,90),this.R.vote,this.R.len);await this.setRoom({...G,status:"starting"});this.next()},
   async next(){if(someoneWon(this.R.scores,this.R))return this.setRoom({status:"end"});this.busy=null;const p=prepRound(this.R,this.colored());if(!p)return this.setRoom({status:"end"});markSeen(p.rd.key);await this.setRoom(p)},
   async skipQ(){SFX.whoosh();this.busy=null;await this.next()},
@@ -1925,7 +1942,7 @@ function wireDjBar(R){const p=$("#dpause");if(p)p.onclick=()=>{D.paused=!D.pause
 const DO={code:null,R:null,players:[],answers:[],bingos:[],cheats:[],unsub:[],shown:null,
   ref(p=""){return ON.db.doc("disco/"+this.code+p)},
   isHost(){return !!this.R&&this.R.host===ON.me},
-  colored(){return this.players.map((p,i)=>({id:p.id,name:p.name,photo:p.photo||null,color:COLORS[i%8]}))},
+  colored(){return this.players.map((p,i)=>({id:p.id,name:p.name,photo:p.photo||famPhoto(p.name)||null,color:COLORS[i%8]}))},
   async write(fn){try{await fn();return true}catch(e){D.err=P2P_ERR[e.code]||"Kunne ikke gemme ("+(e.code||"fejl")+")."+(e.code==="invalid_argument"?" Ejeren skal dele spillet med dig som redaktør.":"");render();return false}},
   async setRoom(patch){const next={...this.R,...patch};this.R=next;return this.write(()=>this.ref().set(clone(next)))},
   subscribe(){
@@ -2273,7 +2290,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=39;
+const APP_V=40;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
