@@ -809,7 +809,7 @@ const TYPES={
 };
 const MAJ=t=>t==="who"||t==="trip";
 const COLORS=["#ff3d7f","#ffd23f","#4de0c5","#8fa8ff","#ff8a3d","#c38bff","#7ae35f","#ff6b6b"];
-let TARGET=21;const COURT_SEC={indsigelse:15},LENS={kort:{name:"Kort spil",sk:12,dq:10},langt:{name:"Langt spil",sk:21,dq:20}},lenOf=k=>LENS[k]||LENS.langt;
+let TARGET=21;const COURT_SEC={indsigelse:15},LENS={kort:{name:"Kort spil",sk:12,dq:16},langt:{name:"Langt spil",sk:21,dq:24}},lenOf=k=>LENS[k]||LENS.langt;
 const HOME={lat:55.9,lon:10.5};
 /* steder: [navn, lat, lon, land på engelsk] */
 const PLACES=[["Blokhus",57.25,9.58,"Denmark"],["Skagen",57.72,10.58,"Denmark"],["Bornholm",55.13,14.92,"Denmark"],["Lalandia Billund",55.73,9.11,"Denmark"],["Legoland",55.735,9.13,"Denmark"],["Fanø",55.42,8.41,"Denmark"],["Løkken",57.37,9.71,"Denmark"],["Henne Strand",55.73,8.17,"Denmark"],["Hvide Sande",56.0,8.13,"Denmark"],["Samsø",55.87,10.6,"Denmark"],["Ærø",54.88,10.4,"Denmark"],["Rømø",55.13,8.5,"Denmark"],["Marielyst",54.67,11.95,"Denmark"],["København",55.68,12.57,"Denmark"],["Aarhus",56.16,10.2,"Denmark"],
@@ -1790,9 +1790,9 @@ const decadeOf=y=>Math.floor(y/10)*10;
 const decName=d=>d<1960?"Før 1960":`${String(d).slice(2)}'erne`;
 const appleLink=s=>"https://music.apple.com/dk/search?term="+encodeURIComponent(s.main+" "+s.title.replace(/\(.*?\)/g,""));
 const DRT={
- aar:{name:"Årstals-dart",color:"#ff3fa4",sub:"Gæt udgivelsesåret.",pts:"Præcist 2 · inden for 2 år 1",dated:true},
+ aar:{name:"Årstals-dart",color:"#ff3fa4",sub:"Gæt udgivelsesåret.",pts:"Præcist 4 · inden for 2 år 2 · rigtigt årti 1",dated:true},
  kunstner:{name:"Hvem synger?",color:"#00b8ff",sub:"Find kunstneren i kataloget.",pts:"Rigtigt 2"},
- titel:{name:"Hvad hedder den?",color:"#ff8a00",sub:"Find titlen i kataloget.",pts:"Rigtigt 2"},
+ titel:{name:"Hvad hedder den?",color:"#ff8a00",sub:"Find titlen i kataloget.",pts:"Rigtigt 3"},
  aarti:{name:"Tidsmaskinen",color:"#7a3cff",sub:"Hvilket årti er den fra?",pts:"Rigtigt 1",dated:true},
  foreller:{name:"Før eller efter?",color:"#18c26b",sub:"Er den ældre eller nyere end forrige plade?",pts:"Rigtigt 1",dated:true},
 };
@@ -1818,8 +1818,8 @@ function search(list,q){const f=fold(q);if(!f)return [];const words=f.split(" ")
 function isRight(type,s,a,prev){
   if(a==null)return 0;
   if(type==="kunstner")return s.names.concat([s.main]).some(n=>fold(n)===fold(a))?2:0;
-  if(type==="titel")return fold(a)===fold(s.title)?2:0;
-  if(type==="aar"){const d=Math.abs(Number(a)-s.year);return d===0?2:d<=2?1:0}
+  if(type==="titel")return fold(a)===fold(s.title)?3:0;
+  if(type==="aar"){const d=Math.abs(Number(a)-s.year);return d===0?4:d<=2?2:decadeOf(Number(a))===decadeOf(s.year)?1:0}
   if(type==="aarti")return Number(a)===decadeOf(s.year)?1:0;
   if(type==="foreller")return a===(s.year<prev.year?"Ældre":"Nyere")?1:0;return 0}
 function answerText(type,s,prev){if(type==="kunstner")return s.main;if(type==="titel")return s.title;if(type==="aar")return String(s.year);if(type==="aarti")return decName(decadeOf(s.year));if(type==="foreller")return s.year<prev.year?"Ældre":"Nyere"}
@@ -2325,7 +2325,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=49;
+const APP_V=50;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
