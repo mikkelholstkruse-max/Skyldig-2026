@@ -473,6 +473,7 @@ button.dopt{cursor:pointer;font-family:"Baloo 2",system-ui,sans-serif}
 .readsc.dark{background:transparent;color:#fff4e6}.readsc.dark .rs-ink{position:absolute;inset:-60%;background:radial-gradient(circle,#05010a 55%,rgba(5,1,10,.0) 70%);animation:rsInk 1.6s ease-in forwards;transform-origin:50% 50%}
 .readsc.dark .rs-in{animation:rsIn 1s .9s both}.readsc.dark .rs-who{font-size:30px;margin:0}.readsc .rs-cd{font-size:44px;color:#ffd23f;font-variant-numeric:tabular-nums}
 @keyframes rsInk{0%{transform:scale(.05);opacity:.6}100%{transform:scale(1.4);opacity:1}}@keyframes rsIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes rsLit{0%{filter:brightness(.2)}60%{filter:brightness(1.4)}100%{filter:none}}
+.nchip.face{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px}.nchip.face img{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--c)}
 .flashnote{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px;border-radius:16px;text-align:center}.flashnote b{font-size:20px}.flashnote.fire{background:linear-gradient(90deg,#ff7a00,#ff2d4d);color:#fff}.flashnote.cold{background:#2d6bff33;box-shadow:inset 0 0 0 2px #7fdcff}
 .awards{display:flex;flex-direction:column;gap:8px}.award{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.06)}.award b{display:block}.award span.k{font-size:13px;opacity:.75}
 .st-note{font-size:12px;color:#fff;opacity:.75}
@@ -1096,7 +1097,7 @@ function buildSeq(cats,pack,count=90){
   const own=(pack.who||[]).map(x=>[x.q,x.title||"Familiens dom"]);
   const trips=(pack.trips||[]).filter(t=>t.lat!=null);const K=x=>x[0];
   const tripItems=trips.flatMap(t=>TRIPQ.map(q=>({t,q,k:t.place+": "+q[0]}))),tripOwn=trips.flatMap(t=>(tripX(t).who||[]).map(q=>({t,q,k:t.place+": "+q[0]}))),tripHot=trips.flatMap(t=>tripX(t).hot||[]);
-  const pools={who:freshFirst(own,K).concat(freshFirst(who,K)),hot:freshFirst(tripHot,K).filter(x=>!SEEN.has(K(x))).concat(freshFirst(HOT,K)),where:trips.length>=3?freshFirst(trips,t=>"hvor:"+t.place):[],trivia:freshFirst(TRIVIA,K),est:freshFirst(EST,K),
+  const pools={who:freshFirst(own,K).concat(freshFirst(who,K)),hot:freshFirst(tripHot,K).filter(x=>!SEEN.has(K(x))).concat(freshFirst(HOT,K)),where:trips.length>=3?freshFirst(trips.flatMap(t=>[{t,c:tripX(t).clue||null},{t,c:null}]).filter((x,i,a)=>x.c||!a.some(y=>y.t===x.t&&y.c)),x=>"hvor:"+x.t.place+(x.c?":"+x.c:"")):[],trivia:freshFirst(TRIVIA,K),est:freshFirst(EST,K),
     trip:freshFirst(tripOwn,x=>x.k).filter(x=>!SEEN.has(x.k)).concat(freshFirst(tripItems,x=>x.k)),tripyear:freshFirst(trips.filter(t=>t.year),t=>"år:"+t.place),
     quiz:freshFirst((pack.quiz||[]).map(x=>({q:x.q,a:x.a,w:x.w,ex:x.ex})).concat((pack.words||[]).map(w=>({q:`Hvad betyder "${w.w}" i vores familie?`,a:w.def,w:shuffle((pack.words||[]).filter(o=>o!==w).map(o=>o.def).concat(shuffle(FAKE_DEFS))).slice(0,3),ex:w.ex}))),x=>x.q),
     quote:freshFirst(pack.quotes||[],x=>x.q)};
@@ -1115,7 +1116,7 @@ function buildSeq(cats,pack,count=90){
     else if(k==="trivia")rd={type:"trivia",q:it[0],ans:it[1][0],opts:shuffle(it[1]),key:it[0]};
     else if(k==="est")rd={type:"est",q:it[0],ans:it[1],unit:it[2],key:it[0]};
     else if(k==="trip")rd={type:"trip",q:`${it.t.place}${it.t.year?" "+it.t.year:""}: ${it.q[0]}`,title:`${it.q[1]} · ${it.t.place}`,trip:it.t,ex:!!it.t.ex,key:it.k};
-    else if(k==="where"){const others=shuffle(trips.filter(t=>t.place!==it.place)).slice(0,3).map(t=>t.place);rd={type:"where",q:"Hvor var vi?",ans:it.place,opts:shuffle([it.place,...others]),trip:it,story:tripX(it).story||"",key:"hvor:"+it.place}}
+    else if(k==="where"){const t=it.t,others=shuffle(trips.filter(x=>x.place!==t.place)).slice(0,3).map(x=>x.place);rd={type:"where",q:it.c||"Hvor var vi?",ans:t.place,opts:shuffle([t.place,...others]),trip:t,story:tripX(t).story||"",key:"hvor:"+t.place+(it.c?":"+it.c:"")}}
     else if(k==="tripyear")rd={type:"tripyear",q:`Hvilket år var vi i ${it.place}?`,ans:Number(it.year),unit:"",trip:it,ex:!!it.ex,key:"år:"+it.place};
     else if(k==="quiz")rd={type:"quiz",q:it.q,ans:it.a,opts:shuffle([it.a,...(it.w||[]).filter(Boolean)].slice(0,4)),ex:!!it.ex,key:it.q};
     else if(k==="quote")rd={type:"quote",q:it.q,ans:it.who,ex:!!it.ex,key:it.q};
@@ -1386,6 +1387,12 @@ function findPlace(q){if(String(q||"").includes(",")){const parts=String(q).spli
   const dk=Object.keys(DK_COUNTRY).find(k=>norm(k)===n);const en=dk?DK_COUNTRY[dk]:null;GLOBE.init();
   const c=(GLOBE.countries||[]).find(c=>norm(c.name)===n||(en&&c.name===en));if(c)return {place:dk||c.name,lat:c.center[1],lon:c.center[0],country:c.name};
   const partial=PLACES.find(x=>norm(x[0]).startsWith(n)&&n.length>=3);if(partial)return {place:partial[0],lat:partial[1],lon:partial[2],country:partial[3]};return null}
+const SITEFAM={tried:false,vids:{},
+  async init(){if(this.tried)return;this.tried=true;if(!/^https?:/.test(location.protocol))return;try{const r=await fetch("fam/familie.json",{cache:"no-store"});if(!r.ok)return;const j=await r.json();const lp=store("skyldig.localplayers")||FAM4.map((n,i)=>({id:"p"+i,name:n,color:COLORS[i]}));let ch=false;
+    (j.lp||[]).forEach(q=>{const p=lp.find(x=>norm(x.name)===norm(q.name));if(p){if(!p.photo&&q.photo){p.photo=q.photo;ch=true}}else{lp.push({id:"s"+Math.random().toString(36).slice(2,7),name:q.name,color:COLORS[lp.length%8],photo:q.photo||null,build:q.build,height:q.height});ch=true}});
+    if(ch){store("skyldig.localplayers",lp);S.lp=lp;if(S.view==="hub"||S.view==="studio")render()}}catch(e){}},
+  async video(k){if(k in this.vids)return this.vids[k];let u=null;try{if(/^https?:/.test(location.protocol)){const r=await fetch("fam/"+k+".mp4",{method:"HEAD",cache:"no-store"});if(r.ok)u="fam/"+k+".mp4"}}catch(e){}return this.vids[k]=u}};
+setTimeout(()=>SITEFAM.init(),300);
 function famPhoto(name){const lp=store("skyldig.localplayers")||[];const p=lp.find(x=>norm(x.name)===norm(name));return p&&p.photo||null}
 /* familiepakke: en fil med billeder, som man åbner én gang; derefter deler telefonerne den */
 function importFamPack(obj){if(!obj||!Array.isArray(obj.lp))return 0;S.lp=S.lp||store("skyldig.localplayers")||FAM4.map((n,i)=>({id:"p"+i,name:n,color:COLORS[i]}));let n=0;
@@ -1393,18 +1400,33 @@ function importFamPack(obj){if(!obj||!Array.isArray(obj.lp))return 0;S.lp=S.lp||
     if(i>=0){S.lp[i]={...S.lp[i],...(q.photo?{photo:q.photo}:{}),...(q.build?{build:q.build}:{}),...(q.height?{height:q.height}:{}),t:now}}else S.lp.push({id:"p"+now.toString(36)+n,name:q.name,color:COLORS[S.lp.length%8],photo:q.photo||null,build:q.build,height:q.height,t:now});n++});
   store("skyldig.localplayers",S.lp);return n}
 const TRIP_EXTRA={
- "porto og ericeira":{story:"Porto 2019: Brandalarmen gik, og Bulle løb ud med Nutellaen i stedet for alt det vigtige.",
-   who:[["Hvem ville redde Nutellaen, hvis brandalarmen gik igen?","Nutella-redderen"],["Hvem blev den største portvinskender på turen?","Portvinsbaronen"],["Hvem ville flytte til Ericeira for at surfe?","Surferen"]],
-   hot:[["Porto: Brandalarmen går igen. Hvad redder {n}?",["Passene","Telefonen","Portvinen","Nutellaen"]]]},
- "normandiet":{story:"Normandiet 2025: God bilferie. Kun én syntes, campingen var god.",
-   who:[["Hvem synes stadig, campingen var god?","Campingens eneste fan"],["Hvem sov dårligst på campingpladsen?","Campingofferet"],["Hvem var bedst til at bestemme ruten på bilturen?","Kortlæseren"]],
-   hot:[["Bilferie igen. Hvad vælger {n} at sove i?",["Telt på camping","Hotel","Sommerhus","Bilen"]]]},
- "rom":{story:"Rom 2023: Mad, mad og den gamle bydel.",who:[["Hvem gik mest i stå foran ruinerne?","Ruinrotten"]]},
- "azorerne":{story:"Azorerne 2022: Natur, natur og natur."},
- "tanzania og zanzibar":{story:"Tanzania og Zanzibar 2023: Safari og luksushotel."},
- "new york":{story:"New York 2024: Storbyen. Attentatet på Trump skete, mens vi var derovre."},
- "malaga":{story:"Malaga 2025: Godt vejr og god mad."},
- "canada":{story:"Canada 2026: Bilferie med fokus på naturen."}};
+ "porto og ericeira":{story:"Porto 2019: Portvin, god mad og en brandalarm, hvor Bulle løb ud med Nutellaen i stedet for alt det vigtige.",
+   clue:"Hvor løb Bulle ud med Nutellaen, da brandalarmen gik?",
+   who:[["Hvem ville løbe først ud ad døren, hvis brandalarmen gik igen?","Flugtmesteren"],["Hvem blev den største portvinskender på turen?","Portvinsbaronen"]]},
+ "azorerne":{story:"Azorerne 2022: Vandreture på bjergtoppe, hortensiaer overalt, og en bil, der endte på en gåsti. Bulle sagde noget lidt for hårdt, og Båbe blev ked af det.",
+   clue:"Hvor endte vi med at køre bilen ind på en gåsti?",
+   who:[["Hvem var mest vild med hortensiaerne?","Blomsterelskeren"],["Hvem ville kunne bo på en ø midt i Atlanterhavet?","Øboen"],["Hvem gik længst på vandreturene uden at klage?","Bjerggeden"]]},
+ "rom":{story:"Rom 2023: Romerriget, Vatikanet, kanon pizza og is, og Bøh mødte sin ven Mark.",
+   clue:"Hvor mødte Bøh sin ven Mark?",
+   who:[["Hvem spiste flest is?","Isdronningen"],["Hvem fik mest ud af alt det gamle: ruinerne, kirkerne og Vatikanet?","Historienørden"],["Hvem ville kunne blive munk eller nonne i Vatikanet?","Den hellige"]],
+   hot:[["Hvad var det bedste ved Rom for {n}?",["Pizzaen","Isen","Vatikanet","Ruinerne"]]]},
+ "tanzania og zanzibar":{story:"Tanzania og Zanzibar 2023: Alle Big Five, en leopard i et træ, en skorpion på væggen og ren luksus.",
+   clue:"Hvor fandt vi en skorpion på væggen?",
+   who:[["Hvem var mest bange om natten?","Natteskræk"],["Hvem ville have opdaget skorpionen sidst?","Skorpionens bedste ven"],["Hvem nød luksusen mest?","Luksusdyret"],["Hvem ville klare sig bedst alene på savannen en nat?","Savannens overlever"]],
+   hot:[["Hvad var det bedste ved Tanzania for {n}?",["Safarien","Luksushotellet","Stranden på Zanzibar","Tennis"]]]},
+ "new york":{story:"New York 2024: Storbyen, og Broadway den aften, hvor nyheden om attentatet på Trump kom.",
+   clue:"Hvor sad vi i teatret, da nyheden om attentatet på Trump kom?",
+   who:[["Hvem er mest storbymenneske?","Storbydyret"],["Hvem ville du sende alene til New York i en måned?","New Yorkeren"]]},
+ "malaga":{story:"Malaga 2025: Sol, vandreture, stjålne pærer og en italiensk aften med en Negroni for meget og en stor nyhed.",
+   clue:"Hvor stjal Bøh og Bibs pærer?",
+   who:[["Hvem stjal flest pærer?","Pæretyven"],["Hvem havde den største nyhed med hjem fra en ferie?","Feriens store nyhed"]]},
+ "normandiet":{story:"Normandiet 2025: Versailles, kystbyerne, katedralen i Chartres lyst op om aftenen og tidevandet ved Mont-Saint-Michel. Og en camping, alle undtagen Bøh var glade for, mens tre lå og hostede hele natten.",
+   clue:"Hvor så vi tidevandet komme ind?",
+   who:[["Hvem sov dårligst på campingpladsen?","Campingofferet"],["Hvem hostede højest i teltet om natten?","Hostekongen"],["Hvem var mest betaget af Mont-Saint-Michel, da tidevandet kom ind?","Tidevandets fan"]]},
+ "canada":{story:"Canada 2026: Bjergene, bjørnene og luksus overalt, men Vancouver var skuffende som by.",
+   clue:"Hvor så vi bjørne?",
+   who:[["Hvem sov mest i bilen?","Bagsædesoveren"],["Hvem ville klare sig bedst, hvis vi mødte en bjørn?","Bjørnetæmmeren"],["Hvem kunne flytte op i bjergene?","Bjergmennesket"]],
+   hot:[["Hvad var højdepunktet i Canada for {n}?",["Bjergene","Bjørnene","Hotellerne","Bilturen"]]]}};
 const tripX=t=>TRIP_EXTRA[norm(t.place)]||{};
 const FAMILY_TRIPS=[
  {place:"Porto og Ericeira",year:2019,month:"juli",lat:41.15,lon:-8.61,country:"Portugal"},
@@ -2290,14 +2312,14 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=40;
+const APP_V=41;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
 const FAM4=["Båbe","Bibs","Bulle","Bøh"],FAM6=["Båbe","Bibs","Bulle","Bøh","Simon","Farmor"];
 setTimeout(()=>{if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;try{SHOW_ERAS.forEach((e,i)=>setTimeout(()=>PREV.lookup({id:"show:"+e.song.join("-"),main:e.song[0],title:e.song[1]}),i*400))}catch(e){}},1500);
 /* de fire faste navne: tryk på dit navn, så er du klar */
-function nameChips(id,cur,disco){return `<div class="nchips${disco?" dz":""}">${FAM6.map((n,i)=>`<button type="button" class="nchip${norm(cur)===norm(n)?" on":""}" data-nm="${n}" data-for="${id}" style="--c:${COLORS[i]}">${n}</button>`).join("")}</div>`}
+function nameChips(id,cur,disco){return `<div class="nchips${disco?" dz":""}">${FAM6.map((n,i)=>{const ph=famPhoto(n);return `<button type="button" class="nchip${norm(cur)===norm(n)?" on":""}${ph?" face":""}" data-nm="${n}" data-for="${id}" style="--c:${COLORS[i]}">${ph?`<img src="${ph}" alt="">`:""}<span>${n}</span></button>`}).join("")}</div>`}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-nm]");if(!b)return;const inp=document.getElementById(b.dataset.for);if(!inp)return;
   inp.value=b.dataset.nm;inp.dispatchEvent(new Event("input",{bubbles:true}));inp.dispatchEvent(new Event("change",{bubbles:true}));ON.name=b.dataset.nm;store("skyldig.myname",b.dataset.nm);
   b.parentNode.querySelectorAll(".nchip").forEach(x=>x.classList.toggle("on",x===b));try{SFX.tick&&SFX.tick()}catch(x){}
@@ -2515,7 +2537,7 @@ function stageShow(onEnd,mode){
   // lyd: to afspillere på skift. Den ene er spillets egen sang-afspiller, som telefonen allerede har låst op.
   const HK=store("disco.hook")||{};
   const tr=ERAS.map(e=>({e,url:null,at:e.from0?0:null,id:"show:"+e.song.join("-")}));const card=el.querySelector(".bd-card");
-  let hv=null;if(BD)VIDDB.get("hilsen").then(b=>{if(!b||ended)return;hv=document.createElement("video");hv.playsInline=true;hv.setAttribute("playsinline","");hv.preload="auto";hv.src=URL.createObjectURL(b);hv.className="bd-hv"});
+  let hv=null;if(BD)VIDDB.get("hilsen").then(async b=>{const src=b?URL.createObjectURL(b):await SITEFAM.video("hilsen");if(!src||ended)return;const v=document.createElement("video");v.playsInline=true;v.setAttribute("playsinline","");v.preload="auto";v.className="bd-hv";v.onloadedmetadata=()=>{if(!ended)hv=v};v.src=src;try{v.load()}catch(e){}});
   const primeHv=()=>{if(!hv||hv._primed)return;hv._primed=true;try{const p=hv.play();if(p)p.then(()=>{hv.pause();hv.currentTime=0}).catch(()=>{})}catch(e){}};
     PREV.unlock();BGM.unlock();const AP=[PREV.el,BGM.el];let ai=0,playing=null,prepped=null;
   tr.forEach(x=>{if(HK[x.id]!=null&&!x.e.from0)x.at=HK[x.id]});
