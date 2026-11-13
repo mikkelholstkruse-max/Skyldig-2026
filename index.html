@@ -1120,7 +1120,6 @@ function buildSeq(cats,pack,count=90){
     else if(k==="tripyear")rd={type:"tripyear",q:`Hvilket år var vi i ${it.place}?`,ans:Number(it.year),unit:"",trip:it,ex:!!it.ex,key:"år:"+it.place};
     else if(k==="quiz")rd={type:"quiz",q:it.q,ans:it.a,opts:shuffle([it.a,...(it.w||[]).filter(Boolean)].slice(0,4)),ex:!!it.ex,key:it.q};
     else if(k==="quote")rd={type:"quote",q:it.q,ans:it.who,ex:!!it.ex,key:it.q};
-    if((seq.length+1)%6===0)rd.golden=true;
     seq.push(rd);
   }
   return seq;
@@ -1324,7 +1323,7 @@ function render(){({hub:hubView,home:homeView,studio:studioView,setup:setupView,
 
 function homeView(){
   setTheme("who");BGM.play("skyldig").then(ok=>{if(!ok&&THEME.want&&ac()&&S.view==="home")THEME.start()});
-  app.innerHTML=`<div class="row" style="justify-content:space-between;gap:6px"><button class="iconbtn" id="tohub">‹ Alle spil</button><div class="row" style="gap:6px"><button class="iconbtn" id="thm">${THEME.want?"Tema til":"Tema fra"}</button>${muteBtn()}</div></div>
+  app.innerHTML=`<div class="row" style="justify-content:space-between;gap:6px"><button class="iconbtn" id="tohub">‹ Alle spil</button><div class="row" style="gap:6px"><button class="iconbtn" id="thm">${THEME.want?"Musik til":"Musik fra"}</button>${muteBtn()}</div></div>
   <div class="marquee"><h1 class="logo">Skyldig!</h1><div class="tag">Hvem af os?</div></div>
   <p class="c" style="font-size:17px">Et udsagn. Hvem passer det på? <b style="color:var(--bulb)">Kort eller langt spil.</b></p>
   <div class="mode">
@@ -1338,7 +1337,7 @@ function homeView(){
     <div style="--c:#4de0c5"><b>Ferieminder</b>Jeres egne ferier på globussen.</div>
   </div><button class="link" id="reintro" style="align-self:center">Se introen igen</button>`;
   wireMute();
-  $("#thm").onclick=()=>{THEME.toggle();$("#thm").textContent=THEME.want?"Tema til":"Tema fra"};
+  $("#thm").onclick=()=>{THEME.toggle();$("#thm").textContent=THEME.want?"Musik til":"Musik fra"};
   if(!THEME.on&&THEME.want){const kick=()=>{document.removeEventListener("pointerdown",kick);if((S.view==="home"||S.view==="hub")&&ac())THEME.start()};document.addEventListener("pointerdown",kick)}
   $("#m-local").onclick=()=>{SFX.whoosh();go("setup")};
   $("#m-online").onclick=()=>{SFX.whoosh();ON.enter()};
@@ -1962,7 +1961,8 @@ const AUTO={t:null,
   onReveal(){this.clear()},
   check(){const R=DO.R;if(!R||!R.auto||!DO.isHost()||R.status!=="play"||R.mode!=="quiz")return;const v=DO.roundAns(),ps=DO.colored();if(ps.length&&ps.every(p=>p.id in v)){this.clear();DO.reveal()}}
 };
-function djBar(R){if(!R.auto||!DO.isHost())return "";const rev=R.status==="reveal";return `<div class="djbar"><span>DJ</span>${R.mode==="bingo"&&!rev?`<button class="dchip" id="drev2">Afslør sangen</button>`:""}${rev?`<button class="dchip" id="dnext2">Næste sang</button>`:""}<button class="dchip" id="dpause">${D.paused?"Spil":"Pause"}</button><button class="dchip" id="dskip2">Spring over</button><button class="dchip" id="dend2">Afslut</button></div>`}
+function bgCount(){const R=DO.R;if(!R)return "";const ps=DO.colored().filter(p=>!(DO.isHost()&&p.id===ON.me&&R.auto)),n=(DO.bg||[]).filter(g=>g.n===R.n&&ps.some(p=>p.id===g.uid)).length;return `${n} af ${ps.length} har låst gæt`}
+function djBar(R){if(!R.auto||!DO.isHost())return "";const rev=R.status==="reveal";return `<div class="djbar"><span>DJ</span>${R.mode==="bingo"&&!rev?`<span class="dchip" id="dgc">${bgCount()}</span><button class="dchip" id="drev2">Afslør sangen</button>`:""}${rev?`<button class="dchip" id="dnext2">Næste sang</button>`:""}<button class="dchip" id="dpause">${D.paused?"Spil":"Pause"}</button><button class="dchip" id="dskip2">Spring over</button><button class="dchip" id="dend2">Afslut</button></div>`}
 function wireDjBar(R){const p=$("#dpause");if(p)p.onclick=()=>{D.paused=!D.paused;p.textContent=D.paused?"Fortsæt":"Pause";if(D.paused){AUTO.clear();PREV.stop()}else{R.status==="reveal"?AUTO.onReveal():(PREV.el&&PREV.el.src&&PREV.el.play().catch(()=>{}),AUTO.onPlay())}};
   const s=$("#dskip2");if(s)s.onclick=()=>{s.disabled=true;AUTO.clear();DO.next()};const rv=$("#drev2");if(rv)rv.onclick=()=>{rv.disabled=true;DSFX.scratch();DO.reveal()};const nx=$("#dnext2");if(nx)nx.onclick=()=>{nx.disabled=true;DSFX.whoop();DO.next()};const e=$("#dend2");if(e)e.onclick=()=>{AUTO.clear();PREV.stop();if(R.mode==="quiz")DO.setRoom({status:"end"});else{DO.leave();go("disco",{dv:"home"})}}}
 
@@ -1979,6 +1979,7 @@ const DO={code:null,R:null,players:[],answers:[],bingos:[],cheats:[],unsub:[],sh
     this.unsub.push(ON.db.doc(base).onSnapshot(s=>{this.R=s.exists?s.data():null;if(S.view==="disco")render()},fail));
     this.unsub.push(ON.db.collection(base+"/players").onSnapshot(s=>{this.players=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.joined-b.joined);if(S.view==="disco"&&this.R?.status==="lobby")render()},fail));
     this.unsub.push(ON.db.collection(base+"/answers").onSnapshot(s=>{this.answers=s.docs.map(d=>d.data());AUTO.check();if(S.view==="disco"&&this.R?.status==="play")render()},fail));
+    this.bg=[];this.unsub.push(ON.db.collection(base+"/bguess").onSnapshot(s=>{this.bg=s.docs.map(d=>d.data());const el=$("#dgc");if(el)el.textContent=bgCount()}));
     this.unsub.push(ON.db.collection(base+"/bingos").onSnapshot(s=>{const before=this.bingos.length;this.bingos=s.docs.map(d=>d.data()).sort((a,b)=>a.at-b.at);if(this.bingos.length>before&&this._ready){const b=this.bingos[this.bingos.length-1];if(b.uid!==ON.me){if(this.isHost()){DSFX.bingo();siren("BINGO!",b.name+" har bingo");confetti(160,.3)}else dToast(b.name+" har BINGO!")}}this._ready=true;if(S.view==="disco")render()},()=>{}));
     this.unsub.push(ON.db.collection(base+"/cheats").onSnapshot(s=>{const before=this.cheats.length;this.cheats=s.docs.map(d=>d.data()).sort((a,b)=>a.at-b.at);this._cdone=this._cdone||new Set();if(this._cready&&this.cheats.length>before){const c=this.cheats[this.cheats.length-1];if(c.uid!==ON.me){dToast(c.name+(c.kind==="app"?" forlod spillet under sangen. CHEATER!":c.kind==="bingo"?" råbte BINGO uden bingo. CHEATER!":" prøvede at cheate! CHEATER!"));if(this.isHost()){SND.allow=true;DSFX.nope();SND.allow=false}}}if(this.isHost()&&this.R&&this.R.mode==="quiz"){const sc={...(this.R.scores||{})};let ch=false;this.cheats.forEach(c=>{if(!c.cid||this._cdone.has(c.cid))return;this._cdone.add(c.cid);if(this._cready&&c.kind==="app"){sc[c.uid]=(sc[c.uid]||0)-1;ch=true}});if(ch)this.setRoom({scores:sc})}else this.cheats.forEach(c=>c.cid&&this._cdone.add(c.cid));this._cready=true;if(S.view==="disco")render()},()=>{}));
   },
@@ -2009,6 +2010,7 @@ const DO={code:null,R:null,players:[],answers:[],bingos:[],cheats:[],unsub:[],sh
     const scores={...(R.scores||{})};Object.entries(gain).forEach(([u,p])=>scores[u]=(scores[u]||0)+p);
     await this.setRoom({status:"reveal",result:{ans:v,gain},scores,gold,prevScores:R.scores||{}});AUTO.onReveal()},
   async cheat(kind="felt",n=0){await this.write(()=>ON.db.collection("disco/"+this.code+"/cheats").add({cid:ON.me+"-"+Date.now(),uid:ON.me,name:ON.name,kind,n,at:Date.now()}))},
+  async bguess(){const R=this.R;if(!R)return;await this.write(()=>ON.db.doc("disco/"+this.code+"/bguess/"+ON.me).set({n:R.n,uid:ON.me,at:Date.now()}))},
   async callBingo(){await this.write(()=>ON.db.collection("disco/"+this.code+"/bingos").add({uid:ON.me,name:ON.name,at:Date.now()}))}
 };
 
@@ -2153,7 +2155,7 @@ function bingoCard(R,players){
   ${DO.bingos.length||Object.keys(cheat).length?`<div class="dpanel">${DO.bingos.length?`<b>Bingo</b><span>${DO.bingos.map(b=>esc(b.name)).join(", ")}</span>`:""}${Object.keys(cheat).length?`<b>Cheaterlisten</b><span>${Object.entries(cheat).map(([n,c])=>`${esc(n)} ×${c}`).join(" · ")}</span>`:""}</div>`:""}`;
   spinBalls();wireBeat();
   if(playing&&!myGuess&&$("#bgw")){let pick=null;const w=pickerUI("kunstner",v=>{pick=v;$("#bglock").disabled=false});$("#bgw").innerHTML=w.html;w.wire();
-    $("#bglock").onclick=()=>{if(!pick)return;card.guess[R.sid]=pick;store(ck,card);DSFX.stamp();DO.shown=null;bingoCard(DO.R,players)}}
+    $("#bglock").onclick=()=>{if(!pick)return;card.guess[R.sid]=pick;store(ck,card);DSFX.stamp();DO.bguess();DO.shown=null;bingoCard(DO.R,players)}}
   $("#dbingo").onclick=()=>{const L=bingoLines(card.mark);
     if(L>(card.called||0)){card.called=L;store(ck,card);SND.allow=true;DSFX.bingo();SND.allow=false;siren("BINGO!","Rejs dig og dans",true);[0,400,800].forEach(t=>setTimeout(()=>confetti(170,.3),t));DO.callBingo();DO.shown=null;bingoCard(DO.R,players)}
     else{if(!cheatOK()){dToast(L?"Den række har du allerede råbt for":"Du har ikke en hel række endnu");return}snyder(L?"Den række har du allerede råbt for":"Du har ikke en hel række endnu");DO.cheat("bingo",R.n)}};
@@ -2325,7 +2327,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=50;
+const APP_V=51;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
@@ -2470,8 +2472,8 @@ function stageShow(onEnd,mode){
       const kn=new T.Group();kn.position.y=-.5;hp.add(kn);const sh2=part(new T.CylinderGeometry(.13*lr,.12*lr,.45,10),pants);sh2.position.y=-.22;kn.add(sh2);const shoe=part(new T.SphereGeometry(.2,12,8),"#fff");shoe.scale.set(1,.6,1.5);shoe.position.set(0,-.48,.1);kn.add(shoe);
       const sk=new T.Group();sk.add(part(new T.BoxGeometry(.3,.08,.55),"#ff3fa4"));[-1,1].forEach(z=>{const w=part(new T.CylinderGeometry(.08,.08,.32,10),"#ffd400");w.rotation.z=Math.PI/2;w.position.set(0,-.1,z*.18);sk.add(w)});sk.position.set(0,-.66,.1);sk.visible=false;kn.add(sk);c.skate[k]=sk;c.hp[k]=hp;c.kn[k]=kn});
     const face=new T.Sprite(new T.SpriteMaterial({map:faceTex(p,T),transparent:true}));face.scale.setScalar(.92*s);sc.add(face);c.face=face;
-    const nm=document.createElement("canvas");nm.width=256;nm.height=64;const nx=nm.getContext("2d");nx.fillStyle="rgba(20,10,36,.85)";nx.beginPath();nx.roundRect?nx.roundRect(8,6,240,52,26):nx.rect(8,6,240,52);nx.fill();nx.fillStyle="#fff";nx.font="bold 34px sans-serif";nx.textAlign="center";nx.textBaseline="middle";nx.fillText(p.name,128,33);
-    const tag=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(nm),transparent:true}));tag.scale.set(1.15,.29,1);sc.add(tag);c.tag=tag;return c};
+    const nm=document.createElement("canvas");nm.width=256;nm.height=64;const nx=nm.getContext("2d");nx.fillStyle="rgba(20,10,36,.85)";nx.beginPath();nx.roundRect?nx.roundRect(8,6,240,52,26):nx.rect(8,6,240,52);nx.fill();nx.fillStyle="#fff";nx.font="bold 44px sans-serif";nx.textAlign="center";nx.textBaseline="middle";nx.fillText(p.name,128,33);
+    const tag=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(nm),transparent:true}));tag.scale.set(1.5,.38,1);sc.add(tag);c.tag=tag;return c};
   const chars=fam.map(mkChar);
   // fest i baggrunden: konfettikanoner og lyskegler (kun fødselsdag)
   const party=new T.Group();party.visible=false;sc.add(party);const cps=[];let lastFire=-1,lastT=0;
@@ -2706,13 +2708,13 @@ function stageShow(onEnd,mode){
 const SEEN_INTRO={};
 function hubView(){
   setTheme("who");BGM.play("hub").then(ok=>{if(!ok&&THEME.want&&ac()&&S.view==="hub")THEME.start()});
-  app.innerHTML=`<div class="row" style="justify-content:flex-end;gap:6px"><button class="iconbtn" id="thm">${THEME.want?"Tema til":"Tema fra"}</button>${muteBtn()}</div>
+  app.innerHTML=`<div class="row" style="justify-content:flex-end;gap:6px"><button class="iconbtn" id="thm">${THEME.want?"Musik til":"Musik fra"}</button>${muteBtn()}</div>
   <div class="hub"><div class="hub-head"><h1>Hjemmebane</h1><span class="k">SPIL, DER KUN GIVER MENING MED JERES FAMILIE</span></div>
     <button class="hub-card hub-sk" id="h-sk"><span class="hk-logo">Skyldig!</span><span class="hk-txt">Et udsagn. I stemmer på, hvem det passer bedst på.</span><span class="hk-meta">3 til 8 spillere · hver sin telefon eller én</span></button>
     <button class="hub-card hub-dz" id="h-dz">${ballHTML(70)}<span class="hk-logo">DISKO</span><span class="hk-txt">Musikquiz og bingo med ${SONGS.length} sange fra 1939 til i dag.</span><span class="hk-meta">En DJ og alle andre på hver sin telefon</span></button>
     ${recentGame()?`<button class="hub-tool hub-cont" id="h-cont"><div><b>Fortsæt spillet</b><span>${recentGame().g==="disko"?"Disko":"Skyldig"} · kode ${esc(recentGame().code)}</span></div><i aria-hidden="true">›</i></button>`:""}${bdayToday()||S.bdayPreview?`<button class="hub-tool hub-bd" id="h-bd"><div><b>Tillykke, ${esc(BDAY.name)}!</b><span>Se fødselsdagsshowet igen</span></div><i aria-hidden="true">›</i></button>`:""}<div class="hub-tools"><button class="hub-tool" id="h-studio"><div><b>Familiestudiet</b><span>Jeres navne, rejser og egne spørgsmål</span></div><i aria-hidden="true">›</i></button></div>
   </div>`;
-  spinBalls();wireMute();$("#thm").onclick=()=>{THEME.toggle();$("#thm").textContent=THEME.want?"Tema til":"Tema fra"};
+  spinBalls();wireMute();$("#thm").onclick=()=>{THEME.toggle();$("#thm").textContent=THEME.want?"Musik til":"Musik fra"};
   if(!THEME.on&&THEME.want){const kick=()=>{document.removeEventListener("pointerdown",kick);BGM.unlock();if(S.view==="hub")BGM.play("hub").then(ok=>{if(!ok&&ac()&&S.view==="hub")THEME.start()})};document.addEventListener("pointerdown",kick)}
   const hb=$("#h-bd");if(hb)hb.onclick=()=>bdayStart();const hc=$("#h-cont");if(hc)hc.onclick=()=>resumeGame();$("#h-sk").onclick=()=>openGame("skyldig");$("#h-dz").onclick=()=>openGame("disko");$("#h-studio").onclick=()=>{SFX.whoosh();go("studio",{tab:"family"})};
 }
