@@ -2300,7 +2300,7 @@ const BDAY={name:"Marie",nick:"Bibs",age:20,y:2026,m:10,d:13,from:"Bøh",
 const BDAY_ERAS=[
  {dec:"",song:["Schnappi","Schnappi, das kleine Krokodil"],bpm:110,era:"croc",dance:"prank",nocap:true,gimmick:"",sky:["#000000","#030303"],floor:"#060606",props:["croc"],cos:["#ff5fb0","#ffd400","#7fdcff","#18c26b"],hair:"short",d:11000},
  {dec:"Tillykke, Marie!",song:["","Happy Birthday to You"],tid:1551863153,full:true,from0:true,loop:true,cap:"Happy Birthday to You",bpm:122,era:"hbd",dance:"bday",gimmick:"20 år i dag",sky:["#2a0845","#ff6fb5"],floor:"#2a1240",props:["cake","balloons","twenty","gifts","croc"],cos:["#ff5fb0","#ffd400","#7fdcff","#18c26b","#c38bff"],hair:"short",d:17000}];
-const BDAY_TEST=[12];// testdag(e) i november 2026
+const BDAY_TEST=[];// testdag(e) i november 2026
 const bdayToday=()=>{const n=new Date();return n.getFullYear()===BDAY.y&&n.getMonth()===BDAY.m&&((n.getDate()>=BDAY.d&&n.getDate()<=BDAY.d+2)||BDAY_TEST.includes(n.getDate()))};
 const VIDDB={db:null,open(){if(this.db)return Promise.resolve(this.db);return new Promise((ok,no)=>{try{const r=indexedDB.open("hjemmebane-video",1);r.onupgradeneeded=()=>r.result.createObjectStore("v");r.onsuccess=()=>{this.db=r.result;ok(this.db)};r.onerror=()=>no(r.error)}catch(e){no(e)}})},
   async get(k){try{const db=await this.open();return await new Promise(ok=>{const q=db.transaction("v").objectStore("v").get(k);q.onsuccess=()=>ok(q.result||null);q.onerror=()=>ok(null)})}catch(e){return null}},
@@ -2327,7 +2327,7 @@ const SHOW_ERAS=[
  {dec:"10'erne",song:["Lukas Graham","7 Years"],bpm:120,era:"edm10",dance:"selfie",gimmick:"Smartphonen og selfien",sky:["#22074a","#ff3fa4"],floor:"#1a0a2b",props:["phones","smileys"],cos:["#222244","#f2f2f2","#3a1aff","#ff3fa4"],hair:"short"},
  {dec:"20'erne",song:["The Weeknd","Blinding Lights"],bpm:171,era:"wave20",dance:"drones",gimmick:"Trådløse ørepropper og droner",sky:["#050505","#ff2d6f"],floor:"#0a0a0a",props:["drones","earbuds"],cos:["#ff2d6f","#00f0ff","#ffffff","#7a3cff"],hair:"bun"},
 ];
-const APP_V=51;
+const APP_V=52;
 /* på jeres egen side: hent automatisk den nyeste version, hvis telefonen viser en gammel */
 (function(){if(!/^https?:$/.test(location.protocol)||window.claude||/claude\.ai|claudeusercontent/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const APP_V=(\d+);/.exec(t||"");if(m&&+m[1]>APP_V&&!sessionStorage.getItem("hb.upd"+m[1])){sessionStorage.setItem("hb.upd"+m[1],"1");location.replace(location.pathname+"?v="+m[1]+location.hash)}}).catch(()=>{})})();
